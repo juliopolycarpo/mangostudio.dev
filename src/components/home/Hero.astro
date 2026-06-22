@@ -1,0 +1,147 @@
+---
+import Icon from '@/components/Icon.astro';
+import Logo from '@/components/Logo.astro';
+import { GITHUB_URL } from '@/data/site';
+import type { Lang, SiteContent } from '@/i18n/types';
+import { routes } from '@/i18n/ui';
+import InstallTerminal from './InstallTerminal.astro';
+
+interface Props {
+  lang: Lang;
+  content: SiteContent;
+}
+
+const { lang, content: c } = Astro.props;
+---
+
+<section class="hero">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <Logo size={120} detailed class="hero-logo" />
+
+  <div class="hero-inner">
+    <div class="pill"><span class="dot"></span>{c.hero.badge}</div>
+
+    <h1 class="hero-title">
+      {c.hero.titlePre}{' '}
+      <span class="accent">{c.hero.titleHighlight}</span>{c.hero.titlePost}
+    </h1>
+
+    <p class="hero-sub">{c.hero.subtitle}</p>
+
+    <InstallTerminal content={c} />
+
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href={routes.doc(lang, 'quickstart')}>
+        {c.hero.ctaPrimary}
+        <Icon name="arrow" size={16} />
+      </a>
+      <a class="btn btn-lg" href={GITHUB_URL} target="_blank" rel="noopener">
+        <Icon name="github" size={17} />
+        {c.hero.ctaSecondary}
+      </a>
+    </div>
+
+    <p class="hero-req mono">{c.hero.requirements}</p>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 84px 24px 48px;
+    text-align: center;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
+    background-size: 30px 30px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
+    opacity: 0.5;
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 560px;
+    height: 360px;
+    max-width: 100%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--mango) 34%, transparent),
+      transparent 68%
+    );
+    filter: blur(34px);
+    animation: glowpulse 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .hero-logo {
+    position: absolute;
+    top: 44px;
+    right: 6%;
+    filter: drop-shadow(0 18px 36px rgba(232, 89, 12, 0.4));
+    animation: floaty 6.5s ease-in-out infinite;
+    pointer-events: none;
+    opacity: 0.96;
+  }
+
+  .hero-inner {
+    position: relative;
+  }
+
+  .hero-title {
+    margin: 24px auto 0;
+    max-width: 760px;
+    font-size: clamp(38px, 7.5vw, 62px);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .accent {
+    color: var(--mango);
+  }
+
+  .hero-sub {
+    margin: 22px auto 0;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-2);
+    text-wrap: pretty;
+  }
+
+  .hero-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 26px;
+    flex-wrap: wrap;
+  }
+
+  .hero-req {
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  @media (max-width: 720px) {
+    .hero {
+      padding: 56px 24px 32px;
+    }
+    .hero-logo {
+      display: none;
+    }
+  }
+</style>

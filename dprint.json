@@ -1,0 +1,22 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "lineWidth": 100,
+  "indentWidth": 2,
+  "newLineKind": "lf",
+  "useTabs": false,
+  "markdown": {
+    "textWrap": "maintain",
+    "emphasisKind": "asterisks",
+    "strongKind": "asterisks",
+    "lineWidth": 100
+  },
+  "toml": {},
+  "yaml": {},
+  "includes": ["**/*.{md,mdx,toml,yml,yaml}"],
+  "excludes": ["**/node_modules", "dist", ".astro", ".wrangler-dry", "bun.lock", "**/CHANGELOG.md"],
+  "plugins": [
+    "./node_modules/@dprint/markdown/plugin.wasm",
+    "./node_modules/@dprint/toml/plugin.wasm",
+    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm"
+  ]
+}

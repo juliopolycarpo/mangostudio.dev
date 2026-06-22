@@ -1,0 +1,8 @@
+# Normalize line endings to LF on checkin for all text files.
+* text=auto eol=lf
+
+# Generated / binary-ish files
+bun.lock        -diff linguist-generated
+*.webp          binary
+*.png           binary
+*.woff2         binary

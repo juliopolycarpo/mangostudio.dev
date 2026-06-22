@@ -1,0 +1,72 @@
+---
+import { getLangFromUrl, routes, useContent } from '@/i18n/ui';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const lang = getLangFromUrl(Astro.url);
+useContent(lang);
+const isEn = lang === 'en';
+
+const t = isEn
+  ? {
+      title: 'Page not found — MangoStudio',
+      heading: 'Page not found',
+      body: 'The page you are looking for does not exist or was moved.',
+      home: 'Back home',
+      docs: 'Read the docs',
+    }
+  : {
+      title: 'Página não encontrada — MangoStudio',
+      heading: 'Página não encontrada',
+      body: 'A página que você procura não existe ou foi movida.',
+      home: 'Voltar ao início',
+      docs: 'Ler os docs',
+    };
+---
+
+<BaseLayout page="home" title={t.title}>
+  <section class="nf container">
+    <div class="nf-code mono">404</div>
+    <h1 class="nf-title">{t.heading}</h1>
+    <p class="nf-body">{t.body}</p>
+    <div class="nf-cta">
+      <a class="btn btn-primary btn-lg" href={routes.home(lang)}>{t.home}</a>
+      <a class="btn btn-lg" href={routes.doc(lang, 'quickstart')}>{t.docs}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    text-align: center;
+    padding: 120px 24px 140px;
+  }
+
+  .nf-code {
+    font-size: 64px;
+    font-weight: 600;
+    color: var(--mango);
+    letter-spacing: -0.04em;
+  }
+
+  .nf-title {
+    margin: 8px 0 0;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .nf-body {
+    margin: 12px auto 0;
+    max-width: 420px;
+    font-size: 15px;
+    color: var(--text-2);
+  }
+
+  .nf-cta {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 26px;
+    flex-wrap: wrap;
+  }
+</style>

@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      glob: "*.{ts,tsx,js,jsx,mjs,json,jsonc,css}"
+      run: bunx biome check --write {staged_files}
+      stage_fixed: true
+    dprint:
+      glob: "*.{md,mdx,toml,yml,yaml}"
+      run: bunx dprint fmt {staged_files}
+      stage_fixed: true
+    astro-check:
+      glob: "*.{astro,ts,tsx}"
+      run: bunx astro check
+      skip:
+        - merge
+        - rebase

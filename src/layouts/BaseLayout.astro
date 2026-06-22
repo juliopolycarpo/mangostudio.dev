@@ -1,0 +1,80 @@
+---
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
+import '@/styles/global.css';
+import CommandPalette from '@/components/CommandPalette.astro';
+import Footer from '@/components/Footer.astro';
+import Header from '@/components/Header.astro';
+import Icon from '@/components/Icon.astro';
+import { alternatePath, getLangFromUrl, useContent } from '@/i18n/ui';
+
+interface Props {
+  page: 'home' | 'releases' | 'docs';
+  title?: string;
+  description?: string;
+}
+
+const { page, title, description } = Astro.props;
+
+const lang = getLangFromUrl(Astro.url);
+const c = useContent(lang);
+const pathname = Astro.url.pathname;
+
+const pageTitle = title ?? c.meta.title;
+const pageDesc = description ?? c.meta.description;
+const canonical = new URL(pathname, Astro.site).toString();
+const altPt = new URL(alternatePath(pathname, 'pt'), Astro.site).toString();
+const altEn = new URL(alternatePath(pathname, 'en'), Astro.site).toString();
+---
+
+<!doctype html>
+<html lang={lang} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDesc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="pt" href={altPt} />
+    <link rel="alternate" hreflang="en" href={altEn} />
+    <link rel="alternate" hreflang="x-default" href={altPt} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:url" content={canonical} />
+    <meta name="theme-color" content="#0b0b0d" />
+    <meta name="generator" content={Astro.generator} />
+    {/* No-FOUC theme + JS-enhancement flag; must run before first paint. */}
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem("mango.theme");
+          if (!t) t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {
+          /* keep default dark theme */
+        }
+        document.documentElement.classList.add("js");
+      })();
+    </script>
+  </head>
+  <body>
+    <Header lang={lang} pathname={pathname} content={c} page={page} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} pathname={pathname} content={c} />
+
+    <CommandPalette lang={lang} content={c} />
+
+    <div id="copy-toast" class="copy-toast" role="status" aria-live="polite">
+      <span class="check"><Icon name="check" size={16} /></span>
+      <span>{c.copyToast}</span>
+    </div>
+
+    <script>
+      import '@/scripts/main';
+    </script>
+  </body>
+</html>

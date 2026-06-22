@@ -1,0 +1,117 @@
+---
+import CopyButton from '@/components/CopyButton.astro';
+import { INSTALL_TABS } from '@/data/site';
+import type { SiteContent } from '@/i18n/types';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content: c } = Astro.props;
+const initial = INSTALL_TABS[0];
+---
+
+<div class="install">
+  <div class="terminal-bar">
+    <span class="traffic red"></span>
+    <span class="traffic yellow"></span>
+    <span class="traffic green"></span>
+    <span class="terminal-title">{c.hero.terminalTitle}</span>
+  </div>
+
+  <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.hero.terminalTitle}>
+    {
+      INSTALL_TABS.map((tab, index) => (
+        <button
+          type="button"
+          class:list={['install-tab', { 'is-active': index === 0 }]}
+          role="tab"
+          aria-selected={index === 0 ? 'true' : 'false'}
+          data-channel={tab.id}
+          data-cmd={tab.cmd}
+        >
+          {tab.label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="install-cmd">
+    <code class="install-code"><span class="prompt">$ </span><span id="hero-cmd">{initial.cmd}</span></code>
+    <CopyButton text={initial.cmd} label="Copy" id="hero-copy" />
+  </div>
+</div>
+
+<style>
+  .install {
+    max-width: 640px;
+    margin: 34px auto 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--code-bg);
+    overflow: hidden;
+    box-shadow: 0 30px 70px -28px var(--shadow), 0 0 0 1px var(--hair);
+    text-align: left;
+  }
+
+  .install-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 10px 0;
+    flex-wrap: wrap;
+  }
+
+  .install-tab {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-3);
+    padding: 7px 12px 9px;
+    border-radius: 7px 7px 0 0;
+    font-weight: 500;
+  }
+
+  .install-tab:hover {
+    color: var(--text-2);
+  }
+
+  .install-tab.is-active {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .install-tab.is-active::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--mango);
+  }
+
+  .install-cmd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .install-code {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .prompt {
+    color: var(--mango);
+  }
+</style>

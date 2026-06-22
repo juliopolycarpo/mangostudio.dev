@@ -1,0 +1,176 @@
+---
+import { CONTRIBUTING_URL, GITHUB_URL, ISSUES_URL } from '@/data/site';
+import type { Lang, SiteContent } from '@/i18n/types';
+import { routes } from '@/i18n/ui';
+import LangToggle from './LangToggle.astro';
+import Logo from './Logo.astro';
+
+interface Props {
+  lang: Lang;
+  pathname: string;
+  content: SiteContent;
+}
+
+const { lang, pathname, content: c } = Astro.props;
+
+const product = [
+  { label: c.footer.product.features, href: `${routes.home(lang)}#features` },
+  { label: c.footer.product.releases, href: routes.releases(lang) },
+  { label: c.footer.product.install, href: routes.doc(lang, 'quickstart') },
+];
+const docs = [
+  { label: c.footer.docsLinks.quickstart, href: routes.doc(lang, 'quickstart') },
+  { label: c.footer.docsLinks.cli, href: routes.doc(lang, 'cli') },
+  { label: c.footer.docsLinks.architecture, href: routes.doc(lang, 'continuation') },
+];
+const community = [
+  { label: c.footer.community.github, href: GITHUB_URL },
+  { label: c.footer.community.issues, href: ISSUES_URL },
+  { label: c.footer.community.contribute, href: CONTRIBUTING_URL },
+];
+---
+
+<footer class="site-footer">
+  <div class="footer-grid container">
+    <div>
+      <div class="footer-brand">
+        <Logo size={26} />
+        <span class="footer-brand-name">MangoStudio</span>
+      </div>
+      <p class="footer-tagline">{c.footer.tagline}</p>
+      <div class="footer-domain mono">mangostudio.dev</div>
+    </div>
+
+    <div>
+      <div class="footer-col-title">{c.footer.productTitle}</div>
+      <div class="footer-links">
+        {product.map((link) => <a href={link.href}>{link.label}</a>)}
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title">{c.footer.docsTitle}</div>
+      <div class="footer-links">
+        {docs.map((link) => <a href={link.href}>{link.label}</a>)}
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title">{c.footer.communityTitle}</div>
+      <div class="footer-links">
+        {community.map((link) => <a href={link.href} target="_blank" rel="noopener">{link.label}</a>)}
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom container">
+    <span class="footer-copy">{c.footer.copyright}</span>
+    <div class="footer-bottom-right">
+      <span class="footer-made">{c.footer.madeWith}</span>
+      <LangToggle lang={lang} pathname={pathname} />
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .footer-grid {
+    padding: 54px 24px 30px;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 32px;
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-brand-name {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .footer-tagline {
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: var(--text-3);
+    max-width: 260px;
+    line-height: 1.6;
+  }
+
+  .footer-domain {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .footer-col-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    margin-bottom: 13px;
+  }
+
+  .footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .footer-links a {
+    font-size: 13.5px;
+    color: var(--text-2);
+    text-decoration: none;
+  }
+
+  .footer-links a:hover {
+    color: var(--text);
+  }
+
+  .footer-bottom {
+    padding: 18px 24px 30px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .footer-copy {
+    font-size: 12.5px;
+    color: var(--text-3);
+  }
+
+  .footer-bottom-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .footer-made {
+    font-size: 12.5px;
+    color: var(--text-3);
+  }
+
+  @media (max-width: 860px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,331 @@
+---
+import CopyButton from '@/components/CopyButton.astro';
+import { VERSION } from '@/data/site';
+import type { ReleaseType, SiteContent } from '@/i18n/types';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content: c } = Astro.props;
+const r = c.releases;
+
+const badge: Record<ReleaseType, { fg: string; bg: string }> = {
+  feat: { fg: 'var(--lime)', bg: 'color-mix(in srgb, var(--lime) 15%, transparent)' },
+  fix: { fg: 'var(--mango)', bg: 'color-mix(in srgb, var(--mango) 15%, transparent)' },
+  perf: {
+    fg: 'var(--mango-light)',
+    bg: 'color-mix(in srgb, var(--mango-light) 16%, transparent)',
+  },
+  refactor: { fg: 'var(--text-2)', bg: 'color-mix(in srgb, var(--text-2) 16%, transparent)' },
+};
+---
+
+<section class="releases">
+  <div class="eyebrow">{r.eyebrow}</div>
+  <h1 class="rel-title">{r.title}</h1>
+  <p class="rel-intro">
+    {r.introBefore}<code class="mono rel-code">CHANGELOG.md</code>{r.introAfter}
+  </p>
+
+  <div class="rel-latest">
+    <div class="rel-latest-main">
+      <div class="rel-ver-row">
+        <span class="rel-ver">{VERSION}</span>
+        <span class="rel-badge-latest mono">{r.latestBadge}</span>
+      </div>
+      <div class="rel-date mono">{r.latestDate}</div>
+    </div>
+    <div class="rel-install">
+      <code class="mono rel-install-code"><span class="prompt">$ </span>{r.installCmd}</code>
+      <CopyButton text={r.installCmd} label="Copy" size="sm" />
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-line" aria-hidden="true"></div>
+
+    <div class="tl-item tl-item-unreleased">
+      <span class="tl-dot tl-dot-hollow" aria-hidden="true"></span>
+      <div class="tl-head">
+        <span class="tl-unreleased">{r.unreleasedTitle}</span>
+        <span class="tl-todo mono">{r.unreleasedBadge}</span>
+      </div>
+      <p class="tl-unreleased-desc">{r.unreleasedDesc}</p>
+    </div>
+
+    <div class="tl-item">
+      <span class="tl-dot tl-dot-active" aria-hidden="true"></span>
+      <div class="tl-head">
+        <h2 class="tl-ver">{VERSION}</h2>
+        <span class="tl-date mono">{r.versionDate}</span>
+      </div>
+
+      {
+        r.groups.map((group) => (
+          <div class="rel-group">
+            <div class="rel-group-head">
+              <span class="rel-emoji">{group.emoji}</span>
+              <h3 class="rel-group-title">{group.title}</h3>
+              <span class="rel-count mono">{group.count}</span>
+            </div>
+            <div class="rel-items">
+              {group.items.map((item) => (
+                <div class="rel-item">
+                  <span
+                    class="rel-type mono"
+                    style={`color:${badge[item.type].fg};background:${badge[item.type].bg}`}
+                  >
+                    {item.type}
+                  </span>
+                  <span class="rel-text">
+                    <span class="rel-scope mono">{item.scope}</span> {item.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .releases {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 64px 24px 88px;
+  }
+
+  .rel-title {
+    margin: 10px 0 0;
+    font-size: clamp(34px, 8vw, 46px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .rel-intro {
+    margin: 14px 0 0;
+    font-size: 16px;
+    color: var(--text-2);
+    max-width: 560px;
+  }
+
+  .rel-code {
+    font-size: 13px;
+    color: var(--mango);
+  }
+
+  .rel-latest {
+    margin-top: 34px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    padding: 26px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    box-shadow: 0 0 0 1px var(--hair), 0 18px 50px -32px var(--shadow);
+  }
+
+  .rel-latest-main {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .rel-ver-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rel-ver {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .rel-badge-latest {
+    font-size: 11px;
+    color: var(--lime);
+    border: 1px solid color-mix(in srgb, var(--lime) 35%, transparent);
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+
+  .rel-date {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-3);
+  }
+
+  .rel-install {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+  }
+
+  .rel-install-code {
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .prompt {
+    color: var(--mango);
+  }
+
+  .timeline {
+    margin-top: 40px;
+    position: relative;
+    padding-left: 30px;
+  }
+
+  .tl-line {
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .tl-item {
+    position: relative;
+  }
+
+  .tl-item-unreleased {
+    margin-bottom: 34px;
+  }
+
+  .tl-dot {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  .tl-dot-hollow {
+    left: -30px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    background: var(--bg);
+    border: 2px solid var(--text-3);
+  }
+
+  .tl-dot-active {
+    left: -31px;
+    top: 1px;
+    width: 14px;
+    height: 14px;
+    background: var(--mango);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--mango) 22%, transparent);
+  }
+
+  .tl-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .tl-unreleased {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  .tl-todo {
+    font-size: 11px;
+    color: var(--mango);
+    border: 1px solid color-mix(in srgb, var(--mango) 35%, transparent);
+    border-radius: 5px;
+    padding: 2px 7px;
+  }
+
+  .tl-unreleased-desc {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    color: var(--text-3);
+  }
+
+  .tl-ver {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .tl-date {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .rel-group {
+    margin-top: 22px;
+  }
+
+  .rel-group-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 12px;
+  }
+
+  .rel-emoji {
+    font-size: 14px;
+  }
+
+  .rel-group-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .rel-count {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .rel-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rel-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 11px 14px;
+  }
+
+  .rel-type {
+    flex-shrink: 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-radius: 5px;
+    padding: 3px 8px;
+    margin-top: 1px;
+  }
+
+  .rel-text {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-2);
+  }
+
+  .rel-scope {
+    color: var(--text);
+    font-size: 12px;
+  }
+</style>

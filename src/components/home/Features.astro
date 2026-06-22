@@ -1,0 +1,89 @@
+---
+import Icon from '@/components/Icon.astro';
+import type { SiteContent } from '@/i18n/types';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content: c } = Astro.props;
+---
+
+<section id="features" class="features container">
+  <div class="features-head">
+    <div class="eyebrow">{c.features.eyebrow}</div>
+    <h2 class="section-title">{c.features.title}</h2>
+  </div>
+
+  <div class="features-grid">
+    {
+      c.features.items.map((feature) => (
+        <div class="card feature">
+          <div class="feature-icon">
+            <Icon name={feature.icon} size={22} />
+          </div>
+          <h3 class="feature-title">{feature.title}</h3>
+          <p class="feature-desc">{feature.desc}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .features {
+    padding: 24px 24px 72px;
+  }
+
+  .features-head {
+    margin-bottom: 34px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  .feature {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--mango) 14%, transparent);
+    color: var(--mango);
+  }
+
+  .feature-title {
+    margin: 0;
+    font-size: 16.5px;
+    font-weight: 600;
+  }
+
+  .feature-desc {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  @media (max-width: 860px) {
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

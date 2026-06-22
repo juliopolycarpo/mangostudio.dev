@@ -1,0 +1,19 @@
+{
+  // Cloudflare Workers static-assets deployment for mangostudio.dev.
+  // This is an assets-only Worker: there is no `main` script and no asset `binding`,
+  // so Cloudflare serves the prebuilt Astro output in ./dist directly from its edge.
+  // Docs: https://developers.cloudflare.com/workers/static-assets/
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mangostudio-dev",
+  "compatibility_date": "2026-06-22",
+  "assets": {
+    "directory": "./dist",
+    // Astro emits <route>/index.html; serve both /path and /path/ consistently.
+    "html_handling": "auto-trailing-slash",
+    // Serve dist/404.html (built from src/pages/404.astro) for unknown routes.
+    "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

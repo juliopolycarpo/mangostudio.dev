@@ -1,0 +1,23 @@
+# ─── Dependencies and build artifacts ─── #
+node_modules/
+dist/
+.astro/
+
+# ─── Cloudflare / Wrangler ─── #
+.wrangler/
+.wrangler-dry/
+.dev.vars
+.dev.vars.*
+
+# ─── Env and secrets ─── #
+.env
+.env.*
+!.env.example
+
+# ─── OS and logs ─── #
+.DS_Store
+*.log
+
+# ─── Caches ─── #
+**/.tsbuildinfo
+**/node_modules/.cache/

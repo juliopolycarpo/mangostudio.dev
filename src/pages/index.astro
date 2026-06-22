@@ -1,0 +1,12 @@
+---
+import Home from '@/components/home/Home.astro';
+import { getLangFromUrl, useContent } from '@/i18n/ui';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const content = useContent(lang);
+---
+
+<BaseLayout page="home">
+  <Home lang={lang} content={content} />
+</BaseLayout>

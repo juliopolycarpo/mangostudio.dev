@@ -1,0 +1,115 @@
+---
+import CopyButton from '@/components/CopyButton.astro';
+import type { SiteContent } from '@/i18n/types';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content: c } = Astro.props;
+---
+
+<section class="qs container">
+  <div class="qs-head">
+    <div class="eyebrow">{c.quickstart.eyebrow}</div>
+    <h2 class="section-title">{c.quickstart.title}</h2>
+  </div>
+
+  <div class="qs-grid">
+    {
+      c.quickstart.steps.map((step) => (
+        <div class="card qs-card">
+          <div class="qs-card-head">
+            <span class="qs-num mono">{step.n}</span>
+            <h3 class="qs-card-title">{step.title}</h3>
+          </div>
+          <p class="qs-desc">{step.desc}</p>
+          <div class="qs-cmd">
+            <code class="qs-code mono">{step.cmd}</code>
+            <CopyButton text={step.cmd} label="Copy" size="sm" />
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .qs {
+    padding: 24px 24px 72px;
+  }
+
+  .qs-head {
+    text-align: center;
+    margin-bottom: 38px;
+  }
+
+  .qs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  .qs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .qs-card-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .qs-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--mango) 16%, transparent);
+    color: var(--mango);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .qs-card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .qs-desc {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  .qs-cmd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 11px;
+  }
+
+  .qs-code {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 860px) {
+    .qs-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

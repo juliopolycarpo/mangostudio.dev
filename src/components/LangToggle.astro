@@ -1,0 +1,30 @@
+---
+import type { Lang } from '@/i18n/types';
+import { alternatePath } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  pathname: string;
+}
+
+const { lang, pathname } = Astro.props;
+const options: { code: Lang; label: string }[] = [
+  { code: 'pt', label: 'PT' },
+  { code: 'en', label: 'EN' },
+];
+---
+
+<div class="lang-toggle" role="group" aria-label="Language">
+  {
+    options.map((option) => (
+      <a
+        href={alternatePath(pathname, option.code)}
+        hreflang={option.code}
+        class:list={['lang-opt', { 'is-active': lang === option.code }]}
+        aria-current={lang === option.code ? 'true' : undefined}
+      >
+        {option.label}
+      </a>
+    ))
+  }
+</div>

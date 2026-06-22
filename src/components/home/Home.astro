@@ -1,0 +1,27 @@
+---
+import type { Lang, SiteContent } from '@/i18n/types';
+import Channels from './Channels.astro';
+import Comparison from './Comparison.astro';
+import Contribute from './Contribute.astro';
+import Features from './Features.astro';
+import Hero from './Hero.astro';
+import Providers from './Providers.astro';
+import Quickstart from './Quickstart.astro';
+import TerminalDemo from './TerminalDemo.astro';
+
+interface Props {
+  lang: Lang;
+  content: SiteContent;
+}
+
+const { lang, content } = Astro.props;
+---
+
+<Hero lang={lang} content={content} />
+<TerminalDemo content={content} />
+<Quickstart content={content} />
+<Features content={content} />
+<Providers content={content} />
+<Comparison content={content} />
+<Channels content={content} />
+<Contribute lang={lang} content={content} />

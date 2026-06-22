@@ -1,0 +1,24 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  text: string;
+  label: string;
+  size?: 'sm' | 'md';
+  id?: string;
+  class?: string;
+}
+
+const { text, label, size = 'md', id, class: className } = Astro.props;
+const iconSize = size === 'sm' ? 13 : 15;
+---
+
+<button
+  type="button"
+  class:list={['icon-btn', 'copy-btn', `copy-btn-${size}`, className]}
+  data-copy={text}
+  aria-label={label}
+  id={id}
+>
+  <Icon name="copy" size={iconSize} />
+</button>

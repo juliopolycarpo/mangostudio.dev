@@ -1,0 +1,13 @@
+---
+import ReleaseTimeline from '@/components/releases/ReleaseTimeline.astro';
+import { getLangFromUrl, useContent } from '@/i18n/ui';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const content = useContent(lang);
+const title = `${content.releases.title} — MangoStudio`;
+---
+
+<BaseLayout page="releases" title={title}>
+  <ReleaseTimeline content={content} />
+</BaseLayout>

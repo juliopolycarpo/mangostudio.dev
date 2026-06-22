@@ -1,0 +1,103 @@
+---
+export type IconName =
+  | 'search'
+  | 'sun'
+  | 'moon'
+  | 'github'
+  | 'copy'
+  | 'arrow'
+  | 'check'
+  | 'x'
+  | 'info'
+  | 'chat'
+  | 'image'
+  | 'attachment'
+  | 'tools'
+  | 'keys'
+  | 'database';
+
+interface IconDef {
+  mode: 'stroke' | 'fill';
+  sw?: number;
+  inner: string;
+}
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 16, class: className } = Astro.props;
+
+const icons: Record<IconName, IconDef> = {
+  search: { mode: 'stroke', inner: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>' },
+  sun: {
+    mode: 'stroke',
+    inner:
+      '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  },
+  moon: { mode: 'stroke', inner: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>' },
+  github: {
+    mode: 'fill',
+    inner:
+      '<path d="M12 1.5a10.5 10.5 0 0 0-3.32 20.46c.53.1.72-.23.72-.5l-.01-1.8c-2.92.63-3.54-1.4-3.54-1.4-.48-1.22-1.17-1.55-1.17-1.55-.96-.65.07-.64.07-.64 1.06.08 1.62 1.09 1.62 1.09.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.67-1.4-2.33-.27-4.78-1.17-4.78-5.2 0-1.15.4-2.09 1.08-2.83-.1-.27-.47-1.34.1-2.8 0 0 .89-.28 2.9 1.08a10 10 0 0 1 5.28 0c2-1.36 2.9-1.08 2.9-1.08.57 1.46.2 2.53.1 2.8.68.74 1.07 1.68 1.07 2.83 0 4.04-2.45 4.93-4.79 5.19.38.33.71.97.71 1.96l-.01 2.9c0 .28.19.61.73.5A10.5 10.5 0 0 0 12 1.5Z"/>',
+  },
+  copy: {
+    mode: 'stroke',
+    inner: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  },
+  arrow: { mode: 'stroke', sw: 2.2, inner: '<path d="M5 12h14M13 6l6 6-6 6"/>' },
+  check: { mode: 'stroke', sw: 2.4, inner: '<path d="M20 6 9 17l-5-5"/>' },
+  x: { mode: 'stroke', inner: '<path d="M18 6 6 18M6 6l12 12"/>' },
+  info: {
+    mode: 'stroke',
+    inner: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>',
+  },
+  chat: {
+    mode: 'stroke',
+    inner: '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-4.1A8.4 8.4 0 1 1 21 11.5Z"/>',
+  },
+  image: {
+    mode: 'stroke',
+    inner:
+      '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+  },
+  attachment: {
+    mode: 'stroke',
+    inner:
+      '<path d="M21.4 11.1 12.3 20a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.4a1.6 1.6 0 0 1-2.3-2.3l7.8-7.8"/>',
+  },
+  tools: {
+    mode: 'stroke',
+    inner:
+      '<path d="M14.7 6.3a4 4 0 0 1 5.3 5.3l-1.4-1.4-2.5 2.5 1.4 1.4-7.6 7.6a2 2 0 0 1-2.8-2.8l7.6-7.6 1.4 1.4 2.5-2.5-1.4-1.4Z"/>',
+  },
+  keys: {
+    mode: 'stroke',
+    inner:
+      '<circle cx="8" cy="15" r="4"/><path d="m10.9 12.1 8-8 2 2-1.5 1.5 1.5 1.5-2 2-1.5-1.5-1.5 1.5"/>',
+  },
+  database: {
+    mode: 'stroke',
+    inner:
+      '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  },
+};
+
+const def = icons[name];
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill={def.mode === 'fill' ? 'currentColor' : 'none'}
+  stroke={def.mode === 'stroke' ? 'currentColor' : 'none'}
+  stroke-width={def.sw ?? 2}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class={className}
+  aria-hidden="true"
+  set:html={def.inner}
+></svg>

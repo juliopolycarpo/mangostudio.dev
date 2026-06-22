@@ -1,0 +1,14 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label={label}>
+  <Icon name="sun" size={17} class="icon-dark" />
+  <Icon name="moon" size={17} class="icon-light" />
+</button>

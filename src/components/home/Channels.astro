@@ -1,0 +1,97 @@
+---
+import CopyButton from '@/components/CopyButton.astro';
+import { CHANNELS } from '@/data/site';
+import type { SiteContent } from '@/i18n/types';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content: c } = Astro.props;
+---
+
+<section class="channels container">
+  <div class="channels-head">
+    <div class="eyebrow">{c.channels.eyebrow}</div>
+    <h2 class="section-title">{c.channels.title}</h2>
+    <p class="channels-note">
+      {c.channels.noteBefore}<code class="mono note-code">SHA256SUMS</code>{c.channels.noteAfter}
+    </p>
+  </div>
+
+  <div class="channels-grid">
+    {
+      CHANNELS.map((channel) => (
+        <div class="channel">
+          <span class="channel-label mono">{channel.label}</span>
+          <code class="channel-cmd mono">{channel.cmd}</code>
+          <CopyButton text={channel.cmd} label="Copy" size="sm" />
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .channels {
+    padding: 24px 24px 72px;
+  }
+
+  .channels-head {
+    margin-bottom: 30px;
+  }
+
+  .channels-note {
+    margin: 12px 0 0;
+    font-size: 15px;
+    color: var(--text-2);
+    max-width: 560px;
+  }
+
+  .note-code {
+    font-size: 13px;
+    color: var(--mango);
+  }
+
+  .channels-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .channel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+
+  .channel-label {
+    flex-shrink: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--mango);
+    background: color-mix(in srgb, var(--mango) 12%, transparent);
+    border-radius: 7px;
+    padding: 5px 10px;
+    min-width: 72px;
+    text-align: center;
+  }
+
+  .channel-cmd {
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--text-2);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 760px) {
+    .channels-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

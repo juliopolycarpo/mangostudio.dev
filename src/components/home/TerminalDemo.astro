@@ -1,0 +1,226 @@
+---
+import Logo from '@/components/Logo.astro';
+import type { SiteContent } from '@/i18n/types';
+
+interface Props {
+  content: SiteContent;
+}
+
+const { content: c } = Astro.props;
+const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--lime)'];
+---
+
+<section class="demo-section container">
+  <div class="demo-grid" id="terminal-demo">
+    <div class="terminal demo-term">
+      <div class="terminal-bar">
+        <span class="traffic red"></span>
+        <span class="traffic yellow"></span>
+        <span class="traffic green"></span>
+        <span class="terminal-title">{c.demo.tab}</span>
+      </div>
+      <div class="demo-term-body">
+        <div>
+          <span class="arrow">➜</span>{' '}<span class="prompt">$</span>{' '}
+          <span data-typed data-cmd="mangostudio serve">mangostudio serve</span><span
+            class="term-cursor"></span>
+        </div>
+        {
+          c.terminalLines.map((line, index) => (
+            <div class="term-line" data-term-line style={`color:${lineColors[index] ?? 'var(--text-3)'}`}>
+              {line}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="demo-browser">
+      <div class="browser-bar">
+        <span class="bdot"></span>
+        <span class="bdot"></span>
+        <span class="bspace"></span>
+        <span class="burl mono">localhost:3001</span>
+        <span class="bspace"></span>
+      </div>
+      <div class="browser-body">
+        <div class="chat-head">
+          <Logo size={20} />
+          <span class="chat-name">MangoStudio</span>
+          <span class="bspace"></span>
+          <span class="chat-online mono">{c.demo.online}</span>
+        </div>
+        <div class="bubble bubble-user">{c.demo.userMsg}</div>
+        <div class="bubble bubble-assistant">
+          <span>{c.demo.assistant}</span>
+          <div class="gen-image">
+            <Logo size={40} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="demo-caption">{c.demo.caption}</p>
+</section>
+
+<style>
+  .demo-section {
+    padding: 40px 24px 72px;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 28px;
+    align-items: stretch;
+  }
+
+  .demo-term {
+    box-shadow: 0 24px 60px -30px var(--shadow);
+  }
+
+  .demo-term-body {
+    padding: 18px 18px 22px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.9;
+    min-height: 230px;
+  }
+
+  .arrow {
+    color: var(--lime);
+  }
+
+  .prompt {
+    color: var(--mango);
+  }
+
+  .term-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--mango);
+    vertical-align: -2px;
+    animation: blink 1s step-end infinite;
+  }
+
+  .demo-browser {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .browser-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .bdot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .bspace {
+    flex: 1;
+  }
+
+  .burl {
+    font-size: 11px;
+    color: var(--text-3);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 10px;
+  }
+
+  .browser-body {
+    flex: 1;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chat-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .chat-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .chat-online {
+    font-size: 10.5px;
+    color: var(--lime);
+    border: 1px solid color-mix(in srgb, var(--lime) 40%, transparent);
+    border-radius: 5px;
+    padding: 2px 7px;
+  }
+
+  .bubble {
+    font-size: 12.5px;
+    padding: 9px 13px;
+    border-radius: 12px;
+  }
+
+  .bubble-user {
+    align-self: flex-end;
+    max-width: 78%;
+    background: var(--mango);
+    color: #1a1207;
+    border-radius: 12px 12px 4px 12px;
+  }
+
+  .bubble-assistant {
+    align-self: flex-start;
+    max-width: 86%;
+    background: var(--elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px 12px 12px 4px;
+    color: var(--text-2);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .gen-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--mango-light) 50%, var(--surface)),
+      color-mix(in srgb, var(--mango-deep) 45%, var(--surface))
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  }
+
+  .demo-caption {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 13.5px;
+    color: var(--text-3);
+  }
+
+  @media (max-width: 860px) {
+    .demo-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

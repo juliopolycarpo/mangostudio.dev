@@ -1,0 +1,107 @@
+---
+import { GITHUB_URL } from '@/data/site';
+import type { Lang, SiteContent } from '@/i18n/types';
+import { routes } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  content: SiteContent;
+}
+
+const { lang, content: c } = Astro.props;
+---
+
+<section class="contribute container">
+  <div class="contribute-card">
+    <div class="contribute-glow" aria-hidden="true"></div>
+    <div class="contribute-inner">
+      <span class="contribute-badge mono">{c.contribute.badge}</span>
+      <h2 class="contribute-title">{c.contribute.title}</h2>
+      <p class="contribute-desc">{c.contribute.desc}</p>
+      <div class="contribute-cta">
+        <a class="btn btn-primary" href={GITHUB_URL} target="_blank" rel="noopener">
+          {c.contribute.ctaStar}
+        </a>
+        <a class="btn" href={routes.doc(lang, 'contributing')}>{c.contribute.ctaGuide}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contribute {
+    padding: 24px 24px 88px;
+  }
+
+  .contribute-card {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    padding: 48px 40px;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .contribute-glow {
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    height: 300px;
+    max-width: 100%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--mango) 26%, transparent),
+      transparent 70%
+    );
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  .contribute-inner {
+    position: relative;
+  }
+
+  .contribute-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--lime);
+    border: 1px solid color-mix(in srgb, var(--lime) 35%, transparent);
+    border-radius: 999px;
+    padding: 5px 13px;
+  }
+
+  .contribute-title {
+    margin: 20px auto 0;
+    max-width: 540px;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .contribute-desc {
+    margin: 14px auto 0;
+    max-width: 480px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  .contribute-cta {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 26px;
+    flex-wrap: wrap;
+  }
+
+  .contribute-cta .btn {
+    padding: 11px 20px;
+    font-size: 14.5px;
+  }
+</style>
