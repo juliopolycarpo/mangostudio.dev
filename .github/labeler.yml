@@ -44,6 +44,8 @@
           - "tsconfig.json"
           - ".github/labels.json"
           - ".github/labeler.yml"
+          - ".github/workflows/**"
+          - ".github/dependabot.yml"
 
 "type: test":
   - changed-files:

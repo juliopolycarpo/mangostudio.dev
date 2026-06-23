@@ -34,13 +34,28 @@ run('extractLoadedExternalUrls reports only externally loaded assets', () => {
   ]);
 });
 
+run('extractLoadedExternalUrls reports remote srcset candidates', () => {
+  const html = `
+    <img src="/_astro/logo.png" srcset="/_astro/logo-1x.png 1x, https://cdn.example.com/logo-2x.png 2x">
+    <source srcset="//cdn.example.com/wide.avif 1280w" type="image/avif">
+    <link rel="preload" as="image" imagesrcset="https://cdn.example.com/hero.webp 2x">
+  `;
+
+  deepStrictEqual(extractLoadedExternalUrls(html), [
+    '//cdn.example.com/wide.avif',
+    'https://cdn.example.com/hero.webp',
+    'https://cdn.example.com/logo-2x.png',
+  ]);
+});
+
 run('extractRemoteCssUrls reports remote CSS url() assets', () => {
   deepStrictEqual(
     extractRemoteCssUrls(`
       .local { background: url("/local.svg"); }
       .remote { background: url("https://cdn.example.com/asset.svg"); }
+      .proto { background: url(//cdn.example.com/proto.svg); }
     `),
-    ['https://cdn.example.com/asset.svg']
+    ['//cdn.example.com/proto.svg', 'https://cdn.example.com/asset.svg']
   );
 });
 

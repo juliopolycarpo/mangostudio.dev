@@ -146,6 +146,7 @@ export function extractLoadedExternalUrls(html: string): string[] {
 
       if (loadedRel) {
         addRemoteUrl(urls, attrs.get('href'));
+        addSrcsetUrls(urls, attrs.get('imagesrcset'));
       }
 
       tagMatch = tagPattern.exec(html);
@@ -154,6 +155,7 @@ export function extractLoadedExternalUrls(html: string): string[] {
 
     addRemoteUrl(urls, attrs.get('src'));
     addRemoteUrl(urls, attrs.get('poster'));
+    addSrcsetUrls(urls, attrs.get('srcset'));
     tagMatch = tagPattern.exec(html);
   }
 
@@ -162,7 +164,7 @@ export function extractLoadedExternalUrls(html: string): string[] {
 
 export function extractRemoteCssUrls(css: string): string[] {
   const urls = new Set<string>();
-  const urlPattern = /url\(\s*(['"]?)(https?:\/\/[^'")]+)\1\s*\)/gi;
+  const urlPattern = /url\(\s*(['"]?)((?:https?:)?\/\/[^'")]+)\1\s*\)/gi;
   let match = urlPattern.exec(css);
 
   while (match !== null) {
@@ -240,7 +242,9 @@ async function auditWrangler(repoRoot: string): Promise<AuditSection> {
 async function auditWorkflows(repoRoot: string): Promise<AuditSection> {
   const errors: string[] = [];
   const workflowsDir = join(repoRoot, '.github', 'workflows');
-  const workflowFiles = (await walkFiles(workflowsDir)).filter((file) => file.endsWith('.yml'));
+  const workflowFiles = (await walkFiles(workflowsDir)).filter(
+    (file) => file.endsWith('.yml') || file.endsWith('.yaml')
+  );
   const deployPath = join(workflowsDir, 'deploy.yml');
   const deployText = await readFileText(deployPath, errors);
 
@@ -502,6 +506,16 @@ function addRemoteUrl(urls: Set<string>, value: string | undefined): void {
 
   if (value.startsWith('//') || /^https?:\/\//i.test(value)) {
     urls.add(value);
+  }
+}
+
+function addSrcsetUrls(urls: Set<string>, value: string | undefined): void {
+  if (!value) {
+    return;
+  }
+
+  for (const candidate of value.split(',')) {
+    addRemoteUrl(urls, candidate.trim().split(/\s+/)[0]);
   }
 }
 
