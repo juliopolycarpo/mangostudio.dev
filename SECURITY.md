@@ -41,7 +41,8 @@ bun run qa
 Security-relevant automation includes:
 
 - CodeQL with `security-extended` queries for JavaScript/TypeScript.
-- Dependency Review blocking newly introduced moderate-or-worse vulnerabilities.
+- Dependency Review blocking newly introduced moderate-or-worse vulnerabilities. This requires
+  GitHub Dependency graph to stay enabled for the repository.
 - Static-output audit for Cloudflare deploy posture and public asset integrity.
 - Dependabot for npm and GitHub Actions updates.
 
