@@ -32,6 +32,9 @@ jobs:
           - language: javascript-typescript
             build-mode: none
             queries: security-extended
+          - language: actions
+            build-mode: none
+            queries: security-extended
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
