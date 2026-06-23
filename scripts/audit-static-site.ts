@@ -1,0 +1,570 @@
+import { readdir, readFile, stat } from 'node:fs/promises';
+import { basename, extname, join, relative } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+interface AuditSection {
+  name: string;
+  errors: string[];
+}
+
+interface LabelDefinition {
+  name: string;
+  color: string;
+  description: string;
+}
+
+const DIST_EXPECTED_FILES = [
+  'index.html',
+  'en/index.html',
+  'releases/index.html',
+  'en/releases/index.html',
+  'docs/quickstart/index.html',
+  'en/docs/quickstart/index.html',
+  '404.html',
+  'sitemap-index.xml',
+];
+
+const DISALLOWED_WRANGLER_KEYS = [
+  'account_id',
+  'ai',
+  'analytics_engine_datasets',
+  'build',
+  'd1_databases',
+  'durable_objects',
+  'hyperdrive',
+  'kv_namespaces',
+  'main',
+  'mtls_certificates',
+  'pipelines',
+  'placement',
+  'queues',
+  'r2_buckets',
+  'route',
+  'routes',
+  'secrets_store_secrets',
+  'services',
+  'tail_consumers',
+  'triggers',
+  'unsafe',
+  'vars',
+  'vectorize',
+  'workflows',
+];
+
+const TEXT_EXTENSIONS = new Set([
+  '.css',
+  '.html',
+  '.js',
+  '.json',
+  '.mjs',
+  '.sh',
+  '.svg',
+  '.txt',
+  '.webmanifest',
+  '.xml',
+]);
+
+const SECRET_PATTERNS = [
+  { label: 'Cloudflare API token variable', pattern: /\bCLOUDFLARE_API_TOKEN\b/ },
+  { label: 'Cloudflare account id variable', pattern: /\bCLOUDFLARE_ACCOUNT_ID\b/ },
+  { label: 'private key block', pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
+  { label: 'GitHub token-like value', pattern: /\bgh[pousr]_[A-Za-z0-9_]{30,}\b/ },
+];
+
+export function stripJsonComments(input: string): string {
+  let output = '';
+  let inString = false;
+  let stringQuote = '';
+  let escaped = false;
+
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index] ?? '';
+    const next = input[index + 1] ?? '';
+
+    if (inString) {
+      output += char;
+
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === stringQuote) {
+        inString = false;
+        stringQuote = '';
+      }
+
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      inString = true;
+      stringQuote = char;
+      output += char;
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      while (index < input.length && input[index] !== '\n') {
+        index += 1;
+      }
+      output += '\n';
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      index += 2;
+      while (index < input.length - 1 && !(input[index] === '*' && input[index + 1] === '/')) {
+        index += 1;
+      }
+      if (index < input.length - 1) {
+        index += 1;
+      }
+      output += ' ';
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output;
+}
+
+export function extractLoadedExternalUrls(html: string): string[] {
+  const urls = new Set<string>();
+  const tagPattern = /<\s*(script|iframe|img|source|video|audio|link)\b[^>]*>/gi;
+  let tagMatch = tagPattern.exec(html);
+
+  while (tagMatch !== null) {
+    const tag = tagMatch[0] ?? '';
+    const tagName = (tagMatch[1] ?? '').toLowerCase();
+    const attrs = parseAttributes(tag);
+
+    if (tagName === 'link') {
+      const rel = attrs.get('rel')?.toLowerCase() ?? '';
+      const loadedRel =
+        /\b(stylesheet|preload|modulepreload|icon|manifest|apple-touch-icon)\b/.test(rel);
+
+      if (loadedRel) {
+        addRemoteUrl(urls, attrs.get('href'));
+      }
+
+      tagMatch = tagPattern.exec(html);
+      continue;
+    }
+
+    addRemoteUrl(urls, attrs.get('src'));
+    addRemoteUrl(urls, attrs.get('poster'));
+    tagMatch = tagPattern.exec(html);
+  }
+
+  return [...urls].sort();
+}
+
+export function extractRemoteCssUrls(css: string): string[] {
+  const urls = new Set<string>();
+  const urlPattern = /url\(\s*(['"]?)(https?:\/\/[^'")]+)\1\s*\)/gi;
+  let match = urlPattern.exec(css);
+
+  while (match !== null) {
+    const url = match[2];
+
+    if (url !== undefined) {
+      urls.add(url);
+    }
+
+    match = urlPattern.exec(css);
+  }
+
+  return [...urls].sort();
+}
+
+async function runAudit(repoRoot: string): Promise<AuditSection[]> {
+  const sections = [
+    await auditWrangler(repoRoot),
+    await auditWorkflows(repoRoot),
+    await auditInstallEndpoint(repoRoot),
+    await auditBuiltOutput(repoRoot),
+    await auditLabels(repoRoot),
+  ];
+
+  return sections;
+}
+
+async function auditWrangler(repoRoot: string): Promise<AuditSection> {
+  const errors: string[] = [];
+  const configPath = join(repoRoot, 'wrangler.jsonc');
+  const config = await readJsonc(configPath, errors);
+
+  if (!config) {
+    return { name: 'Wrangler static-assets config', errors };
+  }
+
+  const assets = config.assets;
+
+  if (!isRecord(assets)) {
+    errors.push('wrangler.jsonc must define an assets object.');
+  } else {
+    assertEquals(
+      errors,
+      assets.directory,
+      './dist',
+      'wrangler.jsonc assets.directory must stay ./dist.'
+    );
+    assertEquals(
+      errors,
+      assets.html_handling,
+      'auto-trailing-slash',
+      'wrangler.jsonc assets.html_handling must stay auto-trailing-slash.'
+    );
+    assertEquals(
+      errors,
+      assets.not_found_handling,
+      '404-page',
+      'wrangler.jsonc assets.not_found_handling must stay 404-page.'
+    );
+
+    if ('binding' in assets) {
+      errors.push('wrangler.jsonc assets.binding must stay unset for direct static serving.');
+    }
+  }
+
+  for (const key of DISALLOWED_WRANGLER_KEYS) {
+    if (key in config) {
+      errors.push(`wrangler.jsonc must not define ${key}; this site is assets-only.`);
+    }
+  }
+
+  return { name: 'Wrangler static-assets config', errors };
+}
+
+async function auditWorkflows(repoRoot: string): Promise<AuditSection> {
+  const errors: string[] = [];
+  const workflowsDir = join(repoRoot, '.github', 'workflows');
+  const workflowFiles = (await walkFiles(workflowsDir)).filter((file) => file.endsWith('.yml'));
+  const deployPath = join(workflowsDir, 'deploy.yml');
+  const deployText = await readFileText(deployPath, errors);
+
+  for (const file of workflowFiles) {
+    const relativePath = toPosix(relative(repoRoot, file));
+    const text = await readFile(file, 'utf8');
+
+    if (file !== deployPath && /\bCLOUDFLARE_(API_TOKEN|ACCOUNT_ID)\b/.test(text)) {
+      errors.push(`${relativePath} must not reference Cloudflare deploy credentials.`);
+    }
+
+    if (file !== deployPath && /cloudflare\/wrangler-action/i.test(text)) {
+      errors.push(`${relativePath} must not use wrangler-action outside the deploy workflow.`);
+    }
+  }
+
+  if (deployText) {
+    if (/^\s*pull_request:/m.test(deployText)) {
+      errors.push('deploy.yml must not run on pull_request events.');
+    }
+
+    if (!/branches:\s*\[main\]/.test(deployText)) {
+      errors.push('deploy.yml must restrict automatic deploys to main.');
+    }
+
+    if (!/environment:\s*\n\s*name:\s*production/m.test(deployText)) {
+      errors.push('deploy.yml must deploy through the protected production environment.');
+    }
+
+    if (!deployText.includes('secrets.CLOUDFLARE_API_TOKEN')) {
+      errors.push('deploy.yml must read CLOUDFLARE_API_TOKEN only from GitHub secrets.');
+    }
+
+    if (!deployText.includes('secrets.CLOUDFLARE_ACCOUNT_ID')) {
+      errors.push('deploy.yml must read CLOUDFLARE_ACCOUNT_ID only from GitHub secrets.');
+    }
+  }
+
+  return { name: 'GitHub Actions deploy isolation', errors };
+}
+
+async function auditInstallEndpoint(repoRoot: string): Promise<AuditSection> {
+  const errors: string[] = [];
+  const installPath = join(repoRoot, 'public', 'install.sh');
+  const installScript = await readFileText(installPath, errors);
+
+  if (installScript) {
+    if (!installScript.startsWith('#!/usr/bin/env bash')) {
+      errors.push('public/install.sh must keep an explicit bash shebang.');
+    }
+
+    if (!installScript.includes('set -euo pipefail')) {
+      errors.push('public/install.sh must keep strict shell mode.');
+    }
+  }
+
+  return { name: 'Public installer endpoint', errors };
+}
+
+async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
+  const errors: string[] = [];
+  const distDir = join(repoRoot, 'dist');
+
+  if (!(await fileExists(distDir))) {
+    return { name: 'Static build output', errors: ['dist/ is missing; run bun run build first.'] };
+  }
+
+  for (const expectedFile of DIST_EXPECTED_FILES) {
+    const absolutePath = join(distDir, expectedFile);
+
+    if (!(await fileExists(absolutePath))) {
+      errors.push(`dist/${expectedFile} is missing from the static build.`);
+    }
+  }
+
+  for (const file of await walkFiles(distDir)) {
+    const relativePath = toPosix(relative(repoRoot, file));
+    const fileName = basename(file);
+    const extension = extname(file);
+
+    if (/^\.env(?:\.|$)/.test(fileName) || fileName === '.dev.vars') {
+      errors.push(`${relativePath} must not be published.`);
+      continue;
+    }
+
+    if (!TEXT_EXTENSIONS.has(extension)) {
+      continue;
+    }
+
+    const text = await readFile(file, 'utf8');
+
+    for (const { label, pattern } of SECRET_PATTERNS) {
+      if (pattern.test(text)) {
+        errors.push(`${relativePath} contains a ${label}; it must not ship in public assets.`);
+      }
+    }
+
+    if (extension === '.html') {
+      for (const url of extractLoadedExternalUrls(text)) {
+        errors.push(`${relativePath} loads a remote asset (${url}); ship audited assets locally.`);
+      }
+    }
+
+    if (extension === '.css') {
+      for (const url of extractRemoteCssUrls(text)) {
+        errors.push(`${relativePath} loads a remote CSS asset (${url}); ship assets locally.`);
+      }
+    }
+  }
+
+  return { name: 'Static build output', errors };
+}
+
+async function auditLabels(repoRoot: string): Promise<AuditSection> {
+  const errors: string[] = [];
+  const labelsPath = join(repoRoot, '.github', 'labels.json');
+  const labelsText = await readFileText(labelsPath, errors);
+
+  if (!labelsText) {
+    return { name: 'GitHub label configuration', errors };
+  }
+
+  let labels: LabelDefinition[] = [];
+
+  try {
+    const parsed = JSON.parse(labelsText);
+
+    if (Array.isArray(parsed)) {
+      labels = parsed;
+    } else {
+      errors.push('.github/labels.json must be an array.');
+    }
+  } catch (error) {
+    errors.push(`.github/labels.json is invalid JSON: ${formatError(error)}`);
+  }
+
+  const names = new Set<string>();
+
+  for (const label of labels) {
+    if (!isLabelDefinition(label)) {
+      errors.push('.github/labels.json contains an invalid label entry.');
+      continue;
+    }
+
+    if (!/^[0-9a-f]{6}$/i.test(label.color)) {
+      errors.push(`${label.name} must use a six-character hex color without #.`);
+    }
+
+    if (names.has(label.name)) {
+      errors.push(`${label.name} is duplicated in .github/labels.json.`);
+    }
+
+    names.add(label.name);
+  }
+
+  const labelerPath = join(repoRoot, '.github', 'labeler.yml');
+  const labelerText = await readFileText(labelerPath, errors);
+  const labelerLabels = [...labelerText.matchAll(/^"([^"]+)":/gm)].map((match) => match[1] ?? '');
+
+  for (const label of labelerLabels) {
+    if (!names.has(label)) {
+      errors.push(
+        `${labelerPath} references ${label}, but .github/labels.json does not define it.`
+      );
+    }
+  }
+
+  return { name: 'GitHub label configuration', errors };
+}
+
+async function readJsonc(
+  filePath: string,
+  errors: string[]
+): Promise<Record<string, unknown> | undefined> {
+  const text = await readFileText(filePath, errors);
+
+  if (!text) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(stripJsonComments(text));
+
+    if (isRecord(parsed)) {
+      return parsed;
+    }
+
+    errors.push(`${filePath} must parse to an object.`);
+  } catch (error) {
+    errors.push(`${filePath} is invalid JSONC: ${formatError(error)}`);
+  }
+
+  return undefined;
+}
+
+async function readFileText(filePath: string, errors: string[]): Promise<string> {
+  try {
+    return await readFile(filePath, 'utf8');
+  } catch (error) {
+    errors.push(`Could not read ${filePath}: ${formatError(error)}`);
+    return '';
+  }
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function walkFiles(root: string): Promise<string[]> {
+  const files: string[] = [];
+
+  async function visit(dir: string): Promise<void> {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const absolutePath = join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        await visit(absolutePath);
+        continue;
+      }
+
+      if (entry.isFile()) {
+        files.push(absolutePath);
+      }
+    }
+  }
+
+  await visit(root);
+  return files.sort();
+}
+
+function parseAttributes(tag: string): Map<string, string> {
+  const attrs = new Map<string, string>();
+  const attrPattern = /([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+  let match = attrPattern.exec(tag);
+
+  while (match !== null) {
+    const name = match[1]?.toLowerCase();
+    const value = match[2] ?? match[3] ?? '';
+
+    if (name) {
+      attrs.set(name, value);
+    }
+
+    match = attrPattern.exec(tag);
+  }
+
+  return attrs;
+}
+
+function addRemoteUrl(urls: Set<string>, value: string | undefined): void {
+  if (!value) {
+    return;
+  }
+
+  if (value.startsWith('//') || /^https?:\/\//i.test(value)) {
+    urls.add(value);
+  }
+}
+
+function assertEquals(
+  errors: string[],
+  actual: unknown,
+  expected: string,
+  errorMessage: string
+): void {
+  if (actual !== expected) {
+    errors.push(errorMessage);
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isLabelDefinition(value: unknown): value is LabelDefinition {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.name === 'string' &&
+    typeof value.color === 'string' &&
+    typeof value.description === 'string'
+  );
+}
+
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function toPosix(path: string): string {
+  return path.replaceAll('\\', '/');
+}
+
+async function main(): Promise<void> {
+  const sections = await runAudit(process.cwd());
+  let errorCount = 0;
+
+  for (const section of sections) {
+    if (section.errors.length === 0) {
+      process.stdout.write(`[ok] ${section.name}\n`);
+      continue;
+    }
+
+    errorCount += section.errors.length;
+    process.stderr.write(`[fail] ${section.name}\n`);
+
+    for (const error of section.errors) {
+      process.stderr.write(`  - ${error}\n`);
+    }
+  }
+
+  if (errorCount > 0) {
+    process.exitCode = 1;
+  }
+}
+
+const entrypoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : '';
+
+if (import.meta.url === entrypoint) {
+  await main();
+}
