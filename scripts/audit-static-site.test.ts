@@ -1,5 +1,6 @@
 import { deepStrictEqual } from 'node:assert/strict';
 import {
+  extractInlineStyleBlocks,
   extractLoadedExternalUrls,
   extractRemoteCssUrls,
   stripJsonComments,
@@ -57,6 +58,28 @@ run('extractRemoteCssUrls reports remote CSS url() assets', () => {
     `),
     ['//cdn.example.com/proto.svg', 'https://cdn.example.com/asset.svg']
   );
+});
+
+run('extractRemoteCssUrls reports remote @import statements', () => {
+  deepStrictEqual(
+    extractRemoteCssUrls(`
+      @import "https://cdn.example.com/import.css";
+      @import url(//cdn.example.com/proto.css);
+      @import "./local.css";
+    `),
+    ['//cdn.example.com/proto.css', 'https://cdn.example.com/import.css']
+  );
+});
+
+run('extractInlineStyleBlocks surfaces remote assets in inlined CSS', () => {
+  const html = `
+    <style>.hero { background: url(https://cdn.example.com/hero.png); }</style>
+    <style>.local { background: url(/_astro/logo.svg); }</style>
+  `;
+
+  const remote = extractInlineStyleBlocks(html).flatMap(extractRemoteCssUrls);
+
+  deepStrictEqual(remote, ['https://cdn.example.com/hero.png']);
 });
 
 function run(name: string, fn: () => void): void {

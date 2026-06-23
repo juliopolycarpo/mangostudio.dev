@@ -164,20 +164,39 @@ export function extractLoadedExternalUrls(html: string): string[] {
 
 export function extractRemoteCssUrls(css: string): string[] {
   const urls = new Set<string>();
-  const urlPattern = /url\(\s*(['"]?)((?:https?:)?\/\/[^'")]+)\1\s*\)/gi;
-  let match = urlPattern.exec(css);
+  const patterns = [
+    /url\(\s*(['"]?)((?:https?:)?\/\/[^'")]+)\1\s*\)/gi,
+    /@import\s+(['"])((?:https?:)?\/\/[^'"]+)\1/gi,
+  ];
 
-  while (match !== null) {
-    const url = match[2];
+  for (const pattern of patterns) {
+    let match = pattern.exec(css);
 
-    if (url !== undefined) {
-      urls.add(url);
+    while (match !== null) {
+      const url = match[2];
+
+      if (url !== undefined) {
+        urls.add(url);
+      }
+
+      match = pattern.exec(css);
     }
-
-    match = urlPattern.exec(css);
   }
 
   return [...urls].sort();
+}
+
+export function extractInlineStyleBlocks(html: string): string[] {
+  const blocks: string[] = [];
+  const stylePattern = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+  let match = stylePattern.exec(html);
+
+  while (match !== null) {
+    blocks.push(match[1] ?? '');
+    match = stylePattern.exec(html);
+  }
+
+  return blocks;
 }
 
 async function runAudit(repoRoot: string): Promise<AuditSection[]> {
@@ -345,6 +364,12 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     if (extension === '.html') {
       for (const url of extractLoadedExternalUrls(text)) {
         errors.push(`${relativePath} loads a remote asset (${url}); ship audited assets locally.`);
+      }
+
+      for (const styleBlock of extractInlineStyleBlocks(text)) {
+        for (const url of extractRemoteCssUrls(styleBlock)) {
+          errors.push(`${relativePath} inlines a remote CSS asset (${url}); ship assets locally.`);
+        }
       }
     }
 
