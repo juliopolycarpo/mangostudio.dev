@@ -4,7 +4,6 @@ export interface GeneratedRelease {
   releaseDate: string;
   installCmd: string;
   source: string;
-  generatedAt: string;
 }
 
 export const RELEASE: GeneratedRelease = {
@@ -12,5 +11,4 @@ export const RELEASE: GeneratedRelease = {
   releaseDate: '2026-06-23',
   installCmd: 'bun add -g @mangostudio/cli@canary',
   source: 'https://www.npmjs.com/package/@mangostudio/cli/v/0.1.0-canary.b7be89c',
-  generatedAt: 'manual-seed',
 };

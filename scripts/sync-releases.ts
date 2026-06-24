@@ -12,15 +12,11 @@ export interface GeneratedRelease {
   releaseDate: string;
   installCmd: string;
   source: string;
-  generatedAt: string;
 }
 
 const GENERATED_PATH = join(process.cwd(), 'src', 'data', 'releases.generated.ts');
 
-export function releaseFromGitHub(
-  input: ReleaseInput,
-  generatedAt = new Date().toISOString()
-): GeneratedRelease {
+export function releaseFromGitHub(input: ReleaseInput): GeneratedRelease {
   validateReleaseInput(input);
 
   return {
@@ -28,7 +24,6 @@ export function releaseFromGitHub(
     releaseDate: input.published_at.slice(0, 10),
     installCmd: 'bun add -g @mangostudio/cli',
     source: input.html_url,
-    generatedAt,
   };
 }
 
@@ -39,7 +34,6 @@ export interface GeneratedRelease {
   releaseDate: string;
   installCmd: string;
   source: string;
-  generatedAt: string;
 }
 
 export const RELEASE: GeneratedRelease = ${JSON.stringify(release, null, 2).replace(/"([^"]+)":/g, '$1:')};
