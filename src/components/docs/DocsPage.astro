@@ -2,7 +2,7 @@
 import CopyButton from '@/components/CopyButton.astro';
 import Icon from '@/components/Icon.astro';
 import type { Lang, SiteContent } from '@/i18n/types';
-import { routes } from '@/i18n/ui';
+import { findDocItem, isDocReady, routes } from '@/i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -12,14 +12,9 @@ interface Props {
 
 const { lang, content: c, docId } = Astro.props;
 const q = c.docs.quickstart;
-const isQuickstart = docId === 'quickstart';
-
-let stubLabel = docId;
-for (const group of c.docs.groups) {
-  for (const item of group.items) {
-    if (item.id === docId) stubLabel = item.label;
-  }
-}
+const currentItem = findDocItem(c.docs.groups, docId);
+const isReadyPage = currentItem ? isDocReady(currentItem) : false;
+const pageLabel = currentItem?.label ?? docId;
 
 const crumbs = q.breadcrumb.split('/').map((part) => part.trim());
 const crumbLead = crumbs.slice(0, -1).join(' / ');
@@ -39,15 +34,26 @@ const crumbLast = crumbs[crumbs.length - 1];
         <div class="docs-group">
           <div class="docs-group-title">{group.title}</div>
           <div class="docs-group-items">
-            {group.items.map((item) => (
-              <a
-                href={routes.doc(lang, item.id)}
-                class:list={['docs-link', { 'is-active': item.id === docId }]}
-                aria-current={item.id === docId ? 'page' : undefined}
-              >
-                {item.label}
-              </a>
-            ))}
+            {group.items.map((item) => {
+              const planned = !isDocReady(item);
+              return (
+                <a
+                  href={routes.doc(lang, item.id)}
+                  class:list={[
+                    'docs-link',
+                    { 'is-active': item.id === docId, 'is-planned': planned },
+                  ]}
+                  aria-current={item.id === docId ? 'page' : undefined}
+                >
+                  <span class="docs-link-label">{item.label}</span>
+                  {planned && (
+                    <span class="docs-planned-pill mono" aria-label={c.docs.plannedSidebarHint}>
+                      {c.docs.plannedBadge}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
           </div>
         </div>
       ))
@@ -56,7 +62,7 @@ const crumbLast = crumbs[crumbs.length - 1];
 
   <article class="docs-article">
     {
-      isQuickstart ? (
+      isReadyPage ? (
         <>
           <div class="docs-breadcrumb mono">
             {crumbLead} / <span class="accent">{crumbLast}</span>
@@ -102,12 +108,12 @@ const crumbLast = crumbs[crumbs.length - 1];
       ) : (
         <>
           <div class="docs-breadcrumb mono">
-            Docs / <span class="accent">{stubLabel}</span>
+            Docs / <span class="accent">{pageLabel}</span>
           </div>
-          <h1 class="docs-h1">{stubLabel}</h1>
-          <div class="docs-stub">
-            <span class="docs-stub-badge mono">{c.docs.stubBadge}</span>
-            <span>{c.docs.stubText}</span>
+          <h1 class="docs-h1">{pageLabel}</h1>
+          <div class="docs-planned">
+            <span class="docs-planned-badge mono">{c.docs.plannedBadge}</span>
+            <span>{c.docs.plannedText}</span>
           </div>
         </>
       )
@@ -116,7 +122,7 @@ const crumbLast = crumbs[crumbs.length - 1];
 
   <aside class="docs-toc">
     {
-      isQuickstart && (
+      isReadyPage && (
         <div class="docs-toc-inner">
           <div class="docs-toc-title">{q.tocTitle}</div>
           <div class="docs-toc-list">
@@ -191,6 +197,9 @@ const crumbLast = crumbs[crumbs.length - 1];
 
   .docs-link {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     text-align: left;
     text-decoration: none;
     font-size: 13.5px;
@@ -198,6 +207,26 @@ const crumbLast = crumbs[crumbs.length - 1];
     padding: 7px 9px;
     border-radius: 7px;
     font-weight: 500;
+  }
+
+  .docs-link.is-planned {
+    color: var(--text-3);
+  }
+
+  .docs-link-label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .docs-planned-pill {
+    flex-shrink: 0;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--mango);
+    border: 1px solid color-mix(in srgb, var(--mango) 35%, transparent);
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.02em;
   }
 
   .docs-link:hover {
@@ -366,7 +395,7 @@ const crumbLast = crumbs[crumbs.length - 1];
     font-weight: 600;
   }
 
-  .docs-stub {
+  .docs-planned {
     margin-top: 24px;
     display: flex;
     align-items: center;
@@ -378,7 +407,7 @@ const crumbLast = crumbs[crumbs.length - 1];
     font-size: 14.5px;
   }
 
-  .docs-stub-badge {
+  .docs-planned-badge {
     flex-shrink: 0;
     font-size: 11px;
     color: var(--mango);

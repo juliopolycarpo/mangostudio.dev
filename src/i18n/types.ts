@@ -39,9 +39,12 @@ export interface ReleaseGroup {
   items: ReleaseItem[];
 }
 
+export type DocStatus = 'ready' | 'planned';
+
 export interface DocItem {
   id: string;
   label: string;
+  status?: DocStatus;
 }
 
 export interface DocGroup {
@@ -150,8 +153,9 @@ export interface SiteContent {
       tocTitle: string;
       toc: string[];
     };
-    stubBadge: string;
-    stubText: string;
+    plannedBadge: string;
+    plannedText: string;
+    plannedSidebarHint: string;
   };
   cmdk: {
     placeholder: string;

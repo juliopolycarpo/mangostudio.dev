@@ -1,6 +1,6 @@
 import { en } from './en';
 import { pt } from './pt';
-import type { Lang, SiteContent } from './types';
+import type { DocGroup, DocItem, Lang, SiteContent } from './types';
 
 export const languages: Record<Lang, string> = {
   pt: 'Português',
@@ -44,4 +44,20 @@ export function alternatePath(pathname: string, target: Lang): string {
 
 export function otherLang(lang: Lang): Lang {
   return lang === 'pt' ? 'en' : 'pt';
+}
+
+export function docStatus(item: DocItem): NonNullable<DocItem['status']> {
+  return item.status ?? 'planned';
+}
+
+export function isDocReady(item: DocItem): boolean {
+  return docStatus(item) === 'ready';
+}
+
+export function findDocItem(groups: DocGroup[], id: string): DocItem | undefined {
+  for (const group of groups) {
+    const item = group.items.find((entry) => entry.id === id);
+    if (item) return item;
+  }
+  return undefined;
 }
