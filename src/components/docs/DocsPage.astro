@@ -36,7 +36,6 @@ const crumbLast = crumbs[crumbs.length - 1];
           <div class="docs-group-items">
             {group.items.map((item) => {
               const planned = !isDocReady(item);
-              const statusId = `doc-status-${item.id}`;
               return (
                 <a
                   href={routes.doc(lang, item.id)}
@@ -45,16 +44,12 @@ const crumbLast = crumbs[crumbs.length - 1];
                     { 'is-active': item.id === docId, 'is-planned': planned },
                   ]}
                   aria-current={item.id === docId ? 'page' : undefined}
-                  aria-describedby={planned ? statusId : undefined}
                 >
                   <span class="docs-link-label">{item.label}</span>
                   {planned && (
-                    <>
-                      <span class="docs-planned-pill mono">{c.docs.plannedBadge}</span>
-                      <span class="visually-hidden" id={statusId}>
-                        {c.docs.plannedSidebarHint}
-                      </span>
-                    </>
+                    <span class="docs-planned-pill mono" aria-label={c.docs.plannedSidebarHint}>
+                      {c.docs.plannedBadge}
+                    </span>
                   )}
                 </a>
               );

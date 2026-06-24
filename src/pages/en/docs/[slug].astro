@@ -1,6 +1,6 @@
 ---
 import DocsPage from '@/components/docs/DocsPage.astro';
-import { getLangFromUrl, useContent } from '@/i18n/ui';
+import { findDocItem, getLangFromUrl, useContent } from '@/i18n/ui';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 
 export function getStaticPaths() {
@@ -15,12 +15,7 @@ const docId = slug ?? 'quickstart';
 const lang = getLangFromUrl(Astro.url);
 const content = useContent(lang);
 
-let label = docId;
-for (const group of content.docs.groups) {
-  for (const item of group.items) {
-    if (item.id === docId) label = item.label;
-  }
-}
+const label = findDocItem(content.docs.groups, docId)?.label ?? docId;
 const title = `${label} — MangoStudio Docs`;
 ---
 
