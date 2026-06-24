@@ -34,7 +34,9 @@ bun run preview    # preview the production build locally
 ### Quality gates
 
 ```bash
-bun run check      # astro check + tsgo + biome + dprint (what CI runs)
+bun run check      # astro check + tsgo + biome + dprint
+bun run test       # Bun tests for repo automation
+bun run qa         # full CI gate: check + test + build + audit + Wrangler dry-run
 bun run fix        # biome --write + dprint fmt (auto-fix)
 ```
 
@@ -67,11 +69,19 @@ The site builds to `./dist` and is served by an **assets-only Worker** (no serve
 
 ### Pipeline
 
-- **`ci.yml`** — runs on pull requests: install, Biome, dprint, `astro check`, tsgo, build. No secrets.
-- **`deploy.yml`** — runs on push to `main`: a `verify` job re-runs all checks, then a `deploy` job
-  (gated behind the protected `production` GitHub Environment) runs `wrangler deploy`.
+- **`ci.yml`** — runs `bun run qa` on pull requests. No Cloudflare secrets.
+- **`labeler.yml`** — applies path-based `area:` and `type:` labels without checking out PR code.
+- **`codeql.yml`** — runs CodeQL JavaScript/TypeScript analysis with `security-extended` queries.
+- **`dependency-review.yml`** — blocks new moderate-or-worse vulnerable dependencies in PRs; this
+  requires GitHub Dependency graph to stay enabled.
+- **`deploy.yml`** — runs on push to `main`: a `verify` job re-runs the QA gate, then a `deploy`
+  job (gated behind the protected `production` GitHub Environment) runs `wrangler deploy`.
 
-All third-party actions are pinned to commit SHAs; jobs use least-privilege `permissions: contents: read`.
+The PR gate builds the site, audits generated static output for remote loaded assets and secret-like
+strings, validates that `wrangler.jsonc` remains assets-only, checks label configuration, and runs a
+Wrangler dry-run without Cloudflare credentials.
+
+All third-party actions are pinned to commit SHAs; jobs use least-privilege permissions.
 
 ### One-time setup (performed by the maintainer)
 
@@ -85,6 +95,8 @@ All third-party actions are pinned to commit SHAs; jobs use least-privilege `per
    before each deploy.
 4. **Custom domain** — after the first deploy, attach `mangostudio.dev` to the Worker in the
    Cloudflare dashboard (*Workers & Pages → mangostudio-dev → Settings → Domains & Routes*).
+5. **Dependency graph** — enable *Settings → Code security and analysis → Dependency graph* so
+   `dependency-review.yml` can enforce the supply-chain gate.
 
 Manual deploy from a workstation (requires `wrangler login` or the env token):
 
@@ -100,6 +112,8 @@ bun run deploy:dry-run    # validate config without uploading
 - Actions are SHA-pinned; Dependabot keeps actions and dependencies current.
 - Installs use `--frozen-lockfile`; the committed `bun.lock` is the source of truth.
 - No analytics, no third-party fonts, no trackers — consistent with MangoStudio's local-first ethos.
+- `wrangler.jsonc` is audited to remain assets-only: no Worker script, account id, bindings, or vars.
+- Public assets are checked for remote loaded resources and secret-like strings before deploy.
 
 ## License
 

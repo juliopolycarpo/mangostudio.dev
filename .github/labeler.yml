@@ -1,0 +1,104 @@
+"area: content":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/i18n/**"
+          - "src/data/site.ts"
+          - "README.md"
+          - "CLAUDE.md"
+          - "AGENTS.md"
+
+"area: deployment":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "astro.config.mjs"
+          - "wrangler.jsonc"
+          - ".github/workflows/deploy.yml"
+
+"area: security":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "SECURITY.md"
+          - "public/install.sh"
+          - "scripts/audit-static-site.ts"
+          - "scripts/audit-static-site.test.ts"
+          - ".github/workflows/codeql.yml"
+          - ".github/workflows/dependency-review.yml"
+
+"area: site":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**"
+          - "public/**"
+
+"area: tooling":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".editorconfig"
+          - ".gitattributes"
+          - ".gitignore"
+          - "biome.json"
+          - "dprint.json"
+          - "lefthook.yml"
+          - "package.json"
+          - "scripts/**"
+          - "tsconfig.json"
+          - ".github/labels.json"
+          - ".github/labeler.yml"
+          - ".github/workflows/**"
+          - ".github/dependabot.yml"
+
+"type: test":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**/*.test.ts"
+          - "scripts/**/*.test.ts"
+
+"type: chore":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".gitignore"
+          - ".editorconfig"
+          - ".gitattributes"
+          - "lefthook.yml"
+
+"type: ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+          - ".github/dependabot.yml"
+          - ".github/labeler.yml"
+
+"type: dependencies":
+  - changed-files:
+      - any-glob-to-any-file: "bun.lock"
+
+"type: docs":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.md"
+          - ".github/**/*.md"
+          - ".github/ISSUE_TEMPLATE/**"
+          - ".github/pull_request_template.md"
+
+"type: feature":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/**"
+          - "public/**"
+
+"type: hardening":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "scripts/audit-static-site.ts"
+          - "scripts/audit-static-site.test.ts"
+          - "wrangler.jsonc"
+          - ".github/workflows/deploy.yml"
+          - ".github/workflows/codeql.yml"
+          - ".github/workflows/dependency-review.yml"
+
+"type: security":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "SECURITY.md"
+          - ".github/workflows/codeql.yml"
+          - ".github/workflows/dependency-review.yml"

@@ -1,0 +1,47 @@
+name: Website bug
+description: Report broken website behavior, layout, routing, or public assets.
+title: "fix: "
+labels: ["type: bug", "area: site"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Affected URL
+      placeholder: https://mangostudio.dev/
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction
+      description: Exact steps, browser, viewport, and whether JavaScript was enabled.
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, console output, or request details. Do not include secrets.

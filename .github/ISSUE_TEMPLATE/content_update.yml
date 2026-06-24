@@ -1,0 +1,40 @@
+name: Content or docs update
+description: Request website copy, localization, release, or docs content changes.
+title: "docs: "
+labels: ["type: docs", "area: content"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What should change?
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Affected URL
+      placeholder: https://mangostudio.dev/docs/quickstart
+  - type: dropdown
+    id: locale
+    attributes:
+      label: Locale
+      options:
+        - Portuguese
+        - English
+        - Both
+        - Language-neutral
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed wording or source
+      description: Include the exact copy when available.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Links to product changes, releases, or docs that justify the update.

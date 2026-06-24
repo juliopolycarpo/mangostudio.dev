@@ -1,0 +1,72 @@
+[
+  {
+    "name": "area: content",
+    "color": "5319e7",
+    "description": "Marketing copy, docs content, localization, and release metadata."
+  },
+  {
+    "name": "area: deployment",
+    "color": "0e8a16",
+    "description": "Cloudflare Workers static deployment, Wrangler, DNS, or release delivery."
+  },
+  {
+    "name": "area: security",
+    "color": "b60205",
+    "description": "Security posture, public asset auditability, secrets handling, or supply-chain gates."
+  },
+  {
+    "name": "area: site",
+    "color": "1d76db",
+    "description": "Astro pages, components, styles, scripts, and public assets."
+  },
+  {
+    "name": "area: tooling",
+    "color": "c5def5",
+    "description": "Bun scripts, linting, formatting, hooks, labels, and repo automation."
+  },
+  {
+    "name": "type: bug",
+    "color": "d73a4a",
+    "description": "Bug fixes."
+  },
+  {
+    "name": "type: chore",
+    "color": "c2e0c6",
+    "description": "Maintenance that does not change user-facing behavior."
+  },
+  {
+    "name": "type: ci",
+    "color": "0052cc",
+    "description": "GitHub Actions, Dependabot, labeler, or automation changes."
+  },
+  {
+    "name": "type: dependencies",
+    "color": "0366d6",
+    "description": "Dependency manifest or lockfile changes."
+  },
+  {
+    "name": "type: docs",
+    "color": "0075ca",
+    "description": "Documentation, repository guidance, or issue and PR templates."
+  },
+  {
+    "name": "type: feature",
+    "color": "a2eeef",
+    "description": "New user-facing functionality."
+  },
+  {
+    "name": "type: hardening",
+    "color": "fbca04",
+    "description": "Defensive work that reduces a class of bugs or operational risk."
+  },
+  {
+    "name": "type: security",
+    "color": "b60205",
+    "description": "Security-sensitive fixes or hardening."
+  },
+  {
+    "name": "type: test",
+    "color": "f9d0c4",
+    "description": "Tests, fixtures, or validation coverage."
+  }
+]
