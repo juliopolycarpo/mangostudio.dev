@@ -125,15 +125,8 @@ export interface SiteContent {
   releases: {
     eyebrow: string;
     title: string;
-    introBefore: string;
-    introAfter: string;
+    intro: string;
     latestBadge: string;
-    latestDate: string;
-    installCmd: string;
-    unreleasedTitle: string;
-    unreleasedBadge: string;
-    unreleasedDesc: string;
-    versionDate: string;
     groups: ReleaseGroup[];
   };
   docs: {

@@ -1,3 +1,4 @@
+import { RELEASE } from '@/data/releases.generated';
 import { GITHUB_URL } from '@/data/site';
 import type { SiteContent } from './types';
 
@@ -11,7 +12,7 @@ export const pt = {
   nav: { home: 'Início', features: 'Recursos', releases: 'Releases', docs: 'Docs' },
   header: { search: 'Buscar…', cta: 'Começar', theme: 'Alternar tema', github: 'Ver no GitHub' },
   hero: {
-    badge: 'v0.1.0 · MIT · 100% local · BYOK',
+    badge: `${RELEASE.version} · MIT · 100% local · BYOK`,
     titlePre: 'Seu estúdio de IA local, em um',
     titleHighlight: 'único binário',
     titlePost: '.',
@@ -38,7 +39,7 @@ export const pt = {
         n: '1',
         title: 'Instale',
         desc: 'Um comando com o gerenciador que você já usa — o único canal publicado por enquanto.',
-        cmd: 'bun add -g @mangostudio/cli',
+        cmd: RELEASE.installCmd,
       },
       {
         n: '2',
@@ -140,16 +141,9 @@ export const pt = {
   releases: {
     eyebrow: 'Changelog',
     title: 'Releases',
-    introBefore: 'Gerado a partir do ',
-    introAfter:
-      ' (git-cliff · Conventional Commits). A versão mais recente alimenta o comando de instalação.',
-    latestBadge: 'última versão',
-    latestDate: '29 de maio de 2026 · primeira release pública',
-    installCmd: 'bun add -g @mangostudio/cli',
-    unreleasedTitle: 'Unreleased',
-    unreleasedBadge: 'TODO',
-    unreleasedDesc: 'As próximas mudanças aparecem aqui automaticamente a cada merge na main.',
-    versionDate: '2026-05-29',
+    intro:
+      'Versão canary e comando de instalação sincronizados do pipeline de releases do MangoStudio. Destaques curados por release.',
+    latestBadge: 'versão canary',
     groups: [
       {
         emoji: '🚀',
@@ -265,7 +259,7 @@ export const pt = {
           title: '1. Instale o CLI',
           body: 'Por enquanto, só este canal está publicado. O mais rápido com Bun:',
           codeLang: 'bash',
-          code: '# instala globalmente\nbun add -g @mangostudio/cli',
+          code: `# instala globalmente\n${RELEASE.installCmd}`,
         },
         {
           title: '2. Adicione uma chave',
@@ -365,7 +359,7 @@ export const pt = {
   },
   copyToast: 'Copiado para a área de transferência',
   terminalLines: [
-    '▸ MangoStudio v0.1.0  (bun 1.3.14)',
+    `▸ MangoStudio ${RELEASE.version}  (bun 1.3.14)`,
     '▸ database  ~/.mango/database.sqlite',
     '▸ providers gemini · openai · anthropic  ✓',
     '▸ ready ── http://localhost:3001',
