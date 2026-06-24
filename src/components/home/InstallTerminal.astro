@@ -21,23 +21,32 @@ const initial = INSTALL_TABS[0];
 
   <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.hero.terminalTitle}>
     {
-      INSTALL_TABS.map((tab, index) => (
-        <button
-          type="button"
-          class:list={['install-tab', { 'is-active': index === 0 }]}
-          role="tab"
-          aria-selected={index === 0 ? 'true' : 'false'}
-          data-channel={tab.id}
-          data-cmd={tab.cmd}
-        >
-          {tab.label}
-        </button>
-      ))
+      INSTALL_TABS.map((tab, index) => {
+        const isPlanned = tab.status === 'planned';
+        return (
+          <button
+            type="button"
+            class:list={['install-tab', { 'is-active': index === 0, 'is-planned': isPlanned }]}
+            role="tab"
+            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-disabled={isPlanned ? 'true' : undefined}
+            data-channel={tab.id}
+            data-cmd={tab.cmd}
+            data-status={tab.status}
+          >
+            {tab.label}
+            {isPlanned && <span class="planned-pill">{c.channels.plannedLabel}</span>}
+          </button>
+        );
+      })
     }
   </div>
 
-  <div class="install-cmd">
-    <code class="install-code"><span class="prompt">$ </span><span id="hero-cmd">{initial.cmd}</span></code>
+  <div class="install-cmd" id="install-cmd" data-state={initial.status}>
+    <code class="install-code">
+      <span class="prompt">$ </span><span id="hero-cmd">{initial.cmd}</span>
+    </code>
+    <span class="install-hint" id="hero-hint">{c.channels.plannedHint}</span>
     <CopyButton text={initial.cmd} label="Copy" id="hero-copy" />
   </div>
 </div>
@@ -63,6 +72,9 @@ const initial = INSTALL_TABS[0];
 
   .install-tab {
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: none;
     border: none;
     cursor: pointer;
@@ -94,6 +106,30 @@ const initial = INSTALL_TABS[0];
     background: var(--mango);
   }
 
+  .install-tab.is-planned {
+    color: var(--text-3);
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+
+  .install-tab.is-planned.is-active {
+    color: var(--text-2);
+    opacity: 0.85;
+  }
+
+  .planned-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--text-3) 18%, transparent);
+    color: var(--text-3);
+    font-weight: 500;
+  }
+
   .install-cmd {
     display: flex;
     align-items: center;
@@ -109,6 +145,22 @@ const initial = INSTALL_TABS[0];
     color: var(--text);
     overflow-x: auto;
     white-space: nowrap;
+  }
+
+  .install-hint {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-3);
+    font-style: italic;
+  }
+
+  .install-cmd[data-state="ready"] .install-hint {
+    display: none;
+  }
+
+  .install-cmd[data-state="planned"] .install-code,
+  .install-cmd[data-state="planned"] :global(#hero-copy) {
+    display: none;
   }
 
   .prompt {

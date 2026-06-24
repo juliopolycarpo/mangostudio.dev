@@ -8,40 +8,91 @@ export const REPO = 'juliopolycarpo/mangostudio';
 export const STARS = '1.2k';
 export const VERSION = 'v0.1.0';
 
+export type ChannelStatus = 'ready' | 'planned';
+
 export interface InstallTab {
   id: string;
   label: string;
   cmd: string;
+  status: ChannelStatus;
 }
 
 /** Hero install widget — the tabbed channel switcher. */
 export const INSTALL_TABS: InstallTab[] = [
-  { id: 'bun', label: 'bun', cmd: 'bun add -g @mangostudio/cli' },
-  { id: 'brew', label: 'brew', cmd: 'brew install juliopolycarpo/tap/mangostudio' },
-  { id: 'curl', label: 'shell', cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash' },
-  { id: 'scoop', label: 'scoop', cmd: 'scoop install mangostudio' },
-  { id: 'cargo', label: 'cargo', cmd: 'cargo install mangostudio' },
+  {
+    id: 'bun',
+    label: 'bun',
+    cmd: 'bun add -g @mangostudio/cli',
+    status: 'ready',
+  },
+  {
+    id: 'brew',
+    label: 'brew',
+    cmd: 'brew install juliopolycarpo/tap/mangostudio',
+    status: 'planned',
+  },
+  {
+    id: 'curl',
+    label: 'shell',
+    cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+    status: 'planned',
+  },
+  {
+    id: 'scoop',
+    label: 'scoop',
+    cmd: 'scoop install mangostudio',
+    status: 'planned',
+  },
+  {
+    id: 'cargo',
+    label: 'cargo',
+    cmd: 'cargo install mangostudio',
+    status: 'planned',
+  },
   {
     id: 'docker',
     label: 'docker',
     cmd: 'docker run -p 3001:3001 ghcr.io/juliopolycarpo/mangostudio',
+    status: 'planned',
   },
 ];
 
 export interface Channel {
+  id: string;
   label: string;
   cmd: string;
+  status: ChannelStatus;
 }
 
-/** "Seven channels" install grid on the home page. */
+/** Install grid on the home page. Only `bun` is shipped; the rest are planned. */
 export const CHANNELS: Channel[] = [
-  { label: 'npm / bun', cmd: 'bun add -g @mangostudio/cli' },
-  { label: 'homebrew', cmd: 'brew install juliopolycarpo/tap/mangostudio' },
-  { label: 'shell', cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash' },
-  { label: 'scoop', cmd: 'scoop install mangostudio' },
-  { label: 'cargo', cmd: 'cargo install mangostudio' },
-  { label: 'docker', cmd: 'docker run -p 3001:3001 ghcr.io/juliopolycarpo/mangostudio' },
-  { label: 'manual', cmd: 'gh release download --pattern "*.tar.gz" && sha256sum -c SHA256SUMS' },
+  { id: 'bun', label: 'npm / bun', cmd: 'bun add -g @mangostudio/cli', status: 'ready' },
+  {
+    id: 'brew',
+    label: 'homebrew',
+    cmd: 'brew install juliopolycarpo/tap/mangostudio',
+    status: 'planned',
+  },
+  {
+    id: 'curl',
+    label: 'shell',
+    cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+    status: 'planned',
+  },
+  { id: 'scoop', label: 'scoop', cmd: 'scoop install mangostudio', status: 'planned' },
+  { id: 'cargo', label: 'cargo', cmd: 'cargo install mangostudio', status: 'planned' },
+  {
+    id: 'docker',
+    label: 'docker',
+    cmd: 'docker run -p 3001:3001 ghcr.io/juliopolycarpo/mangostudio',
+    status: 'planned',
+  },
+  {
+    id: 'manual',
+    label: 'manual',
+    cmd: 'gh release download --pattern "*.tar.gz" && sha256sum -c SHA256SUMS',
+    status: 'planned',
+  },
 ];
 
 export interface Provider {
