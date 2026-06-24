@@ -42,7 +42,7 @@ export const en = {
       {
         n: '1',
         title: 'Install',
-        desc: 'One command with the package manager you already use. Same binary on every channel.',
+        desc: 'One command with the package manager you already use — the only published channel for now.',
         cmd: 'bun add -g @mangostudio/cli',
       },
       {
@@ -116,9 +116,13 @@ export const en = {
   },
   channels: {
     eyebrow: 'Installation',
-    title: 'Seven channels, the same binary',
-    noteBefore: 'Every channel ships the same precompiled binary, verified against ',
-    noteAfter: '.',
+    title: 'One command today, more channels soon',
+    noteBefore: 'Only the channel below is published and verified against ',
+    noteAfter:
+      '. Brew, shell, scoop, cargo, docker, and manual downloads land as soon as the pipelines publish them.',
+    readyLabel: 'available',
+    plannedLabel: 'soon',
+    plannedHint: 'Planned channel — not available yet',
   },
   contribute: {
     badge: '★ Open source · MIT',
@@ -256,7 +260,7 @@ export const en = {
       sections: [
         {
           title: '1. Install the CLI',
-          body: 'Every channel ships the same binary. The fastest with Bun:',
+          body: 'For now, only this channel is published. The fastest with Bun:',
           codeLang: 'bash',
           code: '# install globally\nbun add -g @mangostudio/cli',
         },

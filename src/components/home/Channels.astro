@@ -21,13 +21,25 @@ const { content: c } = Astro.props;
 
   <div class="channels-grid">
     {
-      CHANNELS.map((channel) => (
-        <div class="channel">
-          <span class="channel-label mono">{channel.label}</span>
-          <code class="channel-cmd mono">{channel.cmd}</code>
-          <CopyButton text={channel.cmd} label="Copy" size="sm" />
-        </div>
-      ))
+      CHANNELS.map((channel) => {
+        const isPlanned = channel.status === 'planned';
+        return (
+          <div class:list={['channel', { 'is-planned': isPlanned }]} data-status={channel.status}>
+            <span class="channel-label mono">{channel.label}</span>
+            <code class="channel-cmd mono">{channel.cmd}</code>
+            <span
+              class:list={['status-pill', { 'is-ready': !isPlanned, 'is-planned': isPlanned }]}
+            >
+              {isPlanned ? c.channels.plannedLabel : c.channels.readyLabel}
+            </span>
+            {isPlanned ? (
+              <span class="visually-hidden">{c.channels.plannedHint}</span>
+            ) : (
+              <CopyButton text={channel.cmd} label="Copy" size="sm" />
+            )}
+          </div>
+        );
+      })
     }
   </div>
 </section>
@@ -45,7 +57,7 @@ const { content: c } = Astro.props;
     margin: 12px 0 0;
     font-size: 15px;
     color: var(--text-2);
-    max-width: 560px;
+    max-width: 620px;
   }
 
   .note-code {
@@ -69,6 +81,10 @@ const { content: c } = Astro.props;
     padding: 16px 18px;
   }
 
+  .channel.is-planned {
+    background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  }
+
   .channel-label {
     flex-shrink: 0;
     font-size: 12.5px;
@@ -87,6 +103,31 @@ const { content: c } = Astro.props;
     color: var(--text-2);
     overflow-x: auto;
     white-space: nowrap;
+  }
+
+  .channel.is-planned .channel-cmd {
+    color: var(--text-3);
+  }
+
+  .status-pill {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  .status-pill.is-ready {
+    background: color-mix(in srgb, var(--lime) 18%, transparent);
+    color: var(--lime);
+  }
+
+  .status-pill.is-planned {
+    background: color-mix(in srgb, var(--text-3) 18%, transparent);
+    color: var(--text-3);
   }
 
   @media (max-width: 760px) {

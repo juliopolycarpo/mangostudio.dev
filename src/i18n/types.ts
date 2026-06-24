@@ -98,7 +98,15 @@ export interface SiteContent {
     them: string;
     rows: CompareRow[];
   };
-  channels: { eyebrow: string; title: string; noteBefore: string; noteAfter: string };
+  channels: {
+    eyebrow: string;
+    title: string;
+    noteBefore: string;
+    noteAfter: string;
+    readyLabel: string;
+    plannedLabel: string;
+    plannedHint: string;
+  };
   contribute: { badge: string; title: string; desc: string; ctaStar: string; ctaGuide: string };
   footer: {
     tagline: string;
