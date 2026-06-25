@@ -1,9 +1,16 @@
-import { deepStrictEqual } from 'node:assert/strict';
+import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
 import {
+  extractCmdkDocIds,
+  extractDataCopyTargets,
   extractInlineStyleBlocks,
   extractLoadedExternalUrls,
   extractRemoteCssUrls,
+  findTodoHtmlFiles,
+  isPlaceholderInstallScript,
+  isShellInstallerAdvertised,
   stripJsonComments,
+  validateInstallChannels,
+  validateReleaseSource,
 } from './audit-static-site';
 
 run('stripJsonComments preserves strings while removing comments', () => {
@@ -80,6 +87,157 @@ run('extractInlineStyleBlocks surfaces remote assets in inlined CSS', () => {
   const remote = extractInlineStyleBlocks(html).flatMap(extractRemoteCssUrls);
 
   deepStrictEqual(remote, ['https://cdn.example.com/hero.png']);
+});
+
+run('isPlaceholderInstallScript detects installer placeholder markers', () => {
+  strictEqual(
+    isPlaceholderInstallScript(`#!/usr/bin/env bash
+# PLACEHOLDER
+set -euo pipefail
+echo "This performs no installation"
+`),
+    true
+  );
+
+  strictEqual(
+    isPlaceholderInstallScript(`#!/usr/bin/env bash
+set -euo pipefail
+echo "Installing MangoStudio"
+`),
+    false
+  );
+});
+
+run('isShellInstallerAdvertised reports built pages that mention the shell endpoint', () => {
+  strictEqual(
+    isShellInstallerAdvertised([
+      { relativePath: 'dist/index.html', text: 'curl https://mangostudio.dev/install.sh' },
+    ]),
+    true
+  );
+
+  strictEqual(
+    isShellInstallerAdvertised([{ relativePath: 'dist/index.html', text: 'bun add -g cli' }]),
+    false
+  );
+});
+
+run('findTodoHtmlFiles reports TODO placeholder copy in built pages', () => {
+  deepStrictEqual(
+    findTodoHtmlFiles([
+      { relativePath: 'dist/index.html', text: '<main>TODO replace before publish</main>' },
+      { relativePath: 'dist/docs/index.html', text: '<main>Planned page</main>' },
+    ]),
+    ['dist/index.html']
+  );
+});
+
+run('extractDataCopyTargets decodes data-copy command attributes', () => {
+  deepStrictEqual(
+    extractDataCopyTargets(
+      '<button data-copy="gh release download --pattern &quot;*.tar.gz&quot; &amp;&amp; sha256sum -c SHA256SUMS">Copy</button>'
+    ),
+    ['gh release download --pattern "*.tar.gz" && sha256sum -c SHA256SUMS']
+  );
+});
+
+run('extractDataCopyTargets leaves out-of-range numeric entities intact', () => {
+  deepStrictEqual(extractDataCopyTargets('<button data-copy="&#x110000;">Copy</button>'), [
+    '&#x110000;',
+  ]);
+});
+
+run('validateInstallChannels accepts ready npm/bun primary channels', () => {
+  deepStrictEqual(
+    validateInstallChannels({
+      installTabs: [
+        { id: 'bun', cmd: 'bun add -g @mangostudio/cli@canary', status: 'ready' },
+        { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
+      ],
+      channels: [
+        { id: 'bun', cmd: 'bun add -g @mangostudio/cli@canary', status: 'ready' },
+        { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
+      ],
+      copyTargets: ['bun add -g @mangostudio/cli@canary'],
+    }),
+    []
+  );
+});
+
+run('validateInstallChannels rejects planned copy targets and missing ready primaries', () => {
+  deepStrictEqual(
+    validateInstallChannels({
+      installTabs: [{ id: 'shell', cmd: 'shell installer planned', status: 'planned' }],
+      channels: [
+        { id: 'brew', cmd: 'brew install juliopolycarpo/tap/mangostudio', status: 'planned' },
+      ],
+      copyTargets: ['brew install juliopolycarpo/tap/mangostudio'],
+    }),
+    [
+      'CHANNELS[0] is planned, but its command is exposed as a copy target.',
+      'At least one install channel must be ready.',
+      'INSTALL_TABS[0] must be the ready npm/bun install command.',
+      'CHANNELS[0] must be the ready npm/bun install command.',
+    ]
+  );
+});
+
+run('validateReleaseSource accepts generated facts and curated highlights copy', () => {
+  deepStrictEqual(
+    validateReleaseSource({
+      release: {
+        version: 'v0.1.0',
+        releaseDate: '2026-06-24',
+        installCmd: 'bun add -g @mangostudio/cli',
+      },
+      localizedReleases: [
+        {
+          locale: 'en',
+          releases: {
+            intro:
+              'Version and install command are synced from the release pipeline. Highlights are curated per release.',
+          },
+        },
+      ],
+    }),
+    []
+  );
+});
+
+run(
+  'validateReleaseSource rejects empty generated facts and stale generated-highlights claims',
+  () => {
+    const errors = validateReleaseSource({
+      release: { version: '', releaseDate: '', installCmd: '' },
+      localizedReleases: [
+        {
+          locale: 'pt',
+          releases: {
+            intro: 'TODO: destaques gerados automaticamente a cada merge via git-cliff.',
+          },
+        },
+      ],
+    });
+
+    ok(errors.includes('RELEASE.version must be non-empty.'));
+    ok(errors.includes('RELEASE.releaseDate must be non-empty.'));
+    ok(errors.includes('RELEASE.installCmd must be non-empty.'));
+    ok(errors.includes('pt release copy must not contain TODO placeholder text.'));
+    ok(errors.some((error) => error.includes('pt release copy still claims git-cliff')));
+    ok(errors.some((error) => error.includes('pt release copy still claims generated highlights')));
+  }
+);
+
+run('extractCmdkDocIds returns sorted doc actions only', () => {
+  deepStrictEqual(
+    extractCmdkDocIds([
+      { action: { type: 'nav', page: 'home' } },
+      { action: { type: 'doc', doc: 'quickstart' } },
+      { action: { type: 'doc', doc: 'cli' } },
+      { action: { type: 'theme' } },
+    ]),
+    ['cli', 'quickstart']
+  );
 });
 
 function run(name: string, fn: () => void): void {
