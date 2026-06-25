@@ -117,20 +117,30 @@ function globMatches(filePath: string, pattern: string): boolean {
     return filePath === pattern;
   }
 
-  const regexSource = pattern
-    .split('/')
-    .map((segment, index, segments) => {
-      if (segment === '**') {
-        const isLast = index === segments.length - 1;
-        return isLast ? '(?:/.+)?' : '.*';
-      }
+  const segments = pattern.split('/');
+  let regexSource = '';
 
-      return segment
+  segments.forEach((segment, index) => {
+    const isLast = index === segments.length - 1;
+
+    if (segment === '**') {
+      // Trailing `**` matches everything beneath the parent directory; a middle
+      // `**/` matches zero or more leading path segments (including none).
+      regexSource += isLast ? '.*' : '(?:.*/)?';
+      if (!isLast) {
+        return;
+      }
+    } else {
+      regexSource += segment
         .replace(/[.+^${}()|[\]\\]/g, '\\$&')
         .replace(/\*/g, '[^/]*')
         .replace(/\?/g, '[^/]');
-    })
-    .join('/');
+    }
+
+    if (!isLast) {
+      regexSource += '/';
+    }
+  });
 
   return new RegExp(`^${regexSource}$`).test(filePath);
 }
