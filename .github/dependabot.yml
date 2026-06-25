@@ -14,8 +14,8 @@ updates:
       actions:
         patterns: ["*"]
 
-  # Astro + toolchain dependencies (bun resolves package.json via the npm ecosystem).
-  - package-ecosystem: npm
+  # Astro + toolchain dependencies (Bun keeps package.json and bun.lock in sync).
+  - package-ecosystem: bun
     directory: "/"
     schedule:
       interval: weekly
@@ -23,7 +23,6 @@ updates:
       prefix: chore
     labels:
       - "type: dependencies"
-    versioning-strategy: increase
     groups:
       dependencies:
         patterns: ["*"]

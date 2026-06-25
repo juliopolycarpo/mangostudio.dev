@@ -106,6 +106,16 @@ Pull request workflows must not read Cloudflare secrets. Production deploys run 
 through the protected `production` GitHub Environment. Never push directly to `main`; open a pull
 request from a feature branch.
 
+## Dependency Updates
+
+Dependabot uses the Bun ecosystem for `package.json` and `bun.lock` updates. If a Dependabot package
+PR changes `package.json` without updating `bun.lock`, `lockfile-sync.yml` runs `bun install
+--ignore-scripts`, commits only `bun.lock`, and lets the normal QA workflow re-run with
+`--frozen-lockfile --ignore-scripts`.
+
+Bun security updates are not currently covered by Dependabot. Keep Dependency Review and CodeQL
+enabled as the supply-chain safety gates.
+
 ## GitHub Maintenance
 
 Path labels are defined in `.github/labels.json` and applied by `.github/labeler.yml`. After label
