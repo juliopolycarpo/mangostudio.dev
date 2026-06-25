@@ -143,7 +143,7 @@ export function resolveInternalHrefToDistFile(
 }
 
 export function containsCanonicalOrigin(text: string, canonicalOrigin = CANONICAL_ORIGIN): boolean {
-  return extractUrlOrigins(text).includes(canonicalOrigin);
+  return extractUrlOrigins(text).some((origin) => origin === canonicalOrigin);
 }
 
 export function findNonCanonicalOrigins(
