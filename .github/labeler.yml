@@ -40,6 +40,7 @@
           - "dprint.json"
           - "lefthook.yml"
           - "package.json"
+          - "bun.lock"
           - "scripts/**"
           - "tsconfig.json"
           - ".github/labels.json"
@@ -70,7 +71,10 @@
 
 "type: dependencies":
   - changed-files:
-      - any-glob-to-any-file: "bun.lock"
+      - any-glob-to-any-file:
+          - "package.json"
+          - "bun.lock"
+          - ".github/dependabot.yml"
 
 "type: docs":
   - changed-files:
