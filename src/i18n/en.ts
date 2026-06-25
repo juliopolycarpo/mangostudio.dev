@@ -1,3 +1,4 @@
+import { RELEASE } from '@/data/releases.generated';
 import { GITHUB_URL } from '@/data/site';
 import type { SiteContent } from './types';
 
@@ -16,7 +17,7 @@ export const en = {
     github: 'View on GitHub',
   },
   hero: {
-    badge: 'v0.1.0 · MIT · 100% local · BYOK',
+    badge: `${RELEASE.version} · MIT · 100% local · BYOK`,
     titlePre: 'Your local AI studio, in a',
     titleHighlight: 'single binary',
     titlePost: '.',
@@ -43,7 +44,7 @@ export const en = {
         n: '1',
         title: 'Install',
         desc: 'One command with the package manager you already use — the only published channel for now.',
-        cmd: 'bun add -g @mangostudio/cli',
+        cmd: RELEASE.installCmd,
       },
       {
         n: '2',
@@ -145,16 +146,9 @@ export const en = {
   releases: {
     eyebrow: 'Changelog',
     title: 'Releases',
-    introBefore: 'Generated from ',
-    introAfter:
-      ' (git-cliff · Conventional Commits). The latest version powers the install command.',
-    latestBadge: 'latest version',
-    latestDate: 'May 29, 2026 · first public release',
-    installCmd: 'bun add -g @mangostudio/cli',
-    unreleasedTitle: 'Unreleased',
-    unreleasedBadge: 'TODO',
-    unreleasedDesc: 'Upcoming changes show up here automatically on every merge to main.',
-    versionDate: '2026-05-29',
+    intro:
+      'Canary version and install command are synced from the MangoStudio release pipeline. Highlights are curated per release.',
+    latestBadge: 'canary version',
     groups: [
       {
         emoji: '🚀',
@@ -262,7 +256,7 @@ export const en = {
           title: '1. Install the CLI',
           body: 'For now, only this channel is published. The fastest with Bun:',
           codeLang: 'bash',
-          code: '# install globally\nbun add -g @mangostudio/cli',
+          code: `# install globally\n${RELEASE.installCmd}`,
         },
         {
           title: '2. Add a key',
@@ -362,7 +356,7 @@ export const en = {
   },
   copyToast: 'Copied to clipboard',
   terminalLines: [
-    '▸ MangoStudio v0.1.0  (bun 1.3.14)',
+    `▸ MangoStudio ${RELEASE.version}  (bun 1.3.14)`,
     '▸ database  ~/.mango/database.sqlite',
     '▸ providers gemini · openai · anthropic  ✓',
     '▸ ready ── http://localhost:3001',

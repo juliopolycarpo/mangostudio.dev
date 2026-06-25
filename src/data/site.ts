@@ -1,12 +1,14 @@
 /** Language-neutral site constants: URLs, install commands, provider glyphs.
  *  Localized copy lives in src/i18n/{pt,en}.ts. */
 
+import { RELEASE } from './releases.generated';
+
 export const GITHUB_URL = 'https://github.com/juliopolycarpo/mangostudio';
 export const ISSUES_URL = `${GITHUB_URL}/issues`;
 export const CONTRIBUTING_URL = `${GITHUB_URL}/blob/main/.github/CONTRIBUTING.md`;
 export const REPO = 'juliopolycarpo/mangostudio';
 export const STARS = '1.2k';
-export const VERSION = 'v0.1.0';
+export const VERSION = RELEASE.version;
 
 export type ChannelStatus = 'ready' | 'planned';
 
@@ -22,7 +24,7 @@ export const INSTALL_TABS: InstallTab[] = [
   {
     id: 'bun',
     label: 'bun',
-    cmd: 'bun add -g @mangostudio/cli',
+    cmd: RELEASE.installCmd,
     status: 'ready',
   },
   {
@@ -66,7 +68,7 @@ export interface Channel {
 
 /** Install grid on the home page. Only `bun` is shipped; the rest are planned. */
 export const CHANNELS: Channel[] = [
-  { id: 'bun', label: 'npm / bun', cmd: 'bun add -g @mangostudio/cli', status: 'ready' },
+  { id: 'bun', label: 'npm / bun', cmd: RELEASE.installCmd, status: 'ready' },
   {
     id: 'brew',
     label: 'homebrew',

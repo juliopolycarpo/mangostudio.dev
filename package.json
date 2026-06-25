@@ -27,7 +27,7 @@
     "qa": "bun run check && bun run test && bun run build && bun run audit:static && bun run labels:check && bun run cloudflare:dry-run",
     "typecheck": "astro check && tsgo --noEmit",
     "lint": "biome check .",
-    "test": "bun ./scripts/audit-static-site.test.ts",
+    "test": "bun ./scripts/audit-static-site.test.ts && bun ./scripts/sync-releases.test.ts",
     "fix": "biome check --write . && dprint fmt",
     "format": "biome format --write . && dprint fmt",
     "audit:static": "bun ./scripts/audit-static-site.ts",
