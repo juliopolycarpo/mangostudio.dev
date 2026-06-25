@@ -276,11 +276,12 @@ async function smokeCanonicalHosts(distDir: string): Promise<SmokeSection> {
 
   for (const file of files) {
     const text = await readTextFile(join(distDir, file), errors);
-    const hostText = file.endsWith('.xml') ? extractXmlLocText(text) : text;
 
     if (!text) {
       continue;
     }
+
+    const hostText = file.endsWith('.xml') ? extractXmlLocText(text) : text;
 
     if (!containsCanonicalOrigin(hostText)) {
       errors.push(`dist/${file} must reference ${CANONICAL_ORIGIN}.`);
@@ -437,10 +438,13 @@ function extractAnchorHrefs(
 }
 
 function extractElementWithClass(html: string, className: string): string | undefined {
+  // Match `className` as a whole class token. `\b` treats `-` as a boundary, so
+  // a query for `nf` would also match `nf-code`; gate on chars that cannot be
+  // part of a class token (whitespace or the surrounding quote) instead.
   const pattern = new RegExp(
-    `<([A-Za-z][A-Za-z0-9]*)\\b[^>]*\\bclass=(["'])[^"']*\\b${escapeRegExp(
+    `<([A-Za-z][A-Za-z0-9]*)\\b[^>]*\\bclass=(["'])[^"']*(?<![\\w-])${escapeRegExp(
       className
-    )}\\b[^"']*\\2[^>]*>[\\s\\S]*?<\\/\\1>`,
+    )}(?![\\w-])[^"']*\\2[^>]*>[\\s\\S]*?<\\/\\1>`,
     'i'
   );
 
