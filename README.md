@@ -71,6 +71,7 @@ The site builds to `./dist` and is served by an **assets-only Worker** (no serve
 
 - **`ci.yml`** — runs `bun run qa` on pull requests. No Cloudflare secrets.
 - **`labeler.yml`** — applies path-based `area:` and `type:` labels without checking out PR code.
+- **`lockfile-sync.yml`** — refreshes `bun.lock` on Dependabot package PRs if the lockfile drifts.
 - **`codeql.yml`** — runs CodeQL JavaScript/TypeScript analysis with `security-extended` queries.
 - **`dependency-review.yml`** — blocks new moderate-or-worse vulnerable dependencies in PRs; this
   requires GitHub Dependency graph to stay enabled.
@@ -109,8 +110,14 @@ bun run deploy:dry-run    # validate config without uploading
 
 - Pull requests never receive deploy credentials; only `main` can deploy.
 - Production deploys pass through a protected GitHub Environment (optional manual approval + audit log).
-- Actions are SHA-pinned; Dependabot keeps actions and dependencies current.
-- Installs use `--frozen-lockfile`; the committed `bun.lock` is the source of truth.
+- Actions are SHA-pinned; Dependabot keeps actions and Bun dependencies current.
+- Dependabot uses the Bun ecosystem so dependency updates resolve `package.json` and `bun.lock`
+  together. A restricted lockfile-sync workflow fixes Dependabot package PRs if the lockfile still
+  drifts.
+- Installs use `--frozen-lockfile --ignore-scripts`; the committed `bun.lock` is the source of
+  truth and dependency lifecycle scripts do not run in CI.
+- Dependabot does not currently cover Bun security updates; CodeQL and Dependency Review still run
+  as supply-chain gates.
 - No analytics, no third-party fonts, no trackers — consistent with MangoStudio's local-first ethos.
 - `wrangler.jsonc` is audited to remain assets-only: no Worker script, account id, bindings, or vars.
 - Public assets are checked for remote loaded resources and secret-like strings before deploy.

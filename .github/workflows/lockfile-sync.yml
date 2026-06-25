@@ -1,0 +1,53 @@
+name: Lockfile Sync
+
+# pull_request_target grants a write token, so this workflow is restricted to
+# Dependabot PRs from this repository and runs install with lifecycle scripts
+# disabled. It checks out the PR head only to regenerate bun.lock, then commits
+# that file alone if Bun changed it.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    paths:
+      - package.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lockfile-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync Bun lockfile
+    if: >-
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout pull request branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Refresh lockfile without lifecycle scripts
+        run: bun install --ignore-scripts
+
+      - name: Commit lockfile if changed
+        run: |
+          if test -z "$(git status --porcelain -- bun.lock)"; then
+            echo "bun.lock is already in sync."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bun.lock
+          git commit -m "chore: sync bun lockfile"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"

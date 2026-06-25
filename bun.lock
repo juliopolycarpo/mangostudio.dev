@@ -7,7 +7,7 @@
       "devDependencies": {
         "@astrojs/check": "^0.9.9",
         "@astrojs/sitemap": "^3.7.3",
-        "@biomejs/biome": "^2.4.15",
+        "@biomejs/biome": "^2.5.0",
         "@dprint/markdown": "^0.22.1",
         "@dprint/toml": "^0.7.0",
         "@fontsource-variable/geist": "^5.2.9",
