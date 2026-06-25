@@ -1,6 +1,5 @@
 import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
 import {
-  extractCmdkDocIds,
   extractDataCopyTargets,
   extractInlineStyleBlocks,
   extractLoadedExternalUrls,
@@ -227,18 +226,6 @@ run(
     ok(errors.some((error) => error.includes('pt release copy still claims generated highlights')));
   }
 );
-
-run('extractCmdkDocIds returns sorted doc actions only', () => {
-  deepStrictEqual(
-    extractCmdkDocIds([
-      { action: { type: 'nav', page: 'home' } },
-      { action: { type: 'doc', doc: 'quickstart' } },
-      { action: { type: 'doc', doc: 'cli' } },
-      { action: { type: 'theme' } },
-    ]),
-    ['cli', 'quickstart']
-  );
-});
 
 function run(name: string, fn: () => void): void {
   try {

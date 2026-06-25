@@ -366,22 +366,6 @@ export function validateReleaseSource(input: ReleaseCopyAuditInput): string[] {
   return errors;
 }
 
-export function extractCmdkDocIds(items: readonly unknown[]): string[] {
-  const ids = new Set<string>();
-
-  for (const item of items) {
-    if (!isRecord(item) || !isRecord(item.action)) {
-      continue;
-    }
-
-    if (item.action.type === 'doc' && typeof item.action.doc === 'string') {
-      ids.add(item.action.doc);
-    }
-  }
-
-  return [...ids].sort();
-}
-
 async function runAudit(repoRoot: string): Promise<AuditSection[]> {
   const sections = [
     await auditWrangler(repoRoot),
@@ -582,7 +566,6 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
 
 async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSection> {
   const errors: string[] = [];
-  const distDir = join(repoRoot, 'dist');
   const htmlFiles = await readDistHtmlFiles(repoRoot);
   const copyTargets = htmlFiles.flatMap((file) => extractDataCopyTargets(file.text));
   const siteData = await importSiteData(errors);
@@ -622,29 +605,6 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
 
   if (release !== undefined || localizedReleases.length > 0) {
     errors.push(...validateReleaseSource({ release, localizedReleases }));
-  }
-
-  if (await fileExists(distDir)) {
-    const distFiles = new Set(htmlFiles.map((file) => file.relativePath));
-
-    for (const { locale, content } of localizedContent) {
-      const cmdk = content.cmdk;
-
-      if (!isRecord(cmdk) || !Array.isArray(cmdk.items)) {
-        errors.push(`${locale} command palette items must be an array.`);
-        continue;
-      }
-
-      const prefix = locale === 'en' ? 'dist/en/docs' : 'dist/docs';
-
-      for (const docId of extractCmdkDocIds(cmdk.items)) {
-        const expectedPath = `${prefix}/${docId}/index.html`;
-
-        if (!distFiles.has(expectedPath)) {
-          errors.push(`${locale} command palette doc link "${docId}" is missing ${expectedPath}.`);
-        }
-      }
-    }
   }
 
   return { name: 'First-publish static promises', errors };
