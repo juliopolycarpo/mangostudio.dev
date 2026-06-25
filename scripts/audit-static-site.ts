@@ -625,9 +625,7 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
   }
 
   if (await fileExists(distDir)) {
-    const distFiles = new Set(
-      (await walkFiles(distDir)).map((file) => toPosix(relative(repoRoot, file)))
-    );
+    const distFiles = new Set(htmlFiles.map((file) => file.relativePath));
 
     for (const { locale, content } of localizedContent) {
       const cmdk = content.cmdk;
@@ -863,17 +861,25 @@ function parseAttributes(tag: string): Map<string, string> {
 
 function decodeHtmlAttribute(value: string): string {
   return value
-    .replace(/&#x([0-9a-f]+);/gi, (_match: string, codePoint: string) =>
-      String.fromCodePoint(Number.parseInt(codePoint, 16))
+    .replace(/&#x([0-9a-f]+);/gi, (match: string, codePoint: string) =>
+      decodeCodePoint(Number.parseInt(codePoint, 16), match)
     )
-    .replace(/&#(\d+);/g, (_match: string, codePoint: string) =>
-      String.fromCodePoint(Number.parseInt(codePoint, 10))
+    .replace(/&#(\d+);/g, (match: string, codePoint: string) =>
+      decodeCodePoint(Number.parseInt(codePoint, 10), match)
     )
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
+}
+
+function decodeCodePoint(codePoint: number, original: string): string {
+  if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10ffff) {
+    return original;
+  }
+
+  return String.fromCodePoint(codePoint);
 }
 
 function addRemoteUrl(urls: Set<string>, value: string | undefined): void {

@@ -141,6 +141,12 @@ run('extractDataCopyTargets decodes data-copy command attributes', () => {
   );
 });
 
+run('extractDataCopyTargets leaves out-of-range numeric entities intact', () => {
+  deepStrictEqual(extractDataCopyTargets('<button data-copy="&#x110000;">Copy</button>'), [
+    '&#x110000;',
+  ]);
+});
+
 run('validateInstallChannels accepts ready npm/bun primary channels', () => {
   deepStrictEqual(
     validateInstallChannels({
