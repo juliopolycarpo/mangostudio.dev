@@ -235,7 +235,21 @@ async function smokeReadyDocs(distDir: string): Promise<SmokeSection> {
 
   for (const doc of readyDocs) {
     const html = await readTextFile(join(distDir, doc.file), errors);
-    const article = html ? (extractElementWithClass(html, 'docs-article') ?? html) : '';
+
+    if (!html) {
+      continue;
+    }
+
+    // Scope the ready/planned checks to the article: the sidebar lists every
+    // planned doc, so the planned badge and `docs-planned` marker appear all
+    // over a ready page. Falling back to the whole document would flag a
+    // correctly rendered page, so a missing article is itself the failure.
+    const article = extractElementWithClass(html, 'docs-article');
+
+    if (!article) {
+      errors.push(`dist/${doc.file} is missing the docs-article container.`);
+      continue;
+    }
 
     if (article.includes('TODO')) {
       errors.push(`dist/${doc.file} must not contain TODO placeholder copy in the article.`);
