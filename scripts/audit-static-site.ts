@@ -13,6 +13,27 @@ interface LabelDefinition {
   description: string;
 }
 
+export interface TextFile {
+  relativePath: string;
+  text: string;
+}
+
+interface LocalizedContent {
+  locale: 'pt' | 'en';
+  content: Record<string, unknown>;
+}
+
+export interface InstallChannelsAuditInput {
+  installTabs: readonly unknown[];
+  channels: readonly unknown[];
+  copyTargets: readonly string[];
+}
+
+export interface ReleaseCopyAuditInput {
+  release: unknown;
+  localizedReleases: readonly { locale: string; releases: unknown }[];
+}
+
 const DIST_EXPECTED_FILES = [
   'index.html',
   'en/index.html',
@@ -69,6 +90,30 @@ const SECRET_PATTERNS = [
   { label: 'Cloudflare account id variable', pattern: /\bCLOUDFLARE_ACCOUNT_ID\b/ },
   { label: 'private key block', pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
   { label: 'GitHub token-like value', pattern: /\bgh[pousr]_[A-Za-z0-9_]{30,}\b/ },
+];
+
+const INSTALLER_URL_MARKER = 'mangostudio.dev/install.sh';
+const TODO_HTML_ALLOWLIST = new Set<string>();
+const INSTALL_PLACEHOLDER_PATTERNS = [
+  /\bplaceholder\b/i,
+  /performs no installation/i,
+  /\bno installation\b/i,
+];
+
+const PUBLISHED_CLI_INSTALL_PATTERN =
+  /^(?:bun\s+add|npm\s+(?:install|i))\s+-g\s+@mangostudio\/cli(?:@\S+)?$/;
+
+const DISALLOWED_RELEASE_COPY_PATTERNS = [
+  { label: 'git-cliff generated highlights', pattern: /git-cliff/i },
+  {
+    label: 'automatic merge generated highlights',
+    pattern: /automaticamente a cada merge|automatically (?:on|after) each merge/i,
+  },
+  {
+    label: 'generated highlights',
+    pattern:
+      /(?:highlight|highlights|destaque|destaques)[^.!?]*(?:generated|auto-generated|synced|sincronizad|gerad|automat)/i,
+  },
 ];
 
 export function stripJsonComments(input: string): string {
@@ -199,12 +244,151 @@ export function extractInlineStyleBlocks(html: string): string[] {
   return blocks;
 }
 
+export function extractDataCopyTargets(html: string): string[] {
+  const targets = new Set<string>();
+  const tagPattern = /<\s*[A-Za-z][^>]*\bdata-copy\s*=\s*(?:"[^"]*"|'[^']*')[^>]*>/gi;
+  let tagMatch = tagPattern.exec(html);
+
+  while (tagMatch !== null) {
+    const attrs = parseAttributes(tagMatch[0] ?? '');
+    const target = attrs.get('data-copy');
+
+    if (target !== undefined) {
+      targets.add(decodeHtmlAttribute(target));
+    }
+
+    tagMatch = tagPattern.exec(html);
+  }
+
+  return [...targets].sort();
+}
+
+export function isPlaceholderInstallScript(script: string): boolean {
+  return INSTALL_PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(script));
+}
+
+export function isShellInstallerAdvertised(htmlFiles: readonly TextFile[]): boolean {
+  return htmlFiles.some((file) => file.text.includes(INSTALLER_URL_MARKER));
+}
+
+export function findTodoHtmlFiles(htmlFiles: readonly TextFile[]): string[] {
+  return htmlFiles
+    .filter((file) => file.text.includes('TODO') && !TODO_HTML_ALLOWLIST.has(file.relativePath))
+    .map((file) => file.relativePath)
+    .sort();
+}
+
+export function validateInstallChannels(input: InstallChannelsAuditInput): string[] {
+  const errors: string[] = [];
+  const copyTargets = new Set(input.copyTargets);
+  const groups = [
+    { name: 'INSTALL_TABS', entries: input.installTabs },
+    { name: 'CHANNELS', entries: input.channels },
+  ];
+  let readyCount = 0;
+
+  for (const group of groups) {
+    for (const [index, entry] of group.entries.entries()) {
+      const label = `${group.name}[${index}]`;
+
+      if (!isRecord(entry)) {
+        errors.push(`${label} must be an object.`);
+        continue;
+      }
+
+      const status = entry.status;
+      const cmd = entry.cmd;
+
+      if (status !== 'ready' && status !== 'planned') {
+        errors.push(`${label} must declare status "ready" or "planned".`);
+        continue;
+      }
+
+      if (typeof cmd !== 'string' || cmd.trim() === '') {
+        errors.push(`${label} must declare a non-empty command.`);
+        continue;
+      }
+
+      if (status === 'ready') {
+        readyCount += 1;
+      }
+
+      if (status === 'planned' && copyTargets.has(cmd)) {
+        errors.push(`${label} is planned, but its command is exposed as a copy target.`);
+      }
+    }
+  }
+
+  if (readyCount === 0) {
+    errors.push('At least one install channel must be ready.');
+  }
+
+  assertPublishedPrimary(errors, 'INSTALL_TABS[0]', input.installTabs[0]);
+  assertPublishedPrimary(errors, 'CHANNELS[0]', input.channels[0]);
+
+  return errors;
+}
+
+export function validateReleaseSource(input: ReleaseCopyAuditInput): string[] {
+  const errors: string[] = [];
+
+  if (!isRecord(input.release)) {
+    errors.push('src/data/releases.generated.ts must export a RELEASE object.');
+  } else {
+    for (const field of ['version', 'releaseDate', 'installCmd']) {
+      if (typeof input.release[field] !== 'string' || input.release[field].trim() === '') {
+        errors.push(`RELEASE.${field} must be non-empty.`);
+      }
+    }
+  }
+
+  for (const { locale, releases } of input.localizedReleases) {
+    if (!isRecord(releases)) {
+      errors.push(`${locale} release copy must be an object.`);
+      continue;
+    }
+
+    const strings = collectStrings(releases);
+
+    if (strings.some((text) => text.includes('TODO'))) {
+      errors.push(`${locale} release copy must not contain TODO placeholder text.`);
+    }
+
+    for (const { label, pattern } of DISALLOWED_RELEASE_COPY_PATTERNS) {
+      const match = strings.find((text) => pattern.test(text));
+
+      if (match) {
+        errors.push(`${locale} release copy still claims ${label}: "${shorten(match)}".`);
+      }
+    }
+  }
+
+  return errors;
+}
+
+export function extractCmdkDocIds(items: readonly unknown[]): string[] {
+  const ids = new Set<string>();
+
+  for (const item of items) {
+    if (!isRecord(item) || !isRecord(item.action)) {
+      continue;
+    }
+
+    if (item.action.type === 'doc' && typeof item.action.doc === 'string') {
+      ids.add(item.action.doc);
+    }
+  }
+
+  return [...ids].sort();
+}
+
 async function runAudit(repoRoot: string): Promise<AuditSection[]> {
   const sections = [
     await auditWrangler(repoRoot),
     await auditWorkflows(repoRoot),
     await auditInstallEndpoint(repoRoot),
     await auditBuiltOutput(repoRoot),
+    await auditFirstPublishReadiness(repoRoot),
     await auditLabels(repoRoot),
   ];
 
@@ -318,6 +502,15 @@ async function auditInstallEndpoint(repoRoot: string): Promise<AuditSection> {
     if (!installScript.includes('set -euo pipefail')) {
       errors.push('public/install.sh must keep strict shell mode.');
     }
+
+    if (
+      isPlaceholderInstallScript(installScript) &&
+      isShellInstallerAdvertised(await readDistHtmlFiles(repoRoot))
+    ) {
+      errors.push(
+        `public/install.sh is a placeholder, but built pages advertise ${INSTALLER_URL_MARKER}.`
+      );
+    }
   }
 
   return { name: 'Public installer endpoint', errors };
@@ -362,6 +555,10 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     }
 
     if (extension === '.html') {
+      for (const relativeHtmlPath of findTodoHtmlFiles([{ relativePath, text }])) {
+        errors.push(`${relativeHtmlPath} contains TODO placeholder copy.`);
+      }
+
       for (const url of extractLoadedExternalUrls(text)) {
         errors.push(`${relativePath} loads a remote asset (${url}); ship audited assets locally.`);
       }
@@ -381,6 +578,78 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
   }
 
   return { name: 'Static build output', errors };
+}
+
+async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSection> {
+  const errors: string[] = [];
+  const distDir = join(repoRoot, 'dist');
+  const htmlFiles = await readDistHtmlFiles(repoRoot);
+  const copyTargets = htmlFiles.flatMap((file) => extractDataCopyTargets(file.text));
+  const siteData = await importSiteData(errors);
+
+  if (siteData) {
+    const installTabs = siteData.INSTALL_TABS;
+    const channels = siteData.CHANNELS;
+
+    if (!Array.isArray(installTabs)) {
+      errors.push('src/data/site.ts must export INSTALL_TABS as an array.');
+    }
+
+    if (!Array.isArray(channels)) {
+      errors.push('src/data/site.ts must export CHANNELS as an array.');
+    }
+
+    if (Array.isArray(installTabs) && Array.isArray(channels)) {
+      errors.push(...validateInstallChannels({ installTabs, channels, copyTargets }));
+    }
+  }
+
+  const releasePath = join(repoRoot, 'src', 'data', 'releases.generated.ts');
+  let release: unknown;
+
+  if (!(await fileExists(releasePath))) {
+    errors.push('src/data/releases.generated.ts must exist.');
+  } else {
+    const releaseModule = await importGeneratedRelease(errors);
+    release = releaseModule?.RELEASE;
+  }
+
+  const localizedContent = await importLocalizedContent(errors);
+  const localizedReleases = localizedContent.map(({ locale, content }) => ({
+    locale,
+    releases: content.releases,
+  }));
+
+  if (release !== undefined || localizedReleases.length > 0) {
+    errors.push(...validateReleaseSource({ release, localizedReleases }));
+  }
+
+  if (await fileExists(distDir)) {
+    const distFiles = new Set(
+      (await walkFiles(distDir)).map((file) => toPosix(relative(repoRoot, file)))
+    );
+
+    for (const { locale, content } of localizedContent) {
+      const cmdk = content.cmdk;
+
+      if (!isRecord(cmdk) || !Array.isArray(cmdk.items)) {
+        errors.push(`${locale} command palette items must be an array.`);
+        continue;
+      }
+
+      const prefix = locale === 'en' ? 'dist/en/docs' : 'dist/docs';
+
+      for (const docId of extractCmdkDocIds(cmdk.items)) {
+        const expectedPath = `${prefix}/${docId}/index.html`;
+
+        if (!distFiles.has(expectedPath)) {
+          errors.push(`${locale} command palette doc link "${docId}" is missing ${expectedPath}.`);
+        }
+      }
+    }
+  }
+
+  return { name: 'First-publish static promises', errors };
 }
 
 async function auditLabels(repoRoot: string): Promise<AuditSection> {
@@ -438,6 +707,74 @@ async function auditLabels(repoRoot: string): Promise<AuditSection> {
   }
 
   return { name: 'GitHub label configuration', errors };
+}
+
+async function readDistHtmlFiles(repoRoot: string): Promise<TextFile[]> {
+  const distDir = join(repoRoot, 'dist');
+
+  if (!(await fileExists(distDir))) {
+    return [];
+  }
+
+  const htmlFiles: TextFile[] = [];
+
+  for (const file of await walkFiles(distDir)) {
+    if (extname(file) !== '.html') {
+      continue;
+    }
+
+    htmlFiles.push({
+      relativePath: toPosix(relative(repoRoot, file)),
+      text: await readFile(file, 'utf8'),
+    });
+  }
+
+  return htmlFiles;
+}
+
+async function importSiteData(errors: string[]): Promise<Record<string, unknown> | undefined> {
+  try {
+    return (await import('../src/data/site')) as Record<string, unknown>;
+  } catch (error) {
+    errors.push(`Could not import src/data/site.ts: ${formatError(error)}`);
+    return undefined;
+  }
+}
+
+async function importGeneratedRelease(
+  errors: string[]
+): Promise<Record<string, unknown> | undefined> {
+  try {
+    return (await import('../src/data/releases.generated')) as Record<string, unknown>;
+  } catch (error) {
+    errors.push(`Could not import src/data/releases.generated.ts: ${formatError(error)}`);
+    return undefined;
+  }
+}
+
+async function importLocalizedContent(errors: string[]): Promise<LocalizedContent[]> {
+  const modules = [
+    { locale: 'pt' as const, modulePath: '../src/i18n/pt', exportName: 'pt' },
+    { locale: 'en' as const, modulePath: '../src/i18n/en', exportName: 'en' },
+  ];
+  const localizedContent: LocalizedContent[] = [];
+
+  for (const { locale, modulePath, exportName } of modules) {
+    try {
+      const module = (await import(modulePath)) as Record<string, unknown>;
+      const content = module[exportName];
+
+      if (isRecord(content)) {
+        localizedContent.push({ locale, content });
+      } else {
+        errors.push(`src/i18n/${locale}.ts must export ${exportName} content.`);
+      }
+    } catch (error) {
+      errors.push(`Could not import src/i18n/${locale}.ts: ${formatError(error)}`);
+    }
+  }
+
+  return localizedContent;
 }
 
 async function readJsonc(
@@ -524,6 +861,21 @@ function parseAttributes(tag: string): Map<string, string> {
   return attrs;
 }
 
+function decodeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&#x([0-9a-f]+);/gi, (_match: string, codePoint: string) =>
+      String.fromCodePoint(Number.parseInt(codePoint, 16))
+    )
+    .replace(/&#(\d+);/g, (_match: string, codePoint: string) =>
+      String.fromCodePoint(Number.parseInt(codePoint, 10))
+    )
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
 function addRemoteUrl(urls: Set<string>, value: string | undefined): void {
   if (!value) {
     return;
@@ -553,6 +905,58 @@ function assertEquals(
   if (actual !== expected) {
     errors.push(errorMessage);
   }
+}
+
+function assertPublishedPrimary(errors: string[], label: string, entry: unknown): void {
+  if (!isRecord(entry)) {
+    errors.push(`${label} must be the ready npm/bun install command.`);
+    return;
+  }
+
+  if (
+    entry.status !== 'ready' ||
+    typeof entry.cmd !== 'string' ||
+    !PUBLISHED_CLI_INSTALL_PATTERN.test(entry.cmd.trim())
+  ) {
+    errors.push(`${label} must be the ready npm/bun install command.`);
+  }
+}
+
+function collectStrings(value: unknown): string[] {
+  const strings: string[] = [];
+
+  function visit(current: unknown): void {
+    if (typeof current === 'string') {
+      strings.push(current);
+      return;
+    }
+
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        visit(item);
+      }
+      return;
+    }
+
+    if (isRecord(current)) {
+      for (const item of Object.values(current)) {
+        visit(item);
+      }
+    }
+  }
+
+  visit(value);
+  return strings;
+}
+
+function shorten(text: string): string {
+  const compact = text.replace(/\s+/g, ' ').trim();
+
+  if (compact.length <= 96) {
+    return compact;
+  }
+
+  return `${compact.slice(0, 93)}...`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

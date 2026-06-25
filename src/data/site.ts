@@ -36,7 +36,7 @@ export const INSTALL_TABS: InstallTab[] = [
   {
     id: 'curl',
     label: 'shell',
-    cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+    cmd: 'shell installer planned',
     status: 'planned',
   },
   {
@@ -78,7 +78,7 @@ export const CHANNELS: Channel[] = [
   {
     id: 'curl',
     label: 'shell',
-    cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+    cmd: 'shell installer planned',
     status: 'planned',
   },
   { id: 'scoop', label: 'scoop', cmd: 'scoop install mangostudio', status: 'planned' },
