@@ -40,6 +40,8 @@ jobs:
         run: bun install --ignore-scripts
 
       - name: Commit lockfile if changed
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           if test -z "$(git status --porcelain -- bun.lock)"; then
             echo "bun.lock is already in sync."
@@ -50,4 +52,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add bun.lock
           git commit -m "chore: sync bun lockfile"
-          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          git push origin "HEAD:$HEAD_REF"
