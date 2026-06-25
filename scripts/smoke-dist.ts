@@ -143,32 +143,14 @@ export function resolveInternalHrefToDistFile(
 }
 
 export function containsCanonicalOrigin(text: string, canonicalOrigin = CANONICAL_ORIGIN): boolean {
-  return text.includes(canonicalOrigin);
+  return extractUrlOrigins(text).includes(canonicalOrigin);
 }
 
 export function findNonCanonicalOrigins(
   text: string,
   canonicalOrigin = CANONICAL_ORIGIN
 ): string[] {
-  const origins = new Set<string>();
-  const urlPattern = /\bhttps?:\/\/[^\s"'<>),]+/gi;
-  let match = urlPattern.exec(text);
-
-  while (match !== null) {
-    try {
-      const origin = new URL(match[0] ?? '').origin;
-
-      if (origin !== canonicalOrigin) {
-        origins.add(origin);
-      }
-    } catch {
-      // Ignore malformed URL-like text; host checks are for emitted absolute URLs.
-    }
-
-    match = urlPattern.exec(text);
-  }
-
-  return [...origins].sort();
+  return extractUrlOrigins(text).filter((origin) => origin !== canonicalOrigin);
 }
 
 async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
@@ -411,6 +393,24 @@ function extractXmlLocText(xml: string): string {
   return [...xml.matchAll(/<loc>([\s\S]*?)<\/loc>/gi)]
     .map((match) => decodeHtmlAttribute(match[1] ?? ''))
     .join('\n');
+}
+
+function extractUrlOrigins(text: string): string[] {
+  const origins = new Set<string>();
+  const urlPattern = /\bhttps?:\/\/[^\s"'<>),]+/gi;
+  let match = urlPattern.exec(text);
+
+  while (match !== null) {
+    try {
+      origins.add(new URL(match[0] ?? '').origin);
+    } catch {
+      // Ignore malformed URL-like text; host checks are for emitted absolute URLs.
+    }
+
+    match = urlPattern.exec(text);
+  }
+
+  return [...origins].sort();
 }
 
 function extractAnchorHrefs(

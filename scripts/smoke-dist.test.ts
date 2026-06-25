@@ -93,6 +93,18 @@ run('canonical host helpers accept production origin and reject preview origins'
   ]);
 });
 
+run('canonical host helpers reject substring host spoofing', () => {
+  const text =
+    'Spoofed path: https://example.com/https://mangostudio.dev/sitemap-index.xml\n' +
+    'Spoofed host: https://mangostudio.dev.example.com/sitemap-index.xml';
+
+  strictEqual(containsCanonicalOrigin(text), false);
+  deepStrictEqual(findNonCanonicalOrigins(text), [
+    'https://example.com',
+    'https://mangostudio.dev.example.com',
+  ]);
+});
+
 run('extractRouteIntegrityHrefs scopes links to cmdk, docs sidebar, and footer', () => {
   const html = `
     <header><a href="/not-checked">Header</a></header>
