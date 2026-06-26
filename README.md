@@ -86,6 +86,9 @@ All third-party actions are pinned to commit SHAs; jobs use least-privilege perm
 
 ### One-time setup (performed by the maintainer)
 
+Use [`docs/first-publish-checklist.md`](./docs/first-publish-checklist.md) as the canonical,
+checkable first-publish list for these external settings.
+
 1. **Cloudflare API token** — create a token scoped to **Workers Scripts: Edit** (and Workers KV/Assets
    if later needed) at <https://dash.cloudflare.com/profile/api-tokens>.
 2. **GitHub secrets** — in repo *Settings → Secrets and variables → Actions*, add:
