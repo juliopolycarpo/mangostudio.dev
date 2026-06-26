@@ -10,7 +10,13 @@ export const pt = {
       'Chat e geração de imagem com Gemini, OpenAI, Anthropic e DeepSeek — rodando na sua máquina, com as suas chaves. Sem nuvem, sem telemetria, sem Node.',
   },
   nav: { home: 'Início', features: 'Recursos', releases: 'Releases', docs: 'Docs' },
-  header: { search: 'Buscar…', cta: 'Começar', theme: 'Alternar tema', github: 'Ver no GitHub' },
+  header: {
+    search: 'Buscar…',
+    cta: 'Começar',
+    theme: 'Alternar tema',
+    github: 'Ver no GitHub',
+    star: 'Dar estrela',
+  },
   hero: {
     badge: `${RELEASE.version} · MIT · 100% local · BYOK`,
     titlePre: 'Seu estúdio de IA local, em um',

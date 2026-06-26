@@ -5,9 +5,9 @@ import { RELEASE } from './releases.generated';
 
 export const GITHUB_URL = 'https://github.com/juliopolycarpo/mangostudio';
 export const ISSUES_URL = `${GITHUB_URL}/issues`;
-export const CONTRIBUTING_URL = `${GITHUB_URL}/blob/main/.github/CONTRIBUTING.md`;
+export const CONTRIBUTING_URL =
+  'https://github.com/juliopolycarpo/mangostudio.dev/blob/main/CONTRIBUTING.md';
 export const REPO = 'juliopolycarpo/mangostudio';
-export const STARS = '1.2k';
 export const VERSION = RELEASE.version;
 
 export type ChannelStatus = 'ready' | 'planned';

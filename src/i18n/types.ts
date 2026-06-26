@@ -77,7 +77,7 @@ export interface SiteContent {
   lang: Lang;
   meta: { title: string; description: string };
   nav: { home: string; features: string; releases: string; docs: string };
-  header: { search: string; cta: string; theme: string; github: string };
+  header: { search: string; cta: string; theme: string; github: string; star: string };
   hero: {
     badge: string;
     titlePre: string;

@@ -1,5 +1,5 @@
 ---
-import { GITHUB_URL, STARS } from '@/data/site';
+import { GITHUB_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
 import Icon from './Icon.astro';
@@ -57,7 +57,8 @@ const nav = [
 
   <a class="gh-link" href={GITHUB_URL} target="_blank" rel="noopener" aria-label={c.header.github}>
     <Icon name="github" size={16} />
-    <span class="gh-stars">{STARS}</span>
+    <span class="gh-star" aria-hidden="true">★</span>
+    <span class="gh-label">{c.header.star}</span>
   </a>
 
   <a class="btn btn-primary header-cta" href={routes.doc(lang, 'quickstart')}>{c.header.cta}</a>
@@ -187,9 +188,14 @@ const nav = [
     border-color: color-mix(in srgb, var(--mango) 45%, var(--border));
   }
 
-  .gh-stars {
-    font-family: var(--font-mono);
+  .gh-star {
     font-size: 12px;
+    line-height: 1;
+    color: var(--mango);
+  }
+
+  .gh-label {
+    font-size: 13px;
     color: var(--text-2);
   }
 
@@ -201,7 +207,8 @@ const nav = [
   @media (max-width: 1080px) {
     .nav,
     .search-label,
-    .gh-stars {
+    .gh-star,
+    .gh-label {
       display: none;
     }
     .search-btn {
