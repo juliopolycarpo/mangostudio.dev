@@ -29,6 +29,8 @@ This website is static Astro output served by Cloudflare Workers static assets.
   `CLOUDFLARE_ACCOUNT_ID`.
 - Public assets must be auditable from the repository. The QA audit fails on remote loaded assets,
   secret-like strings in `dist/`, and accidental Worker bindings.
+- The `main` ruleset requires pull requests, required checks, linear history, and GitHub-verified
+  signed commits.
 
 ## Automation
 
@@ -43,12 +45,12 @@ Security-relevant automation includes:
 - CodeQL with `security-extended` queries for JavaScript/TypeScript.
 - Dependency Review blocking newly introduced moderate-or-worse vulnerabilities. This requires
   GitHub Dependency graph to stay enabled for the repository.
+- Commit policy checks for DCO signoffs, explanatory commit bodies, and GPG/SSH signatures.
 - Static-output audit for Cloudflare deploy posture and public asset integrity.
 - Dependabot for npm and GitHub Actions updates.
 
 ## What Not to Report
 
-- Missing GPG signatures on commits.
 - Missing optional Cloudflare environment reviewer configuration.
 - Unpopulated example files.
 - Product bugs in MangoStudio itself; use the main product repository for those.

@@ -40,7 +40,8 @@ bun run qa         # full CI gate: check + test + build + audit + Wrangler dry-r
 bun run fix        # biome --write + dprint fmt (auto-fix)
 ```
 
-A `lefthook` pre-commit hook runs Biome, dprint and `astro check` on staged files.
+`lefthook` runs Biome, dprint, and `astro check` before commits. It also blocks commits and pushes
+that miss the required commit body, DCO signoff, or GPG/SSH signature.
 
 ## Project layout
 
@@ -101,6 +102,9 @@ checkable first-publish list for these external settings.
    Cloudflare dashboard (*Workers & Pages → mangostudio-dev → Settings → Domains & Routes*).
 5. **Dependency graph** — enable *Settings → Code security and analysis → Dependency graph* so
    `dependency-review.yml` can enforce the supply-chain gate.
+6. **Branch ruleset** — apply the checked-in
+   [`main` ruleset](./docs/branch-protection.md) so pull requests, required checks, signed commits,
+   linear history, and deletion/force-push protections are enforced before first publish.
 
 Manual deploy from a workstation (requires `wrangler login` or the env token):
 
@@ -113,6 +117,8 @@ bun run deploy:dry-run    # validate config without uploading
 
 - Pull requests never receive deploy credentials; only `main` can deploy.
 - Production deploys pass through a protected GitHub Environment (optional manual approval + audit log).
+- `main` is protected by a repository ruleset requiring pull requests, up-to-date required checks,
+  signed commits, linear history, and no force pushes or deletion.
 - Actions are SHA-pinned; Dependabot keeps actions and Bun dependencies current.
 - Dependabot uses the Bun ecosystem so dependency updates resolve `package.json` and `bun.lock`
   together. A restricted lockfile-sync workflow fixes Dependabot package PRs if the lockfile still

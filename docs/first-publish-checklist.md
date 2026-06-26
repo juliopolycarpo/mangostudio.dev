@@ -53,7 +53,7 @@ GitHub or Cloudflare state.
 - [ ] Branch protection or rulesets require the expected `main` checks.
 
   **Verify:** check *Settings -> Rules -> Rulesets* or *Settings -> Branches* in GitHub, and compare
-  the required checks with the branch-protection policy tracked in #16.
+  the required checks and protections with [`docs/branch-protection.md`](./branch-protection.md).
 
   **Blocks publish:** yes.
 
@@ -82,6 +82,14 @@ one place.
 
   **Verify:** run `bun run qa` locally from the repository root and confirm the latest `main` CI run
   is green.
+
+  **Blocks publish:** yes.
+
+- [ ] Local commit hooks are installed on the maintainer workstation.
+
+  **Verify:** run `bun run prepare` or `bunx lefthook install`, then confirm `git commit` and
+  `git push` invoke the commit policy hooks documented in
+  [`docs/branch-protection.md`](./branch-protection.md).
 
   **Blocks publish:** yes.
 
