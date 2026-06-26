@@ -68,9 +68,21 @@ const altEn = new URL(alternatePath(pathname, 'en'), Astro.site).toString();
 
     <CommandPalette lang={lang} content={c} />
 
-    <div id="copy-toast" class="copy-toast" role="status" aria-live="polite">
-      <span class="check"><Icon name="check" size={16} /></span>
-      <span>{c.copyToast}</span>
+    <div
+      id="copy-toast"
+      class="copy-toast"
+      role="status"
+      aria-live="polite"
+      data-copy-success={c.copyToast}
+      data-copy-error={c.copyToastError}
+    >
+      <span class="copy-toast-icon copy-toast-icon--success" aria-hidden="true">
+        <Icon name="check" size={16} />
+      </span>
+      <span class="copy-toast-icon copy-toast-icon--error" aria-hidden="true" hidden>
+        <Icon name="x" size={16} />
+      </span>
+      <span class="copy-toast-message"></span>
     </div>
 
     <script>

@@ -111,12 +111,12 @@ export function validateCommitMessage(
   const expectedIdentities = options.identities ?? [];
 
   if (trailerSignoffs.length === 0) {
-    errors.push('commit message must end with a valid Signed-off-by trailer');
+    errors.push('commit message must end with a DCO Signed-off-by trailer');
   } else if (
     expectedIdentities.length > 0 &&
     !trailerSignoffs.some((signoff) => identityListIncludesEmail(expectedIdentities, signoff.email))
   ) {
-    errors.push('Signed-off-by trailer must match the author or committer email');
+    errors.push('DCO Signed-off-by trailer must match the author or committer email');
   }
 
   const afterSubjectStart = subjectIndex + 1;
@@ -196,7 +196,7 @@ function validateExistingCommits(shas: string[]): CommitPolicyResult[] {
     const errors = validateCommitMessage(commit.message, { identities });
 
     if (!commit.hasSignature) {
-      errors.push('commit must be signed with a GPG or SSH signature');
+      errors.push('commit must include a GPG or SSH signature (-S)');
     }
 
     return {

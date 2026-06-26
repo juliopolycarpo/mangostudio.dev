@@ -42,18 +42,25 @@ const items = c.cmdk.items.map((item) => ({
         data-cmdk-input
         placeholder={c.cmdk.placeholder}
         autocomplete="off"
+        role="combobox"
+        aria-expanded="false"
+        aria-controls="cmdk-list"
+        aria-autocomplete="list"
         aria-label={c.cmdk.placeholder}
       />
       <kbd>esc</kbd>
     </div>
 
-    <div class="cmdk-results">
+    <div class="cmdk-results" id="cmdk-list" role="listbox">
       {
-        items.map((item) =>
+        items.map((item, index) =>
           item.isTheme ? (
             <button
               type="button"
               class="cmdk-item"
+              id={`cmdk-option-${index}`}
+              role="option"
+              aria-selected="false"
               data-cmdk-item
               data-action="theme"
               data-search={item.search}
@@ -68,6 +75,9 @@ const items = c.cmdk.items.map((item) => ({
           ) : (
             <a
               class="cmdk-item"
+              id={`cmdk-option-${index}`}
+              role="option"
+              aria-selected="false"
               data-cmdk-item
               data-search={item.search}
               href={item.href}
@@ -167,7 +177,8 @@ const items = c.cmdk.items.map((item) => ({
   }
 
   .cmdk-item:hover,
-  .cmdk-item:focus-visible {
+  .cmdk-item:focus-visible,
+  .cmdk-item.is-active {
     background: var(--surface);
   }
 

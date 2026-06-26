@@ -159,6 +159,7 @@ export interface SiteContent {
     items: CmdkItem[];
   };
   copyToast: string;
+  copyToastError: string;
   terminalLines: string[];
   langToggle: { pt: string; en: string };
 }

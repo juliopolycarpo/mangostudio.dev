@@ -23,13 +23,17 @@ const initial = INSTALL_TABS[0];
     {
       INSTALL_TABS.map((tab, index) => {
         const isPlanned = tab.status === 'planned';
+        const tabId = `install-tab-${tab.id}`;
         return (
           <button
             type="button"
             class:list={['install-tab', { 'is-active': index === 0, 'is-planned': isPlanned }]}
+            id={tabId}
             role="tab"
             aria-selected={index === 0 ? 'true' : 'false'}
+            aria-controls="install-panel"
             aria-disabled={isPlanned ? 'true' : undefined}
+            tabindex={index === 0 ? 0 : -1}
             data-channel={tab.id}
             data-cmd={tab.cmd}
             data-status={tab.status}
@@ -42,7 +46,13 @@ const initial = INSTALL_TABS[0];
     }
   </div>
 
-  <div class="install-cmd" id="install-cmd" data-state={initial.status}>
+  <div
+    class="install-cmd"
+    id="install-panel"
+    role="tabpanel"
+    aria-labelledby={`install-tab-${initial.id}`}
+    data-state={initial.status}
+  >
     <code class="install-code">
       <span class="prompt">$ </span><span id="hero-cmd">{initial.cmd}</span>
     </code>
