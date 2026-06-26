@@ -11,18 +11,23 @@ how it was verified.
 These settings are not stored in the repository. Check them off only after verifying the current
 GitHub or Cloudflare state.
 
-- [ ] GitHub Actions secret `CLOUDFLARE_ACCOUNT_ID` exists.
+- [ ] `production` Environment secret `CLOUDFLARE_ACCOUNT_ID` exists.
 
-  **Verify:** run `gh secret list --repo juliopolycarpo/mangostudio.dev` and confirm the secret name
-  is listed. GitHub does not print the value.
+  **Verify:** run `gh secret list --env production --repo juliopolycarpo/mangostudio.dev` and confirm
+  the secret name is listed. An Environment secret is recommended for public-repo hygiene. If you
+  deliberately store the account id as an Environment variable instead, run
+  `gh variable list --env production --repo juliopolycarpo/mangostudio.dev` to confirm it. GitHub does
+  not print secret values.
 
   **Blocks publish:** yes.
 
-- [ ] GitHub Actions secret `CLOUDFLARE_API_TOKEN` exists.
+- [ ] `production` Environment secret `CLOUDFLARE_API_TOKEN` exists.
 
-  **Verify:** run `gh secret list --repo juliopolycarpo/mangostudio.dev` and confirm the secret name
-  is listed. The token should be scoped to Workers Scripts: Edit, plus Workers Assets if Cloudflare
-  requires that scope for static-assets deploys.
+  **Verify:** run `gh secret list --env production --repo juliopolycarpo/mangostudio.dev` and confirm
+  the secret name is listed. Keep this token scoped to the `production` Environment, not a
+  repository-wide Actions secret, so non-deploy workflows never receive it. The token should be scoped
+  to Workers Scripts: Edit, plus Workers Assets if Cloudflare requires that scope for static-assets
+  deploys.
 
   **Blocks publish:** yes. This is the expected final missing item before publish.
 
@@ -65,11 +70,14 @@ GitHub or Cloudflare state.
 
   **Blocks publish:** yes.
 
-- [ ] First-deploy follow-up is assigned: attach and record the Cloudflare Worker custom domain or
-      route for `mangostudio.dev` after the Worker exists.
+- [ ] First-deploy follow-up is assigned: confirm the apex custom domain `mangostudio.dev` attaches
+      to the Worker after the first deploy.
 
-  **Verify:** check *Workers & Pages -> mangostudio-dev -> Settings -> Domains & Routes* in the
-  Cloudflare dashboard after the first deploy.
+  **Verify:** `wrangler.jsonc` declares `mangostudio.dev` as a `custom_domain` route, so the binding
+  is created on deploy. Confirm the apex DNS record points at Cloudflare and check
+  *Workers & Pages -> mangostudio-dev -> Settings -> Domains & Routes* in the Cloudflare dashboard
+  after the first deploy. A `www -> apex` redirect, if wanted, is separate Cloudflare DNS/Redirect
+  Rule configuration, not a Worker route.
 
   **Blocks publish:** no for the first deploy that creates the Worker; yes for public launch.
 
@@ -110,7 +118,7 @@ one place.
 ## Only the token is missing
 
 The first deploy is ready when every box above is checked except `CLOUDFLARE_API_TOKEN` and the
-custom-domain follow-up is assigned. At that point, the only remaining pre-deploy action is adding
-that GitHub Actions secret with the scoped Cloudflare API token. After adding it, run or trigger the
+custom-domain follow-up is assigned. At that point, the only remaining pre-deploy action is adding the
+scoped Cloudflare API token as a `production` Environment secret. After adding it, run or trigger the
 documented deploy path from `main`, then complete the Cloudflare domain follow-up before public
 launch.
