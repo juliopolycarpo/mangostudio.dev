@@ -104,11 +104,6 @@ export function validateCommitMessage(
     return ['commit message must have a subject'];
   }
 
-  const subject = lines[subjectIndex]?.trim() ?? '';
-  if (subject.length === 0) {
-    errors.push('commit message must have a subject');
-  }
-
   const trailerBlock = findFinalTrailerBlock(lines);
   const trailerLines = trailerBlock ? lines.slice(trailerBlock.start, trailerBlock.end + 1) : [];
   const trailerSignoffs = parseSignoffs(trailerLines.join('\n'));
