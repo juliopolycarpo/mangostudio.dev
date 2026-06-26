@@ -15,3 +15,25 @@ pre-commit:
       skip:
         - merge
         - rebase
+
+commit-msg:
+  commands:
+    commit-policy-message:
+      run: bun ./scripts/verify-commit-policy.ts --message {1}
+
+post-commit:
+  commands:
+    commit-policy-head:
+      run: bun ./scripts/verify-commit-policy.ts --head
+
+post-rewrite:
+  commands:
+    commit-policy-rewritten:
+      run: bun ./scripts/verify-commit-policy.ts --rewritten
+      use_stdin: true
+
+pre-push:
+  commands:
+    commit-policy-push:
+      run: bun ./scripts/verify-commit-policy.ts --pre-push {1}
+      use_stdin: true

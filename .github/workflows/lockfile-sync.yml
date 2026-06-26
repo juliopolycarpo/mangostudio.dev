@@ -41,15 +41,24 @@ jobs:
 
       - name: Commit lockfile if changed
         env:
+          GH_TOKEN: ${{ github.token }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           if test -z "$(git status --porcelain -- bun.lock)"; then
             echo "bun.lock is already in sync."
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bun.lock
-          git commit -m "chore: sync bun lockfile"
-          git push origin "HEAD:$HEAD_REF"
+          message="$(printf '%s\n\n%s\n\n%s' \
+            'chore(deps): sync bun lockfile' \
+            'Regenerate bun.lock after Dependabot package changes so dependency pull requests keep the lockfile aligned with package.json.' \
+            'Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>')"
+          file_sha="$(gh api "repos/$REPOSITORY/contents/bun.lock?ref=$HEAD_REF" --jq .sha)"
+          content="$(base64 -w 0 bun.lock)"
+
+          gh api --method PUT "repos/$REPOSITORY/contents/bun.lock" \
+            -f branch="$HEAD_REF" \
+            -f content="$content" \
+            -f message="$message" \
+            -f sha="$file_sha"

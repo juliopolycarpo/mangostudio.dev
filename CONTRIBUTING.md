@@ -52,7 +52,8 @@ Environment. Pull request workflows never receive Cloudflare credentials.
 
 ## Commits
 
-Use Conventional Commits, sign commits, and include a DCO sign-off:
+Use Conventional Commits. Every commit must include a body, a DCO sign-off, and a GPG or SSH
+signature:
 
 ```bash
 git commit -s -S -m "type(scope): subject" -m "what changed and why"
@@ -60,3 +61,6 @@ git commit -s -S -m "type(scope): subject" -m "what changed and why"
 
 Allowed types are `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`,
 `chore`, and `revert`.
+
+Run `bun run prepare` once after installing dependencies so Lefthook can enforce the commit policy
+locally before commits and pushes.

@@ -18,9 +18,13 @@
   - changed-files:
       - any-glob-to-any-file:
           - "SECURITY.md"
+          - "docs/branch-protection.md"
           - "public/install.sh"
           - "scripts/audit-static-site.ts"
           - "scripts/audit-static-site.test.ts"
+          - "scripts/verify-commit-policy.ts"
+          - "scripts/verify-commit-policy.test.ts"
+          - ".github/rulesets/**"
           - ".github/workflows/codeql.yml"
           - ".github/workflows/dependency-review.yml"
 
@@ -80,6 +84,7 @@
   - changed-files:
       - any-glob-to-any-file:
           - "*.md"
+          - "docs/**/*.md"
           - ".github/**/*.md"
           - ".github/ISSUE_TEMPLATE/**"
           - ".github/pull_request_template.md"
@@ -95,8 +100,12 @@
       - any-glob-to-any-file:
           - "scripts/audit-static-site.ts"
           - "scripts/audit-static-site.test.ts"
+          - "scripts/verify-commit-policy.ts"
+          - "scripts/verify-commit-policy.test.ts"
           - "wrangler.jsonc"
+          - ".github/rulesets/**"
           - ".github/workflows/deploy.yml"
+          - ".github/workflows/ci.yml"
           - ".github/workflows/codeql.yml"
           - ".github/workflows/dependency-review.yml"
 
@@ -104,5 +113,7 @@
   - changed-files:
       - any-glob-to-any-file:
           - "SECURITY.md"
+          - "docs/branch-protection.md"
+          - ".github/rulesets/**"
           - ".github/workflows/codeql.yml"
           - ".github/workflows/dependency-review.yml"
