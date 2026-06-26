@@ -92,14 +92,23 @@ checkable first-publish list for these external settings.
 
 1. **Cloudflare API token** — create a token scoped to **Workers Scripts: Edit** (and Workers KV/Assets
    if later needed) at <https://dash.cloudflare.com/profile/api-tokens>.
-2. **GitHub secrets** — in repo *Settings → Secrets and variables → Actions*, add:
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-3. **Protected environment** — create an Environment named `production`
+2. **Protected environment** — create an Environment named `production`
    (*Settings → Environments*) and, optionally, add required reviewers to require manual approval
-   before each deploy.
-4. **Custom domain** — after the first deploy, attach `mangostudio.dev` to the Worker in the
-   Cloudflare dashboard (*Workers & Pages → mangostudio-dev → Settings → Domains & Routes*).
+   before each deploy. The `deploy` job declares `environment: production`, so these values are
+   resolved only after the QA gate passes and any approval is granted, before
+   `cloudflare/wrangler-action` reads them.
+3. **Environment-scoped deploy credentials** — add the Cloudflare values to the `production`
+   Environment (*Settings → Environments → production → Environment secrets*), not to repository-wide
+   Actions secrets:
+   - `CLOUDFLARE_API_TOKEN` — Environment **secret**. Keep it out of repository-wide secrets so it is
+     never exposed to non-deploy workflows.
+   - `CLOUDFLARE_ACCOUNT_ID` — Environment **secret** is recommended for public-repo hygiene. An
+     Environment **variable** is acceptable if the maintainer deliberately accepts that the account id
+     becomes readable in workflow logs.
+4. **Custom domain** — `wrangler.jsonc` declares `mangostudio.dev` as a `custom_domain` route, so the
+   apex binds on deploy. Point the apex DNS record at Cloudflare and, if `www` should reach the site,
+   configure a `www → apex` redirect with a Cloudflare DNS record plus a Redirect Rule. The Worker
+   does not serve `www`; that redirect is external Cloudflare configuration.
 5. **Dependency graph** — enable *Settings → Code security and analysis → Dependency graph* so
    `dependency-review.yml` can enforce the supply-chain gate.
 6. **Branch ruleset** — apply the checked-in
@@ -129,6 +138,7 @@ bun run deploy:dry-run    # validate config without uploading
   as supply-chain gates.
 - No analytics, no third-party fonts, no trackers — consistent with MangoStudio's local-first ethos.
 - `wrangler.jsonc` is audited to remain assets-only: no Worker script, account id, bindings, or vars.
+  The audit also pins the single apex `custom_domain` route and rejects a `www` binding.
 - Public assets are checked for remote loaded resources and secret-like strings before deploy.
 
 ## License

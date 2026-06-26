@@ -8,6 +8,7 @@ import {
   isPlaceholderInstallScript,
   isShellInstallerAdvertised,
   stripJsonComments,
+  validateApexRoute,
   validateInstallChannels,
   validateReleaseSource,
   validateTruthfulSiteMetrics,
@@ -238,6 +239,47 @@ run(
     ok(errors.some((error) => error.includes('pt release copy still claims generated highlights')));
   }
 );
+
+run('validateApexRoute accepts the apex custom-domain route', () => {
+  deepStrictEqual(validateApexRoute([{ pattern: 'mangostudio.dev', custom_domain: true }]), []);
+});
+
+run('validateApexRoute rejects a missing routes array', () => {
+  deepStrictEqual(validateApexRoute(undefined), [
+    'wrangler.jsonc must declare a routes array binding the apex custom domain.',
+  ]);
+});
+
+run('validateApexRoute rejects more than one route', () => {
+  deepStrictEqual(
+    validateApexRoute([
+      { pattern: 'mangostudio.dev', custom_domain: true },
+      { pattern: 'mangostudio.dev/api/*', custom_domain: true },
+    ]),
+    ['wrangler.jsonc must declare exactly one route (the apex custom domain); found 2.']
+  );
+});
+
+run('validateApexRoute rejects a www.mangostudio.dev route', () => {
+  deepStrictEqual(validateApexRoute([{ pattern: 'www.mangostudio.dev', custom_domain: true }]), [
+    'wrangler.jsonc route must not bind www.mangostudio.dev; the www -> apex redirect is external Cloudflare DNS/Redirect Rule config.',
+  ]);
+});
+
+run('validateApexRoute rejects a non-apex pattern', () => {
+  deepStrictEqual(validateApexRoute([{ pattern: 'example.com', custom_domain: true }]), [
+    'wrangler.jsonc route pattern must be mangostudio.dev.',
+  ]);
+});
+
+run('validateApexRoute requires custom_domain: true', () => {
+  deepStrictEqual(validateApexRoute([{ pattern: 'mangostudio.dev', custom_domain: false }]), [
+    'wrangler.jsonc route must set custom_domain: true for the apex domain.',
+  ]);
+  deepStrictEqual(validateApexRoute([{ pattern: 'mangostudio.dev' }]), [
+    'wrangler.jsonc route must set custom_domain: true for the apex domain.',
+  ]);
+});
 
 function run(name: string, fn: () => void): void {
   try {

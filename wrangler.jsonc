@@ -6,6 +6,15 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mangostudio-dev",
   "compatibility_date": "2026-06-22",
+  // Bind the Worker to the apex domain so deploy state is auditable and repeatable.
+  // `www.mangostudio.dev` is intentionally omitted; the www -> apex redirect stays as
+  // Cloudflare DNS/Redirect Rule configuration outside this repo.
+  "routes": [
+    {
+      "pattern": "mangostudio.dev",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "./dist",
     // Astro emits <route>/index.html; serve both /path and /path/ consistently.
