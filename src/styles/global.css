@@ -436,6 +436,10 @@ pre {
   display: inline-flex;
 }
 
+.copy-toast-icon[hidden] {
+  display: none;
+}
+
 .copy-toast-icon--success {
   color: var(--lime);
 }
