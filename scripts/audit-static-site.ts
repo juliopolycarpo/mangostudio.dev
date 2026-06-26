@@ -329,6 +329,20 @@ export function validateInstallChannels(input: InstallChannelsAuditInput): strin
   return errors;
 }
 
+export function validateTruthfulSiteMetrics(siteData: Record<string, unknown>): string[] {
+  const errors: string[] = [];
+  const stars = siteData.STARS;
+
+  if (
+    (typeof stars === 'string' && stars.trim() !== '') ||
+    (typeof stars === 'number' && Number.isFinite(stars))
+  ) {
+    errors.push('src/data/site.ts must not export a hardcoded STARS metric.');
+  }
+
+  return errors;
+}
+
 export function validateReleaseSource(input: ReleaseCopyAuditInput): string[] {
   const errors: string[] = [];
 
@@ -571,6 +585,8 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
   const siteData = await importSiteData(errors);
 
   if (siteData) {
+    errors.push(...validateTruthfulSiteMetrics(siteData));
+
     const installTabs = siteData.INSTALL_TABS;
     const channels = siteData.CHANNELS;
 

@@ -10,6 +10,7 @@ import {
   stripJsonComments,
   validateInstallChannels,
   validateReleaseSource,
+  validateTruthfulSiteMetrics,
 } from './audit-static-site';
 
 run('stripJsonComments preserves strings while removing comments', () => {
@@ -161,6 +162,13 @@ run('validateInstallChannels accepts ready npm/bun primary channels', () => {
     }),
     []
   );
+});
+
+run('validateTruthfulSiteMetrics rejects hardcoded star counts', () => {
+  deepStrictEqual(validateTruthfulSiteMetrics({}), []);
+  deepStrictEqual(validateTruthfulSiteMetrics({ STARS: '1.2k' }), [
+    'src/data/site.ts must not export a hardcoded STARS metric.',
+  ]);
 });
 
 run('validateInstallChannels rejects planned copy targets and missing ready primaries', () => {

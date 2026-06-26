@@ -15,6 +15,7 @@ export const en = {
     cta: 'Get started',
     theme: 'Toggle theme',
     github: 'View on GitHub',
+    star: 'Star',
   },
   hero: {
     badge: `${RELEASE.version} · MIT · 100% local · BYOK`,
