@@ -81,8 +81,13 @@ export function initCmdk(): void {
 
   function close(): void {
     if (dialog.open) dialog.close();
-    if (input instanceof HTMLInputElement) input.setAttribute('aria-expanded', 'false');
   }
+
+  // Reset combobox state on every close path, including native Escape, which
+  // bypasses close() entirely but still fires the dialog's `close` event.
+  dialog.addEventListener('close', () => {
+    if (input instanceof HTMLInputElement) input.setAttribute('aria-expanded', 'false');
+  });
 
   for (const trigger of document.querySelectorAll('[data-cmdk-open]')) {
     trigger.addEventListener('click', () => open());
