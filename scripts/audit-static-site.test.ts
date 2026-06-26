@@ -166,7 +166,11 @@ run('validateInstallChannels accepts ready npm/bun primary channels', () => {
 
 run('validateTruthfulSiteMetrics rejects hardcoded star counts', () => {
   deepStrictEqual(validateTruthfulSiteMetrics({}), []);
+  deepStrictEqual(validateTruthfulSiteMetrics({ STARS: '' }), []);
   deepStrictEqual(validateTruthfulSiteMetrics({ STARS: '1.2k' }), [
+    'src/data/site.ts must not export a hardcoded STARS metric.',
+  ]);
+  deepStrictEqual(validateTruthfulSiteMetrics({ STARS: 1200 }), [
     'src/data/site.ts must not export a hardcoded STARS metric.',
   ]);
 });
