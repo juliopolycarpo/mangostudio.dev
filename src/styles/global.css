@@ -428,7 +428,18 @@ pre {
   animation: fadeup 0.2s ease both;
 }
 
-.copy-toast .check {
-  color: var(--lime);
+.copy-toast.is-error {
+  border-color: color-mix(in srgb, var(--mango-deep) 45%, var(--border));
+}
+
+.copy-toast-icon {
   display: inline-flex;
+}
+
+.copy-toast-icon--success {
+  color: var(--lime);
+}
+
+.copy-toast-icon--error {
+  color: var(--mango-deep);
 }

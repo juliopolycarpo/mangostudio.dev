@@ -358,6 +358,7 @@ export const pt = {
     ],
   },
   copyToast: 'Copiado para a área de transferência',
+  copyToastError: 'Não foi possível copiar — selecione e copie manualmente.',
   terminalLines: [
     `▸ MangoStudio ${RELEASE.version}  (bun 1.3.14)`,
     '▸ database  ~/.mango/database.sqlite',
