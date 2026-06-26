@@ -101,6 +101,8 @@ It reads `localStorage["mango.theme"]`, falls back to `prefers-color-scheme`, se
 - no `vars`
 - no `account_id`
 - `assets.directory` remains `./dist`
+- exactly one `routes` entry: the apex `custom_domain` (`mangostudio.dev`). `www` stays an external
+  Cloudflare DNS/Redirect Rule, never a Worker route. `scripts/audit-static-site.ts` enforces this.
 
 Pull request workflows must not read Cloudflare secrets. Production deploys run only from `main`
 through the protected `production` GitHub Environment. Never push directly to `main`; open a pull
