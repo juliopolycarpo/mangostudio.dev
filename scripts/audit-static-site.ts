@@ -61,7 +61,6 @@ const DISALLOWED_WRANGLER_KEYS = [
   'queues',
   'r2_buckets',
   'route',
-  'routes',
   'secrets_store_secrets',
   'services',
   'tail_consumers',
@@ -71,6 +70,10 @@ const DISALLOWED_WRANGLER_KEYS = [
   'vectorize',
   'workflows',
 ];
+
+// The Worker must bind the apex domain only; www -> apex is external DNS/Redirect config.
+const APEX_ROUTE_PATTERN = 'mangostudio.dev';
+const WWW_HOST = 'www.mangostudio.dev';
 
 const TEXT_EXTENSIONS = new Set([
   '.css',
@@ -380,6 +383,43 @@ export function validateReleaseSource(input: ReleaseCopyAuditInput): string[] {
   return errors;
 }
 
+export function validateApexRoute(routes: unknown): string[] {
+  const errors: string[] = [];
+
+  if (!Array.isArray(routes)) {
+    errors.push('wrangler.jsonc must declare a routes array binding the apex custom domain.');
+    return errors;
+  }
+
+  if (routes.length !== 1) {
+    errors.push(
+      `wrangler.jsonc must declare exactly one route (the apex custom domain); found ${routes.length}.`
+    );
+    return errors;
+  }
+
+  const [route] = routes;
+
+  if (!isRecord(route)) {
+    errors.push('wrangler.jsonc route must be an object.');
+    return errors;
+  }
+
+  if (collectStrings(route).some((value) => value.includes(WWW_HOST))) {
+    errors.push(
+      `wrangler.jsonc route must not bind ${WWW_HOST}; the www -> apex redirect is external Cloudflare DNS/Redirect Rule config.`
+    );
+  } else if (route.pattern !== APEX_ROUTE_PATTERN) {
+    errors.push(`wrangler.jsonc route pattern must be ${APEX_ROUTE_PATTERN}.`);
+  }
+
+  if (route.custom_domain !== true) {
+    errors.push('wrangler.jsonc route must set custom_domain: true for the apex domain.');
+  }
+
+  return errors;
+}
+
 async function runAudit(repoRoot: string): Promise<AuditSection[]> {
   const sections = [
     await auditWrangler(repoRoot),
@@ -436,6 +476,8 @@ async function auditWrangler(repoRoot: string): Promise<AuditSection> {
       errors.push(`wrangler.jsonc must not define ${key}; this site is assets-only.`);
     }
   }
+
+  errors.push(...validateApexRoute(config.routes));
 
   return { name: 'Wrangler static-assets config', errors };
 }
