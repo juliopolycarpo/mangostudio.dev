@@ -20,20 +20,30 @@ commit-msg:
   commands:
     commit-policy-message:
       run: bun ./scripts/verify-commit-policy.ts --message {1}
+      fail_text: |
+        Commit rejected: message must include a body, a DCO Signed-off-by trailer
+        matching your author email, and follow Conventional Commits. Sign with -S.
 
 post-commit:
   commands:
     commit-policy-head:
       run: bun ./scripts/verify-commit-policy.ts --head
+      fail_text: |
+        Commit rejected: HEAD must include a body, DCO sign-off, and GPG/SSH signature.
+        Amend with `git commit --amend -s -S` if hooks were bypassed.
 
 post-rewrite:
   commands:
     commit-policy-rewritten:
       run: bun ./scripts/verify-commit-policy.ts --rewritten
       use_stdin: true
+      fail_text: |
+        Rewritten commit rejected: each commit needs a body, DCO sign-off, and signature.
 
 pre-push:
   commands:
     commit-policy-push:
       run: bun ./scripts/verify-commit-policy.ts --pre-push {1}
       use_stdin: true
+      fail_text: |
+        Push rejected: every outgoing commit must have a body, DCO sign-off, and signature.

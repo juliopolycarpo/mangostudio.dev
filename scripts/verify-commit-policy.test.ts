@@ -38,13 +38,13 @@ Signed-off-by: Julio Polycarpo <julio@polycarpo.dev>
   );
 });
 
-run('commit message must use a final Signed-off-by trailer', () => {
+run('commit message must use a final DCO Signed-off-by trailer', () => {
   deepStrictEqual(
     validateCommitMessage(`chore(repo): enforce commit policy
 
 Explain what changed and why.
 `),
-    ['commit message must end with a valid Signed-off-by trailer']
+    ['commit message must end with a DCO Signed-off-by trailer']
   );
 });
 
@@ -70,7 +70,7 @@ Signed-off-by: Someone Else <else@example.com>
 `,
       { identities: [author] }
     ),
-    ['Signed-off-by trailer must match the author or committer email']
+    ['DCO Signed-off-by trailer must match the author or committer email']
   );
 });
 
