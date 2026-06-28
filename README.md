@@ -77,7 +77,9 @@ The site builds to `./dist` and is served by an **assets-only Worker** (no serve
 - **`dependency-review.yml`** — blocks new moderate-or-worse vulnerable dependencies in PRs; this
   requires GitHub Dependency graph to stay enabled.
 - **`deploy.yml`** — runs on push to `main`: a `verify` job re-runs the QA gate, then a `deploy`
-  job (gated behind the protected `production` GitHub Environment) runs `wrangler deploy`.
+  job (gated behind the protected `production` GitHub Environment) runs `wrangler deploy` and
+  `bun run smoke:production` to verify the public apex serves the site and `www` redirects to the
+  apex with path and query preserved.
 
 The PR gate builds the site, audits generated static output for remote loaded assets and secret-like
 strings, validates that `wrangler.jsonc` remains assets-only, checks label configuration, and runs a
