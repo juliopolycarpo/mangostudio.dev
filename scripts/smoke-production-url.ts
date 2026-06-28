@@ -85,8 +85,7 @@ if (import.meta.main) {
     process.stderr.write(
       `[fail] Production URL smoke\n  - request failed: ${formatFetchError(error)}\n`
     );
-    process.exitCode = 1;
-    process.exit();
+    process.exit(1);
   }
 
   let failed = false;
