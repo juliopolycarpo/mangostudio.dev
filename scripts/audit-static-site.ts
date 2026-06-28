@@ -52,12 +52,17 @@ export interface CacheHeaderRule {
   cacheControl: string;
 }
 
+const ONE_YEAR_MAX_AGE_SECONDS = 31_556_952;
+const VERSIONED_ASSET_CACHE_CONTROL = `public, max-age=${ONE_YEAR_MAX_AGE_SECONDS}, immutable`;
+const SHORT_IMAGE_CACHE_CONTROL = 'public, max-age=86400, must-revalidate';
+
 export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
-  { path: '/_astro/*', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/favicon.ico', cacheControl: 'public, max-age=86400, must-revalidate' },
+  { path: '/_astro/*', cacheControl: VERSIONED_ASSET_CACHE_CONTROL },
+  { path: '/favicon.ico', cacheControl: SHORT_IMAGE_CACHE_CONTROL },
   { path: '/site.webmanifest', cacheControl: 'public, max-age=3600, must-revalidate' },
   { path: '/install.sh', cacheControl: 'public, max-age=300, must-revalidate' },
 ];
+const REQUIRED_CACHE_HEADER_PATHS = new Set(REQUIRED_CACHE_HEADER_RULES.map((rule) => rule.path));
 
 const DISALLOWED_WRANGLER_KEYS = [
   'account_id',
@@ -102,6 +107,18 @@ const TEXT_EXTENSIONS = new Set([
   '.xml',
 ]);
 
+const IMAGE_EXTENSIONS = new Set([
+  '.avif',
+  '.gif',
+  '.ico',
+  '.jpeg',
+  '.jpg',
+  '.png',
+  '.svg',
+  '.webp',
+]);
+const ASTRO_ASSET_PATH_PREFIX = '/_astro/';
+const HASHED_FILE_NAME_PATTERN = /\.[A-Za-z0-9_-]{8,}\.[^.]+$/;
 const UNVERSIONED_APP_IMAGE_PATHS = ['/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 const SECRET_PATTERNS = [
@@ -471,6 +488,20 @@ export function validateCacheHeaders(text: string): string[] {
     }
   }
 
+  for (const [path, headers] of rules) {
+    const cacheControl = headers['cache-control'];
+
+    if (!cacheControl || REQUIRED_CACHE_HEADER_PATHS.has(path) || !isImageHeaderPath(path)) {
+      continue;
+    }
+
+    if (isLongLivedCacheControl(cacheControl) && !isVersionedAssetHeaderPath(path)) {
+      errors.push(
+        `dist/_headers ${path} must not use long-lived immutable caching unless the image URL is versioned.`
+      );
+    }
+  }
+
   return errors;
 }
 
@@ -478,6 +509,48 @@ export function findUnversionedAppImageReferences(file: TextFile): string[] {
   return UNVERSIONED_APP_IMAGE_PATHS.filter((path) => file.text.includes(path)).map(
     (path) =>
       `${file.relativePath} references ${path}; app icons must use src/assets imports so Astro emits hashed URLs.`
+  );
+}
+
+export function validateVersionedImageAssetPath(relativePath: string): string | null {
+  if (!relativePath.startsWith('dist/_astro/')) {
+    return null;
+  }
+
+  if (!IMAGE_EXTENSIONS.has(extname(relativePath))) {
+    return null;
+  }
+
+  if (HASHED_FILE_NAME_PATTERN.test(basename(relativePath))) {
+    return null;
+  }
+
+  return `${relativePath} must include a content hash before it receives one-year immutable caching.`;
+}
+
+function isImageHeaderPath(path: string): boolean {
+  if (path.endsWith('/*')) {
+    return false;
+  }
+
+  return IMAGE_EXTENSIONS.has(extname(path));
+}
+
+function isLongLivedCacheControl(cacheControl: string): boolean {
+  if (/\bimmutable\b/i.test(cacheControl)) {
+    return true;
+  }
+
+  const match = /\bmax-age=(\d+)\b/i.exec(cacheControl);
+
+  return match !== null && Number(match[1]) >= ONE_YEAR_MAX_AGE_SECONDS;
+}
+
+function isVersionedAssetHeaderPath(path: string): boolean {
+  return (
+    path === '/_astro/*' ||
+    path.startsWith(ASTRO_ASSET_PATH_PREFIX) ||
+    HASHED_FILE_NAME_PATTERN.test(basename(path))
   );
 }
 
@@ -680,6 +753,12 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     const relativePath = toPosix(relative(repoRoot, file));
     const fileName = basename(file);
     const extension = extname(file);
+
+    const versionedImageAssetError = validateVersionedImageAssetPath(relativePath);
+
+    if (versionedImageAssetError) {
+      errors.push(versionedImageAssetError);
+    }
 
     if (/^\.env(?:\.|$)/.test(fileName) || fileName === '.dev.vars') {
       errors.push(`${relativePath} must not be published.`);

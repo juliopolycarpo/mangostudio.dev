@@ -48,13 +48,14 @@ that miss the required commit body, DCO signoff, or GPG/SSH signature.
 ```
 src/
   i18n/            ui.ts helper + pt.ts / en.ts content (one shared SiteContent type)
-  data/site.ts     language-neutral constants (URLs, install commands, providers)
+  assets/          images imported by Astro and emitted with hashed URLs
+  data/            language-neutral constants and shared generated asset handles
   layouts/         BaseLayout (head, fonts, no-FOUC theme init, header/footer/palette)
   components/       Header, Footer, CommandPalette, Icon + home/ releases/ docs/
   scripts/         theme · cmdk · install-tabs · terminal · copy (client modules)
-  pages/           index, releases, docs/[slug], 404  (+ en/ mirror)
+  pages/           index, releases, docs/[slug], 404, manifest endpoint (+ en/ mirror)
   styles/global.css design tokens + shared component CSS
-public/            favicons, site.webmanifest, robots.txt, install.sh (placeholder)
+public/            stable public files: favicon.ico, robots.txt, install.sh (placeholder)
 ```
 
 ### Internationalization

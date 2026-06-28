@@ -15,6 +15,7 @@ import {
   validateInstallChannels,
   validateReleaseSource,
   validateTruthfulSiteMetrics,
+  validateVersionedImageAssetPath,
 } from './audit-static-site';
 
 run('stripJsonComments preserves strings while removing comments', () => {
@@ -335,6 +336,9 @@ run('validateCacheHeaders rejects immutable on short-lived stable assets', () =>
   const errors = validateCacheHeaders(`/_astro/*
   Cache-Control: public, max-age=31556952, immutable
 
+/static/hero.png
+  Cache-Control: public, max-age=31556952, immutable
+
 /favicon.ico
   Cache-Control: public, max-age=31556952, immutable
 
@@ -348,7 +352,29 @@ run('validateCacheHeaders rejects immutable on short-lived stable assets', () =>
   deepStrictEqual(errors, [
     'dist/_headers /favicon.ico must not be marked immutable.',
     'dist/_headers /install.sh must not be marked immutable.',
+    'dist/_headers /static/hero.png must not use long-lived immutable caching unless the image URL is versioned.',
   ]);
+});
+
+run('validateCacheHeaders accepts long-lived cache rules for hashed image URLs', () => {
+  deepStrictEqual(
+    validateCacheHeaders(`/_astro/*
+  Cache-Control: public, max-age=31556952, immutable
+
+/static/hero.CI8wi-xL.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/favicon.ico
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/site.webmanifest
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/install.sh
+  Cache-Control: public, max-age=300, must-revalidate
+`),
+    []
+  );
 });
 
 run('findUnversionedAppImageReferences rejects stable app icon paths', () => {
@@ -360,6 +386,15 @@ run('findUnversionedAppImageReferences rejects stable app icon paths', () => {
     [
       'dist/site.webmanifest references /icon-192.png; app icons must use src/assets imports so Astro emits hashed URLs.',
     ]
+  );
+});
+
+run('validateVersionedImageAssetPath requires hashed built image names', () => {
+  strictEqual(validateVersionedImageAssetPath('dist/_astro/icon-192.CI8wi-xL.png'), null);
+  strictEqual(validateVersionedImageAssetPath('dist/favicon.ico'), null);
+  strictEqual(
+    validateVersionedImageAssetPath('dist/_astro/icon-192.png'),
+    'dist/_astro/icon-192.png must include a content hash before it receives one-year immutable caching.'
   );
 });
 
