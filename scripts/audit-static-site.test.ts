@@ -4,6 +4,7 @@ import {
   extractInlineStyleBlocks,
   extractLoadedExternalUrls,
   extractRemoteCssUrls,
+  findBrokenVersionedAssetReferences,
   findTodoHtmlFiles,
   findUnversionedAppImageReferences,
   isPlaceholderInstallScript,
@@ -395,6 +396,42 @@ run('validateVersionedImageAssetPath requires hashed built image names', () => {
   strictEqual(
     validateVersionedImageAssetPath('dist/_astro/icon-192.png'),
     'dist/_astro/icon-192.png must include a content hash before it receives one-year immutable caching.'
+  );
+});
+
+run('findBrokenVersionedAssetReferences accepts references that resolve to emitted assets', () => {
+  deepStrictEqual(
+    findBrokenVersionedAssetReferences(
+      [
+        {
+          relativePath: 'dist/index.html',
+          text: '<img src="/_astro/icon-192.CI8wi-xL.png"><link href="/_astro/icon-192.CI8wi-xL.png">',
+        },
+        {
+          relativePath: 'dist/site.webmanifest',
+          text: '{"icons":[{"src":"/_astro/icon-512.DsGvk33E.png"}]}',
+        },
+      ],
+      new Set(['icon-192.CI8wi-xL.png', 'icon-512.DsGvk33E.png'])
+    ),
+    []
+  );
+});
+
+run('findBrokenVersionedAssetReferences flags references to assets that were not emitted', () => {
+  deepStrictEqual(
+    findBrokenVersionedAssetReferences(
+      [
+        {
+          relativePath: 'dist/site.webmanifest',
+          text: '{"icons":[{"src":"/_astro/icon-512.STALE001.png"}]}',
+        },
+      ],
+      new Set(['icon-512.DsGvk33E.png'])
+    ),
+    [
+      'dist/site.webmanifest references /_astro/icon-512.STALE001.png, but no such hashed asset was emitted; the versioned URL would 404 instead of serving the cached image.',
+    ]
   );
 });
 

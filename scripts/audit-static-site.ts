@@ -120,6 +120,8 @@ const IMAGE_EXTENSIONS = new Set([
 const ASTRO_ASSET_PATH_PREFIX = '/_astro/';
 const HASHED_FILE_NAME_PATTERN = /\.[A-Za-z0-9_-]{8,}\.[^.]+$/;
 const UNVERSIONED_APP_IMAGE_PATHS = ['/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
+const VERSIONED_ASSET_REFERENCE_PATTERN =
+  /\/_astro\/([A-Za-z0-9._-]+\.(?:avif|gif|ico|jpeg|jpg|png|svg|webp))/gi;
 
 const SECRET_PATTERNS = [
   { label: 'Cloudflare API token variable', pattern: /\bCLOUDFLARE_API_TOKEN\b/ },
@@ -512,6 +514,42 @@ export function findUnversionedAppImageReferences(file: TextFile): string[] {
   );
 }
 
+// A content-hashed `/_astro/...` URL only stays cacheable for a year if it
+// actually resolves to an emitted file: an unchanged build re-emits the same
+// hash (browser and Cloudflare keep serving the cached image), while changing
+// the source bytes mints a new hash that no cache holds. A reference to a hash
+// that was never emitted breaks that contract — the browser would request a URL
+// that 404s instead of loading the cached image. This flags any such reference
+// across the built HTML and the web manifest.
+export function findBrokenVersionedAssetReferences(
+  files: readonly TextFile[],
+  emittedAssetNames: ReadonlySet<string>
+): string[] {
+  const errors: string[] = [];
+
+  for (const file of files) {
+    const seen = new Set<string>();
+
+    for (const match of file.text.matchAll(VERSIONED_ASSET_REFERENCE_PATTERN)) {
+      const name = match[1];
+
+      if (name === undefined || seen.has(name)) {
+        continue;
+      }
+
+      seen.add(name);
+
+      if (!emittedAssetNames.has(name)) {
+        errors.push(
+          `${file.relativePath} references /_astro/${name}, but no such hashed asset was emitted; the versioned URL would 404 instead of serving the cached image.`
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
 export function validateVersionedImageAssetPath(relativePath: string): string | null {
   if (!relativePath.startsWith('dist/_astro/')) {
     return null;
@@ -749,6 +787,9 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     errors.push(...validateCacheHeaders(await readFile(headersPath, 'utf8')));
   }
 
+  const emittedAstroImageNames = new Set<string>();
+  const textFiles: TextFile[] = [];
+
   for (const file of await walkFiles(distDir)) {
     const relativePath = toPosix(relative(repoRoot, file));
     const fileName = basename(file);
@@ -758,6 +799,10 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
 
     if (versionedImageAssetError) {
       errors.push(versionedImageAssetError);
+    }
+
+    if (relativePath.startsWith('dist/_astro/') && IMAGE_EXTENSIONS.has(extension)) {
+      emittedAstroImageNames.add(fileName);
     }
 
     if (/^\.env(?:\.|$)/.test(fileName) || fileName === '.dev.vars') {
@@ -770,6 +815,8 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     }
 
     const text = await readFile(file, 'utf8');
+
+    textFiles.push({ relativePath, text });
 
     errors.push(...findUnversionedAppImageReferences({ relativePath, text }));
 
@@ -801,6 +848,8 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
       }
     }
   }
+
+  errors.push(...findBrokenVersionedAssetReferences(textFiles, emittedAstroImageNames));
 
   return { name: 'Static build output', errors };
 }
