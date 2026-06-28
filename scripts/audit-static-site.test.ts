@@ -13,6 +13,7 @@ import {
   stripJsonComments,
   validateApexRoute,
   validateCacheHeaders,
+  validateGeistFontAssets,
   validateInstallChannels,
   validateReleaseSource,
   validateTruthfulSiteMetrics,
@@ -283,6 +284,42 @@ run('validateApexRoute requires custom_domain: true', () => {
   ]);
   deepStrictEqual(validateApexRoute([{ pattern: 'mangostudio.dev' }]), [
     'wrangler.jsonc route must set custom_domain: true for the apex domain.',
+  ]);
+});
+
+run('validateGeistFontAssets accepts the required locale subsets', () => {
+  deepStrictEqual(
+    validateGeistFontAssets([
+      'dist/_astro/geist-latin-ext-wght-normal.DC-KSUi6.woff2',
+      'dist/_astro/geist-latin-wght-normal.BgDaEnEv.woff2',
+      'dist/_astro/geist-mono-latin-ext-wght-normal.DrnZ1wKl.woff2',
+      'dist/_astro/geist-mono-latin-wght-normal.B_7UjwxQ.woff2',
+    ]),
+    []
+  );
+});
+
+run('validateGeistFontAssets rejects non-locale Geist subsets', () => {
+  const errors = validateGeistFontAssets([
+    'dist/_astro/geist-latin-ext-wght-normal.DC-KSUi6.woff2',
+    'dist/_astro/geist-latin-wght-normal.BgDaEnEv.woff2',
+    'dist/_astro/geist-mono-latin-ext-wght-normal.DrnZ1wKl.woff2',
+    'dist/_astro/geist-mono-latin-wght-normal.B_7UjwxQ.woff2',
+    'dist/_astro/geist-cyrillic-wght-normal.BEAKL7Jp.woff2',
+    'dist/_astro/geist-mono-vietnamese-wght-normal.D8KDMBhC.woff2',
+    'dist/_astro/geist-mono-symbols2-wght-normal.GZpp1pK2.woff2',
+  ]);
+
+  ok(errors.some((error) => error.includes('geist-cyrillic-wght-normal')));
+  ok(errors.some((error) => error.includes('geist-mono-vietnamese-wght-normal')));
+  ok(errors.some((error) => error.includes('geist-mono-symbols2-wght-normal')));
+});
+
+run('validateGeistFontAssets reports missing required locale subsets', () => {
+  deepStrictEqual(validateGeistFontAssets(['dist/_astro/geist-latin-wght-normal.woff2']), [
+    'dist must include geist-latin-ext-wght-normal.woff2 for local Geist font rendering.',
+    'dist must include geist-mono-latin-ext-wght-normal.woff2 for local Geist font rendering.',
+    'dist must include geist-mono-latin-wght-normal.woff2 for local Geist font rendering.',
   ]);
 });
 

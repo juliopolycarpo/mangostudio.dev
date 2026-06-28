@@ -64,6 +64,17 @@ export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
 ];
 const REQUIRED_CACHE_HEADER_PATHS = new Set(REQUIRED_CACHE_HEADER_RULES.map((rule) => rule.path));
 
+export const REQUIRED_GEIST_FONT_ASSETS = [
+  'geist-latin-ext-wght-normal.woff2',
+  'geist-latin-wght-normal.woff2',
+  'geist-mono-latin-ext-wght-normal.woff2',
+  'geist-mono-latin-wght-normal.woff2',
+] as const;
+
+const REQUIRED_GEIST_FONT_STEMS = new Set(
+  REQUIRED_GEIST_FONT_ASSETS.map((asset) => asset.slice(0, -'.woff2'.length))
+);
+
 const DISALLOWED_WRANGLER_KEYS = [
   'account_id',
   'ai',
@@ -629,6 +640,39 @@ export function validateApexRoute(routes: unknown): string[] {
   return errors;
 }
 
+export function validateGeistFontAssets(filePaths: readonly string[]): string[] {
+  const errors: string[] = [];
+  const foundStems = new Set<string>();
+
+  for (const filePath of filePaths) {
+    const fileName = basename(filePath);
+    const stem = getGeistFontStem(fileName);
+
+    if (stem === undefined) {
+      continue;
+    }
+
+    if (!REQUIRED_GEIST_FONT_STEMS.has(stem)) {
+      errors.push(
+        `${fileName} is not an allowed Geist font asset; update the allowlist only when site locales change.`
+      );
+      continue;
+    }
+
+    foundStems.add(stem);
+  }
+
+  for (const asset of REQUIRED_GEIST_FONT_ASSETS) {
+    const stem = asset.slice(0, -'.woff2'.length);
+
+    if (!foundStems.has(stem)) {
+      errors.push(`dist must include ${asset} for local Geist font rendering.`);
+    }
+  }
+
+  return errors;
+}
+
 async function runAudit(repoRoot: string): Promise<AuditSection[]> {
   const sections = [
     await auditWrangler(repoRoot),
@@ -790,7 +834,10 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
   const emittedAstroImageNames = new Set<string>();
   const textFiles: TextFile[] = [];
 
-  for (const file of await walkFiles(distDir)) {
+  const distFiles = await walkFiles(distDir);
+  errors.push(...validateGeistFontAssets(distFiles));
+
+  for (const file of distFiles) {
     const relativePath = toPosix(relative(repoRoot, file));
     const fileName = basename(file);
     const extension = extname(file);
@@ -1178,6 +1225,21 @@ function assertPublishedPrimary(errors: string[], label: string, entry: unknown)
   ) {
     errors.push(`${label} must be the ready npm/bun install command.`);
   }
+}
+
+function getGeistFontStem(fileName: string): string | undefined {
+  if (!fileName.startsWith('geist-') || !fileName.endsWith('.woff2')) {
+    return undefined;
+  }
+
+  const stemWithOptionalHash = fileName.slice(0, -'.woff2'.length);
+  const hashSeparatorIndex = stemWithOptionalHash.lastIndexOf('.');
+
+  if (hashSeparatorIndex === -1) {
+    return stemWithOptionalHash;
+  }
+
+  return stemWithOptionalHash.slice(0, hashSeparatorIndex);
 }
 
 function collectStrings(value: unknown): string[] {
