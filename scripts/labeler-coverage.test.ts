@@ -53,6 +53,21 @@ run('bun.lock-only changes resolve to area: tooling and type: dependencies', () 
   );
 });
 
+run('astro.config.mjs-only changes resolve to area: deployment and type: hardening', () => {
+  const filePath = 'astro.config.mjs';
+  const areaLabels = matchingLabels(filePath, (label) => label.startsWith('area: '));
+  const typeLabels = matchingLabels(filePath, (label) => label.startsWith('type: '));
+
+  ok(
+    areaLabels.includes('area: deployment'),
+    `expected area: deployment, got ${areaLabels.join(', ')}`
+  );
+  ok(
+    typeLabels.includes('type: hardening'),
+    `expected type: hardening, got ${typeLabels.join(', ')}`
+  );
+});
+
 function matchingLabels(filePath: string, predicate: (label: string) => boolean): string[] {
   const matches: string[] = [];
 

@@ -98,6 +98,7 @@
 "type: hardening":
   - changed-files:
       - any-glob-to-any-file:
+          - "astro.config.mjs"
           - "scripts/audit-static-site.ts"
           - "scripts/audit-static-site.test.ts"
           - "scripts/verify-commit-policy.ts"
