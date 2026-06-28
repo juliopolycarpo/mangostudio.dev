@@ -1,5 +1,4 @@
 ---
-import Logo from '@/components/Logo.astro';
 import type { SiteContent } from '@/i18n/types';
 
 interface Props {
@@ -45,7 +44,7 @@ const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--li
       </div>
       <div class="browser-body">
         <div class="chat-head">
-          <Logo size={20} />
+          <img src="/icon-192.png" alt="" width="20" height="20" decoding="async" />
           <span class="chat-name">MangoStudio</span>
           <span class="bspace"></span>
           <span class="chat-online mono">{c.demo.online}</span>
@@ -54,7 +53,7 @@ const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--li
         <div class="bubble bubble-assistant">
           <span>{c.demo.assistant}</span>
           <div class="gen-image">
-            <Logo size={40} />
+            <img src="/icon-192.png" alt="" width="40" height="40" decoding="async" />
           </div>
         </div>
       </div>

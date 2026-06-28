@@ -3,7 +3,6 @@ import { CONTRIBUTING_URL, GITHUB_URL, ISSUES_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { findDocItem, isDocReady, routes } from '@/i18n/ui';
 import LangToggle from './LangToggle.astro';
-import Logo from './Logo.astro';
 
 interface Props {
   lang: Lang;
@@ -48,7 +47,7 @@ const community = [
   <div class="footer-grid container">
     <div>
       <div class="footer-brand">
-        <Logo size={26} />
+        <img src="/icon-192.png" alt="" width="26" height="26" decoding="async" />
         <span class="footer-brand-name">MangoStudio</span>
       </div>
       <p class="footer-tagline">{c.footer.tagline}</p>
