@@ -41,6 +41,7 @@ export function deriveRequiredDistFiles(contentByLang: LocaleRouteContent): stri
     routeToDistFile(routes.home('en')),
     routeToDistFile(routes.releases('pt')),
     routeToDistFile(routes.releases('en')),
+    'site.webmanifest',
   ]);
 
   for (const [lang, content] of Object.entries(contentByLang) as [

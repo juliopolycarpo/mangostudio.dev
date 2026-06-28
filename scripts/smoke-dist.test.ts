@@ -47,6 +47,7 @@ run('deriveRequiredDistFiles derives locale routes from docs groups', () => {
     'en/docs/install/index.html',
     '404.html',
     'robots.txt',
+    'site.webmanifest',
     'sitemap-index.xml',
   ]) {
     ok(required.includes(expected), `${expected} should be required`);

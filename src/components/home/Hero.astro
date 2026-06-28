@@ -1,5 +1,6 @@
 ---
 import Icon from '@/components/Icon.astro';
+import { siteAssets } from '@/data/assets';
 import { GITHUB_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
@@ -17,7 +18,7 @@ const { lang, content: c } = Astro.props;
   <div class="hero-grid" aria-hidden="true"></div>
   <div class="hero-glow" aria-hidden="true"></div>
   <img
-    src="/icon-192.png"
+    src={siteAssets.icon192.src}
     alt=""
     width="192"
     height="192"

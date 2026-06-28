@@ -5,6 +5,7 @@ import {
   extractLoadedExternalUrls,
   extractRemoteCssUrls,
   findTodoHtmlFiles,
+  findUnversionedAppImageReferences,
   isPlaceholderInstallScript,
   isShellInstallerAdvertised,
   parseHeadersFile,
@@ -304,17 +305,8 @@ run('validateCacheHeaders accepts the required static asset cache rules', () => 
     validateCacheHeaders(`/_astro/*
   Cache-Control: public, max-age=31556952, immutable
 
-/icon-192.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/icon-512.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/apple-touch-icon.png
-  Cache-Control: public, max-age=31556952, immutable
-
 /favicon.ico
-  Cache-Control: public, max-age=31556952, immutable
+  Cache-Control: public, max-age=86400, must-revalidate
 
 /site.webmanifest
   Cache-Control: public, max-age=3600, must-revalidate
@@ -335,21 +327,12 @@ run('validateCacheHeaders rejects missing or weakened cache rules', () => {
 `);
 
   ok(errors.some((error) => error.includes('/_astro/*')));
-  ok(errors.some((error) => error.includes('/icon-192.png')));
+  ok(errors.some((error) => error.includes('/favicon.ico')));
   ok(errors.some((error) => error.includes('/install.sh')));
 });
 
-run('validateCacheHeaders rejects immutable on short-lived installer endpoint', () => {
+run('validateCacheHeaders rejects immutable on short-lived stable assets', () => {
   const errors = validateCacheHeaders(`/_astro/*
-  Cache-Control: public, max-age=31556952, immutable
-
-/icon-192.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/icon-512.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/apple-touch-icon.png
   Cache-Control: public, max-age=31556952, immutable
 
 /favicon.ico
@@ -362,7 +345,22 @@ run('validateCacheHeaders rejects immutable on short-lived installer endpoint', 
   Cache-Control: public, max-age=300, must-revalidate, immutable
 `);
 
-  deepStrictEqual(errors, ['dist/_headers /install.sh must not be marked immutable.']);
+  deepStrictEqual(errors, [
+    'dist/_headers /favicon.ico must not be marked immutable.',
+    'dist/_headers /install.sh must not be marked immutable.',
+  ]);
+});
+
+run('findUnversionedAppImageReferences rejects stable app icon paths', () => {
+  deepStrictEqual(
+    findUnversionedAppImageReferences({
+      relativePath: 'dist/site.webmanifest',
+      text: '{"icons":[{"src":"/icon-192.png"},{"src":"/_astro/icon-512.abc123.png"}]}',
+    }),
+    [
+      'dist/site.webmanifest references /icon-192.png; app icons must use src/assets imports so Astro emits hashed URLs.',
+    ]
+  );
 });
 
 function run(name: string, fn: () => void): void {

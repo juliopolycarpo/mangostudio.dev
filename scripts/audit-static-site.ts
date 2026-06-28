@@ -42,6 +42,7 @@ const DIST_EXPECTED_FILES = [
   'docs/quickstart/index.html',
   'en/docs/quickstart/index.html',
   '404.html',
+  'site.webmanifest',
   'sitemap-index.xml',
   '_headers',
 ];
@@ -53,10 +54,7 @@ export interface CacheHeaderRule {
 
 export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
   { path: '/_astro/*', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/icon-192.png', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/icon-512.png', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/apple-touch-icon.png', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/favicon.ico', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/favicon.ico', cacheControl: 'public, max-age=86400, must-revalidate' },
   { path: '/site.webmanifest', cacheControl: 'public, max-age=3600, must-revalidate' },
   { path: '/install.sh', cacheControl: 'public, max-age=300, must-revalidate' },
 ];
@@ -103,6 +101,8 @@ const TEXT_EXTENSIONS = new Set([
   '.webmanifest',
   '.xml',
 ]);
+
+const UNVERSIONED_APP_IMAGE_PATHS = ['/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 const SECRET_PATTERNS = [
   { label: 'Cloudflare API token variable', pattern: /\bCLOUDFLARE_API_TOKEN\b/ },
@@ -474,6 +474,13 @@ export function validateCacheHeaders(text: string): string[] {
   return errors;
 }
 
+export function findUnversionedAppImageReferences(file: TextFile): string[] {
+  return UNVERSIONED_APP_IMAGE_PATHS.filter((path) => file.text.includes(path)).map(
+    (path) =>
+      `${file.relativePath} references ${path}; app icons must use src/assets imports so Astro emits hashed URLs.`
+  );
+}
+
 export function validateApexRoute(routes: unknown): string[] {
   const errors: string[] = [];
 
@@ -684,6 +691,8 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     }
 
     const text = await readFile(file, 'utf8');
+
+    errors.push(...findUnversionedAppImageReferences({ relativePath, text }));
 
     for (const { label, pattern } of SECRET_PATTERNS) {
       if (pattern.test(text)) {
