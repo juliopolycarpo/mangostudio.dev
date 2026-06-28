@@ -43,6 +43,35 @@ const DIST_EXPECTED_FILES = [
   'en/docs/quickstart/index.html',
   '404.html',
   'sitemap-index.xml',
+  '_headers',
+];
+
+export interface CacheHeaderRule {
+  path: string;
+  cacheControl: string;
+  immutable?: boolean;
+}
+
+export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
+  { path: '/_astro/*', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
+  { path: '/icon-192.png', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
+  { path: '/icon-512.png', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
+  {
+    path: '/apple-touch-icon.png',
+    cacheControl: 'public, max-age=31556952, immutable',
+    immutable: true,
+  },
+  { path: '/favicon.ico', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
+  {
+    path: '/site.webmanifest',
+    cacheControl: 'public, max-age=3600, must-revalidate',
+    immutable: false,
+  },
+  {
+    path: '/install.sh',
+    cacheControl: 'public, max-age=300, must-revalidate',
+    immutable: false,
+  },
 ];
 
 const DISALLOWED_WRANGLER_KEYS = [
@@ -383,6 +412,81 @@ export function validateReleaseSource(input: ReleaseCopyAuditInput): string[] {
   return errors;
 }
 
+export function parseHeadersFile(text: string): Map<string, Record<string, string>> {
+  const rules = new Map<string, Record<string, string>>();
+  let currentPath: string | undefined;
+
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+
+    if (trimmed === '' || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    if (!/^\s/.test(line)) {
+      currentPath = trimmed;
+      rules.set(currentPath, {});
+      continue;
+    }
+
+    if (currentPath === undefined) {
+      continue;
+    }
+
+    const colonIndex = line.indexOf(':');
+
+    if (colonIndex <= 0) {
+      continue;
+    }
+
+    const name = line.slice(0, colonIndex).trim().toLowerCase();
+    const value = line.slice(colonIndex + 1).trim();
+    const headers = rules.get(currentPath);
+
+    if (headers) {
+      headers[name] = value;
+    }
+  }
+
+  return rules;
+}
+
+export function validateCacheHeaders(text: string): string[] {
+  const errors: string[] = [];
+  const rules = parseHeadersFile(text);
+
+  for (const required of REQUIRED_CACHE_HEADER_RULES) {
+    const headers = rules.get(required.path);
+
+    if (!headers) {
+      errors.push(`dist/_headers must define cache rules for ${required.path}.`);
+      continue;
+    }
+
+    const cacheControl = headers['cache-control'];
+
+    if (cacheControl === undefined || cacheControl === '') {
+      errors.push(
+        `dist/_headers ${required.path} must set Cache-Control: ${required.cacheControl}.`
+      );
+      continue;
+    }
+
+    if (required.immutable === false && cacheControl.includes('immutable')) {
+      errors.push(`dist/_headers ${required.path} must not be marked immutable.`);
+      continue;
+    }
+
+    if (cacheControl !== required.cacheControl) {
+      errors.push(
+        `dist/_headers ${required.path} must set Cache-Control: ${required.cacheControl}.`
+      );
+    }
+  }
+
+  return errors;
+}
+
 export function validateApexRoute(routes: unknown): string[] {
   const errors: string[] = [];
 
@@ -570,6 +674,12 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     if (!(await fileExists(absolutePath))) {
       errors.push(`dist/${expectedFile} is missing from the static build.`);
     }
+  }
+
+  const headersPath = join(distDir, '_headers');
+
+  if (await fileExists(headersPath)) {
+    errors.push(...validateCacheHeaders(await readFile(headersPath, 'utf8')));
   }
 
   for (const file of await walkFiles(distDir)) {

@@ -7,8 +7,10 @@ import {
   findTodoHtmlFiles,
   isPlaceholderInstallScript,
   isShellInstallerAdvertised,
+  parseHeadersFile,
   stripJsonComments,
   validateApexRoute,
+  validateCacheHeaders,
   validateInstallChannels,
   validateReleaseSource,
   validateTruthfulSiteMetrics,
@@ -279,6 +281,88 @@ run('validateApexRoute requires custom_domain: true', () => {
   deepStrictEqual(validateApexRoute([{ pattern: 'mangostudio.dev' }]), [
     'wrangler.jsonc route must set custom_domain: true for the apex domain.',
   ]);
+});
+
+run('parseHeadersFile reads Cloudflare _headers path rules', () => {
+  const rules = parseHeadersFile(`/_astro/*
+  Cache-Control: public, max-age=31556952, immutable
+
+/install.sh
+  Cache-Control: public, max-age=300, must-revalidate
+`);
+
+  deepStrictEqual(rules.get('/_astro/*'), {
+    'cache-control': 'public, max-age=31556952, immutable',
+  });
+  deepStrictEqual(rules.get('/install.sh'), {
+    'cache-control': 'public, max-age=300, must-revalidate',
+  });
+});
+
+run('validateCacheHeaders accepts the required static asset cache rules', () => {
+  deepStrictEqual(
+    validateCacheHeaders(`/_astro/*
+  Cache-Control: public, max-age=31556952, immutable
+
+/icon-192.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/icon-512.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/favicon.ico
+  Cache-Control: public, max-age=31556952, immutable
+
+/site.webmanifest
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/install.sh
+  Cache-Control: public, max-age=300, must-revalidate
+`),
+    []
+  );
+});
+
+run('validateCacheHeaders rejects missing or weakened cache rules', () => {
+  const errors = validateCacheHeaders(`/_astro/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/install.sh
+  Cache-Control: public, max-age=31556952, immutable
+`);
+
+  ok(errors.some((error) => error.includes('/_astro/*')));
+  ok(errors.some((error) => error.includes('/icon-192.png')));
+  ok(errors.some((error) => error.includes('/install.sh')));
+});
+
+run('validateCacheHeaders rejects immutable on short-lived installer endpoint', () => {
+  const errors = validateCacheHeaders(`/_astro/*
+  Cache-Control: public, max-age=31556952, immutable
+
+/icon-192.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/icon-512.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/favicon.ico
+  Cache-Control: public, max-age=31556952, immutable
+
+/site.webmanifest
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/install.sh
+  Cache-Control: public, max-age=300, must-revalidate, immutable
+`);
+
+  deepStrictEqual(errors, ['dist/_headers /install.sh must not be marked immutable.']);
 });
 
 function run(name: string, fn: () => void): void {
