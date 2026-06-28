@@ -40,7 +40,7 @@ const badge: Record<ReleaseType, { fg: string; bg: string }> = {
     </div>
     <div class="rel-install">
       <code class="mono rel-install-code"><span class="prompt">$ </span>{RELEASE.installCmd}</code>
-      <CopyButton text={RELEASE.installCmd} label="Copy" size="sm" />
+      <CopyButton text={RELEASE.installCmd} label={c.copyButtonLabel} size="sm" />
     </div>
   </div>
 

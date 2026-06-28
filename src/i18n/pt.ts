@@ -363,6 +363,7 @@ export const pt = {
       },
     ],
   },
+  copyButtonLabel: 'Copiar',
   copyToast: 'Copiado para a área de transferência',
   copyToastError: 'Não foi possível copiar — selecione e copie manualmente.',
   terminalLines: [
