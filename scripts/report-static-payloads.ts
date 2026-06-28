@@ -1,4 +1,4 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
@@ -143,23 +143,21 @@ async function readLinkedStylesheet(distDir: string, href: string): Promise<Asse
 
 async function collectAstroAssets(distDir: string): Promise<AssetPayload[]> {
   const astroDir = join(distDir, '_astro');
-  const entries = await readdir(astroDir);
+  const entries = await readdir(astroDir, { withFileTypes: true });
   const assets = await Promise.all(
     entries.map(async (entry) => {
-      const path = join('_astro', entry);
-      const absolutePath = join(distDir, path);
-      const fileStat = await stat(absolutePath);
-
-      if (!fileStat.isFile()) {
+      if (!entry.isFile()) {
         return null;
       }
 
-      const extension = extname(entry);
+      const extension = extname(entry.name);
 
       if (extension !== '.css' && extension !== '.js') {
         return null;
       }
 
+      const path = join('_astro', entry.name);
+      const absolutePath = join(distDir, path);
       const bytes = await readFile(absolutePath);
 
       return {
