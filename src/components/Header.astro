@@ -17,15 +17,40 @@ interface Props {
 const { lang, pathname, content: c, page } = Astro.props;
 
 const nav = [
-  { label: c.nav.home, href: routes.home(lang), active: page === 'home' },
-  { label: c.nav.features, href: `${routes.home(lang)}#features`, active: false },
-  { label: c.nav.releases, href: routes.releases(lang), active: page === 'releases' },
-  { label: c.nav.docs, href: routes.doc(lang, 'quickstart'), active: page === 'docs' },
+  {
+    label: c.nav.home,
+    href: routes.home(lang),
+    active: page === 'home',
+    prefetch: page !== 'home',
+  },
+  {
+    label: c.nav.features,
+    href: `${routes.home(lang)}#features`,
+    active: false,
+    prefetch: page !== 'home',
+  },
+  {
+    label: c.nav.releases,
+    href: routes.releases(lang),
+    active: page === 'releases',
+    prefetch: page !== 'releases',
+  },
+  {
+    label: c.nav.docs,
+    href: routes.doc(lang, 'quickstart'),
+    active: page === 'docs',
+    prefetch: page !== 'docs',
+  },
 ];
 ---
 
 <header class="site-header">
-  <a class="brand" href={routes.home(lang)} aria-label="MangoStudio">
+  <a
+    class="brand"
+    href={routes.home(lang)}
+    aria-label="MangoStudio"
+    data-astro-prefetch={page === 'home' ? undefined : 'hover'}
+  >
     <img
       src={siteAssets.icon192.src}
       alt=""
@@ -44,6 +69,7 @@ const nav = [
           href={item.href}
           class:list={['nav-link', { 'is-active': item.active }]}
           aria-current={item.active ? 'page' : undefined}
+          data-astro-prefetch={item.prefetch ? 'hover' : undefined}
         >
           {item.label}
         </a>
@@ -60,7 +86,7 @@ const nav = [
   </button>
 
   <ThemeToggle label={c.header.theme} />
-  <LangToggle lang={lang} pathname={pathname} />
+  <LangToggle lang={lang} pathname={pathname} content={c} />
 
   <a class="gh-link" href={GITHUB_URL} target="_blank" rel="noopener" aria-label={c.header.github}>
     <Icon name="github" size={16} />
@@ -68,7 +94,13 @@ const nav = [
     <span class="gh-label">{c.header.star}</span>
   </a>
 
-  <a class="btn btn-primary header-cta" href={routes.doc(lang, 'quickstart')}>{c.header.cta}</a>
+  <a
+    class="btn btn-primary header-cta"
+    href={routes.doc(lang, 'quickstart')}
+    data-astro-prefetch={page === 'docs' ? undefined : 'hover'}
+  >
+    {c.header.cta}
+  </a>
 </header>
 
 <style>

@@ -40,7 +40,11 @@ const { lang, content: c } = Astro.props;
     <InstallTerminal content={c} />
 
     <div class="hero-cta">
-      <a class="btn btn-primary btn-lg" href={routes.doc(lang, 'quickstart')}>
+      <a
+        class="btn btn-primary btn-lg"
+        href={routes.doc(lang, 'quickstart')}
+        data-astro-prefetch="hover"
+      >
         {c.hero.ctaPrimary}
         <Icon name="arrow" size={16} />
       </a>
