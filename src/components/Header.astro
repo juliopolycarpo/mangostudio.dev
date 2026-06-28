@@ -1,4 +1,5 @@
 ---
+import { siteAssets } from '@/data/assets';
 import { GITHUB_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
@@ -25,7 +26,14 @@ const nav = [
 
 <header class="site-header">
   <a class="brand" href={routes.home(lang)} aria-label="MangoStudio">
-    <img src="/icon-192.png" alt="" width="28" height="28" class="brand-logo" decoding="async" />
+    <img
+      src={siteAssets.icon192.src}
+      alt=""
+      width="28"
+      height="28"
+      class="brand-logo"
+      decoding="async"
+    />
     <span class="brand-name">Mango<span class="brand-dim">Studio</span></span>
   </a>
 

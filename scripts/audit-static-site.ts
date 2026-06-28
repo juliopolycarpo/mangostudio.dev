@@ -42,6 +42,7 @@ const DIST_EXPECTED_FILES = [
   'docs/quickstart/index.html',
   'en/docs/quickstart/index.html',
   '404.html',
+  'site.webmanifest',
   'sitemap-index.xml',
   '_headers',
 ];
@@ -51,15 +52,17 @@ export interface CacheHeaderRule {
   cacheControl: string;
 }
 
+const ONE_YEAR_MAX_AGE_SECONDS = 31_556_952;
+const VERSIONED_ASSET_CACHE_CONTROL = `public, max-age=${ONE_YEAR_MAX_AGE_SECONDS}, immutable`;
+const SHORT_IMAGE_CACHE_CONTROL = 'public, max-age=86400, must-revalidate';
+
 export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
-  { path: '/_astro/*', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/icon-192.png', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/icon-512.png', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/apple-touch-icon.png', cacheControl: 'public, max-age=31556952, immutable' },
-  { path: '/favicon.ico', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/_astro/*', cacheControl: VERSIONED_ASSET_CACHE_CONTROL },
+  { path: '/favicon.ico', cacheControl: SHORT_IMAGE_CACHE_CONTROL },
   { path: '/site.webmanifest', cacheControl: 'public, max-age=3600, must-revalidate' },
   { path: '/install.sh', cacheControl: 'public, max-age=300, must-revalidate' },
 ];
+const REQUIRED_CACHE_HEADER_PATHS = new Set(REQUIRED_CACHE_HEADER_RULES.map((rule) => rule.path));
 
 const DISALLOWED_WRANGLER_KEYS = [
   'account_id',
@@ -103,6 +106,22 @@ const TEXT_EXTENSIONS = new Set([
   '.webmanifest',
   '.xml',
 ]);
+
+const IMAGE_EXTENSIONS = new Set([
+  '.avif',
+  '.gif',
+  '.ico',
+  '.jpeg',
+  '.jpg',
+  '.png',
+  '.svg',
+  '.webp',
+]);
+const ASTRO_ASSET_PATH_PREFIX = '/_astro/';
+const HASHED_FILE_NAME_PATTERN = /\.[A-Za-z0-9_-]{8,}\.[^.]+$/;
+const UNVERSIONED_APP_IMAGE_PATHS = ['/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
+const VERSIONED_ASSET_REFERENCE_PATTERN =
+  /\/_astro\/([A-Za-z0-9._-]+\.(?:avif|gif|ico|jpeg|jpg|png|svg|webp))/gi;
 
 const SECRET_PATTERNS = [
   { label: 'Cloudflare API token variable', pattern: /\bCLOUDFLARE_API_TOKEN\b/ },
@@ -471,7 +490,106 @@ export function validateCacheHeaders(text: string): string[] {
     }
   }
 
+  for (const [path, headers] of rules) {
+    const cacheControl = headers['cache-control'];
+
+    if (!cacheControl || REQUIRED_CACHE_HEADER_PATHS.has(path) || !isImageHeaderPath(path)) {
+      continue;
+    }
+
+    if (isLongLivedCacheControl(cacheControl) && !isVersionedAssetHeaderPath(path)) {
+      errors.push(
+        `dist/_headers ${path} must not use long-lived immutable caching unless the image URL is versioned.`
+      );
+    }
+  }
+
   return errors;
+}
+
+export function findUnversionedAppImageReferences(file: TextFile): string[] {
+  return UNVERSIONED_APP_IMAGE_PATHS.filter((path) => file.text.includes(path)).map(
+    (path) =>
+      `${file.relativePath} references ${path}; app icons must use src/assets imports so Astro emits hashed URLs.`
+  );
+}
+
+// A content-hashed `/_astro/...` URL only stays cacheable for a year if it
+// actually resolves to an emitted file: an unchanged build re-emits the same
+// hash (browser and Cloudflare keep serving the cached image), while changing
+// the source bytes mints a new hash that no cache holds. A reference to a hash
+// that was never emitted breaks that contract — the browser would request a URL
+// that 404s instead of loading the cached image. This flags any such reference
+// across the built HTML and the web manifest.
+export function findBrokenVersionedAssetReferences(
+  files: readonly TextFile[],
+  emittedAssetNames: ReadonlySet<string>
+): string[] {
+  const errors: string[] = [];
+
+  for (const file of files) {
+    const seen = new Set<string>();
+
+    for (const match of file.text.matchAll(VERSIONED_ASSET_REFERENCE_PATTERN)) {
+      const name = match[1];
+
+      if (name === undefined || seen.has(name)) {
+        continue;
+      }
+
+      seen.add(name);
+
+      if (!emittedAssetNames.has(name)) {
+        errors.push(
+          `${file.relativePath} references /_astro/${name}, but no such hashed asset was emitted; the versioned URL would 404 instead of serving the cached image.`
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
+export function validateVersionedImageAssetPath(relativePath: string): string | null {
+  if (!relativePath.startsWith('dist/_astro/')) {
+    return null;
+  }
+
+  if (!IMAGE_EXTENSIONS.has(extname(relativePath))) {
+    return null;
+  }
+
+  if (HASHED_FILE_NAME_PATTERN.test(basename(relativePath))) {
+    return null;
+  }
+
+  return `${relativePath} must include a content hash before it receives one-year immutable caching.`;
+}
+
+function isImageHeaderPath(path: string): boolean {
+  if (path.endsWith('/*')) {
+    return false;
+  }
+
+  return IMAGE_EXTENSIONS.has(extname(path));
+}
+
+function isLongLivedCacheControl(cacheControl: string): boolean {
+  if (/\bimmutable\b/i.test(cacheControl)) {
+    return true;
+  }
+
+  const match = /\bmax-age=(\d+)\b/i.exec(cacheControl);
+
+  return match !== null && Number(match[1]) >= ONE_YEAR_MAX_AGE_SECONDS;
+}
+
+function isVersionedAssetHeaderPath(path: string): boolean {
+  return (
+    path === '/_astro/*' ||
+    path.startsWith(ASTRO_ASSET_PATH_PREFIX) ||
+    HASHED_FILE_NAME_PATTERN.test(basename(path))
+  );
 }
 
 export function validateApexRoute(routes: unknown): string[] {
@@ -669,10 +787,23 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     errors.push(...validateCacheHeaders(await readFile(headersPath, 'utf8')));
   }
 
+  const emittedAstroImageNames = new Set<string>();
+  const textFiles: TextFile[] = [];
+
   for (const file of await walkFiles(distDir)) {
     const relativePath = toPosix(relative(repoRoot, file));
     const fileName = basename(file);
     const extension = extname(file);
+
+    const versionedImageAssetError = validateVersionedImageAssetPath(relativePath);
+
+    if (versionedImageAssetError) {
+      errors.push(versionedImageAssetError);
+    }
+
+    if (relativePath.startsWith('dist/_astro/') && IMAGE_EXTENSIONS.has(extension)) {
+      emittedAstroImageNames.add(fileName);
+    }
 
     if (/^\.env(?:\.|$)/.test(fileName) || fileName === '.dev.vars') {
       errors.push(`${relativePath} must not be published.`);
@@ -684,6 +815,10 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
     }
 
     const text = await readFile(file, 'utf8');
+
+    textFiles.push({ relativePath, text });
+
+    errors.push(...findUnversionedAppImageReferences({ relativePath, text }));
 
     for (const { label, pattern } of SECRET_PATTERNS) {
       if (pattern.test(text)) {
@@ -713,6 +848,8 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
       }
     }
   }
+
+  errors.push(...findBrokenVersionedAssetReferences(textFiles, emittedAstroImageNames));
 
   return { name: 'Static build output', errors };
 }

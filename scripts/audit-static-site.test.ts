@@ -4,7 +4,9 @@ import {
   extractInlineStyleBlocks,
   extractLoadedExternalUrls,
   extractRemoteCssUrls,
+  findBrokenVersionedAssetReferences,
   findTodoHtmlFiles,
+  findUnversionedAppImageReferences,
   isPlaceholderInstallScript,
   isShellInstallerAdvertised,
   parseHeadersFile,
@@ -14,6 +16,7 @@ import {
   validateInstallChannels,
   validateReleaseSource,
   validateTruthfulSiteMetrics,
+  validateVersionedImageAssetPath,
 } from './audit-static-site';
 
 run('stripJsonComments preserves strings while removing comments', () => {
@@ -304,17 +307,8 @@ run('validateCacheHeaders accepts the required static asset cache rules', () => 
     validateCacheHeaders(`/_astro/*
   Cache-Control: public, max-age=31556952, immutable
 
-/icon-192.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/icon-512.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/apple-touch-icon.png
-  Cache-Control: public, max-age=31556952, immutable
-
 /favicon.ico
-  Cache-Control: public, max-age=31556952, immutable
+  Cache-Control: public, max-age=86400, must-revalidate
 
 /site.webmanifest
   Cache-Control: public, max-age=3600, must-revalidate
@@ -335,21 +329,15 @@ run('validateCacheHeaders rejects missing or weakened cache rules', () => {
 `);
 
   ok(errors.some((error) => error.includes('/_astro/*')));
-  ok(errors.some((error) => error.includes('/icon-192.png')));
+  ok(errors.some((error) => error.includes('/favicon.ico')));
   ok(errors.some((error) => error.includes('/install.sh')));
 });
 
-run('validateCacheHeaders rejects immutable on short-lived installer endpoint', () => {
+run('validateCacheHeaders rejects immutable on short-lived stable assets', () => {
   const errors = validateCacheHeaders(`/_astro/*
   Cache-Control: public, max-age=31556952, immutable
 
-/icon-192.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/icon-512.png
-  Cache-Control: public, max-age=31556952, immutable
-
-/apple-touch-icon.png
+/static/hero.png
   Cache-Control: public, max-age=31556952, immutable
 
 /favicon.ico
@@ -362,7 +350,89 @@ run('validateCacheHeaders rejects immutable on short-lived installer endpoint', 
   Cache-Control: public, max-age=300, must-revalidate, immutable
 `);
 
-  deepStrictEqual(errors, ['dist/_headers /install.sh must not be marked immutable.']);
+  deepStrictEqual(errors, [
+    'dist/_headers /favicon.ico must not be marked immutable.',
+    'dist/_headers /install.sh must not be marked immutable.',
+    'dist/_headers /static/hero.png must not use long-lived immutable caching unless the image URL is versioned.',
+  ]);
+});
+
+run('validateCacheHeaders accepts long-lived cache rules for hashed image URLs', () => {
+  deepStrictEqual(
+    validateCacheHeaders(`/_astro/*
+  Cache-Control: public, max-age=31556952, immutable
+
+/static/hero.CI8wi-xL.png
+  Cache-Control: public, max-age=31556952, immutable
+
+/favicon.ico
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/site.webmanifest
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/install.sh
+  Cache-Control: public, max-age=300, must-revalidate
+`),
+    []
+  );
+});
+
+run('findUnversionedAppImageReferences rejects stable app icon paths', () => {
+  deepStrictEqual(
+    findUnversionedAppImageReferences({
+      relativePath: 'dist/site.webmanifest',
+      text: '{"icons":[{"src":"/icon-192.png"},{"src":"/_astro/icon-512.abc123.png"}]}',
+    }),
+    [
+      'dist/site.webmanifest references /icon-192.png; app icons must use src/assets imports so Astro emits hashed URLs.',
+    ]
+  );
+});
+
+run('validateVersionedImageAssetPath requires hashed built image names', () => {
+  strictEqual(validateVersionedImageAssetPath('dist/_astro/icon-192.CI8wi-xL.png'), null);
+  strictEqual(validateVersionedImageAssetPath('dist/favicon.ico'), null);
+  strictEqual(
+    validateVersionedImageAssetPath('dist/_astro/icon-192.png'),
+    'dist/_astro/icon-192.png must include a content hash before it receives one-year immutable caching.'
+  );
+});
+
+run('findBrokenVersionedAssetReferences accepts references that resolve to emitted assets', () => {
+  deepStrictEqual(
+    findBrokenVersionedAssetReferences(
+      [
+        {
+          relativePath: 'dist/index.html',
+          text: '<img src="/_astro/icon-192.CI8wi-xL.png"><link href="/_astro/icon-192.CI8wi-xL.png">',
+        },
+        {
+          relativePath: 'dist/site.webmanifest',
+          text: '{"icons":[{"src":"/_astro/icon-512.DsGvk33E.png"}]}',
+        },
+      ],
+      new Set(['icon-192.CI8wi-xL.png', 'icon-512.DsGvk33E.png'])
+    ),
+    []
+  );
+});
+
+run('findBrokenVersionedAssetReferences flags references to assets that were not emitted', () => {
+  deepStrictEqual(
+    findBrokenVersionedAssetReferences(
+      [
+        {
+          relativePath: 'dist/site.webmanifest',
+          text: '{"icons":[{"src":"/_astro/icon-512.STALE001.png"}]}',
+        },
+      ],
+      new Set(['icon-512.DsGvk33E.png'])
+    ),
+    [
+      'dist/site.webmanifest references /_astro/icon-512.STALE001.png, but no such hashed asset was emitted; the versioned URL would 404 instead of serving the cached image.',
+    ]
+  );
 });
 
 function run(name: string, fn: () => void): void {
