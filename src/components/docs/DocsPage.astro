@@ -15,6 +15,12 @@ const q = c.docs.quickstart;
 const currentItem = findDocItem(c.docs.groups, docId);
 const isReadyPage = currentItem ? isDocReady(currentItem) : false;
 const pageLabel = currentItem?.label ?? docId;
+const prevDocId = 'install';
+const nextDocId = 'chat';
+const shouldPrefetchDoc = (id: string) => {
+  const item = findDocItem(c.docs.groups, id);
+  return item ? isDocReady(item) : false;
+};
 
 const crumbs = q.breadcrumb.split('/').map((part) => part.trim());
 const crumbLead = crumbs.slice(0, -1).join(' / ');
@@ -95,11 +101,19 @@ const crumbLast = crumbs[crumbs.length - 1];
           ))}
 
           <div class="docs-pager">
-            <a class="docs-pager-link" href={routes.doc(lang, 'install')}>
+            <a
+              class="docs-pager-link"
+              href={routes.doc(lang, prevDocId)}
+              data-astro-prefetch={shouldPrefetchDoc(prevDocId) ? 'hover' : undefined}
+            >
               <span class="docs-pager-dir">{q.prevLabel}</span>
               <span class="docs-pager-title">{q.prevTitle}</span>
             </a>
-            <a class="docs-pager-link docs-pager-next" href={routes.doc(lang, 'chat')}>
+            <a
+              class="docs-pager-link docs-pager-next"
+              href={routes.doc(lang, nextDocId)}
+              data-astro-prefetch={shouldPrefetchDoc(nextDocId) ? 'hover' : undefined}
+            >
               <span class="docs-pager-dir">{q.nextLabel}</span>
               <span class="docs-pager-title">{q.nextTitle}</span>
             </a>

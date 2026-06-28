@@ -14,6 +14,9 @@ export default defineConfig({
       redirectToDefaultLocale: false,
     },
   },
+  prefetch: {
+    prefetchAll: false,
+  },
   build: {
     // Emit dist/<route>/index.html so Cloudflare's auto-trailing-slash handling works cleanly.
     format: 'directory',

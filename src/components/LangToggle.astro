@@ -1,17 +1,26 @@
 ---
-import type { Lang } from '@/i18n/types';
-import { alternatePath } from '@/i18n/ui';
+import type { Lang, SiteContent } from '@/i18n/types';
+import { alternatePath, findDocItem, isDocReady } from '@/i18n/ui';
 
 interface Props {
   lang: Lang;
   pathname: string;
+  content: SiteContent;
 }
 
-const { lang, pathname } = Astro.props;
+const { lang, pathname, content } = Astro.props;
+const docId = getDocId(pathname);
+const currentDoc = docId ? findDocItem(content.docs.groups, docId) : undefined;
+const canPrefetchAlternate = !docId || (currentDoc ? isDocReady(currentDoc) : false);
 const options: { code: Lang; label: string }[] = [
   { code: 'pt', label: 'PT' },
   { code: 'en', label: 'EN' },
 ];
+
+function getDocId(pathname: string): string | undefined {
+  const defaultLocalePath = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
+  return /^\/docs\/([^/]+)\/?$/.exec(defaultLocalePath)?.[1];
+}
 ---
 
 <div class="lang-toggle" role="group" aria-label="Language">
@@ -22,6 +31,9 @@ const options: { code: Lang; label: string }[] = [
         hreflang={option.code}
         class:list={['lang-opt', { 'is-active': lang === option.code }]}
         aria-current={lang === option.code ? 'true' : undefined}
+        data-astro-prefetch={
+          lang !== option.code && canPrefetchAlternate ? 'hover' : undefined
+        }
       >
         {option.label}
       </a>

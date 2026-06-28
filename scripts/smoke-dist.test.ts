@@ -3,11 +3,14 @@ import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
 import {
   containsCanonicalOrigin,
   deriveDocIds,
+  derivePlannedDocHrefs,
   deriveRequiredDistFiles,
+  extractPrefetchHrefs,
   extractRouteIntegrityHrefs,
   findNonCanonicalOrigins,
   redirectHtmlReferencesTarget,
   resolveInternalHrefToDistFile,
+  resolveInternalHrefToRoutePath,
 } from './smoke-dist';
 
 run('deriveDocIds returns unique sorted doc ids from grouped content', () => {
@@ -79,6 +82,49 @@ run('resolveInternalHrefToDistFile maps internal routes to emitted files', () =>
   strictEqual(resolveInternalHrefToDistFile('/favicon.ico'), 'favicon.ico');
   strictEqual(resolveInternalHrefToDistFile('#features'), null);
   strictEqual(resolveInternalHrefToDistFile('https://github.com/juliopolycarpo/mangostudio'), null);
+});
+
+run('resolveInternalHrefToRoutePath normalizes same-origin links', () => {
+  strictEqual(resolveInternalHrefToRoutePath('/docs/quickstart#install'), '/docs/quickstart');
+  strictEqual(
+    resolveInternalHrefToRoutePath('https://mangostudio.dev/en/releases?ref=smoke'),
+    '/en/releases'
+  );
+  strictEqual(
+    resolveInternalHrefToRoutePath('https://github.com/juliopolycarpo/mangostudio'),
+    null
+  );
+});
+
+run('derivePlannedDocHrefs derives localized planned docs only', () => {
+  deepStrictEqual(
+    derivePlannedDocHrefs({
+      pt: {
+        docs: {
+          plannedBadge: 'Planejado',
+          groups: [{ items: [{ id: 'quickstart', status: 'ready' }, { id: 'cli' }] }],
+        },
+      },
+      en: {
+        docs: {
+          plannedBadge: 'Planned',
+          groups: [{ items: [{ id: 'quickstart', status: 'ready' }, { id: 'install' }] }],
+        },
+      },
+    }),
+    ['/docs/cli', '/en/docs/install']
+  );
+});
+
+run('extractPrefetchHrefs returns only active Astro prefetch anchors', () => {
+  const html = `
+    <a href="/docs/quickstart" data-astro-prefetch>Quickstart</a>
+    <a data-astro-prefetch="hover" href="/releases">Releases</a>
+    <a href="https://github.com/juliopolycarpo/mangostudio" data-astro-prefetch="false">GitHub</a>
+    <a href="/docs/cli">CLI</a>
+  `;
+
+  deepStrictEqual(extractPrefetchHrefs(html), ['/docs/quickstart', '/releases']);
 });
 
 run('canonical host helpers accept production origin and reject preview origins', () => {

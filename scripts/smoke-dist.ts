@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, join, relative } from 'node:path';
 
 import { en } from '../src/i18n/en';
 import { pt } from '../src/i18n/pt';
@@ -16,6 +16,7 @@ interface SmokeSection {
 
 interface DocRouteItem {
   id: string;
+  status?: 'ready' | 'planned';
 }
 
 interface DocRouteGroup {
@@ -68,6 +69,25 @@ export function deriveDocIds(groups: readonly DocRouteGroup[]): string[] {
   return [...ids].sort();
 }
 
+export function derivePlannedDocHrefs(contentByLang: LocaleRouteContent): string[] {
+  const hrefs = new Set<string>();
+
+  for (const [lang, content] of Object.entries(contentByLang) as [
+    Lang,
+    LocaleRouteContent[Lang],
+  ][]) {
+    for (const group of content.docs.groups) {
+      for (const item of group.items) {
+        if (item.status !== 'ready') {
+          hrefs.add(routes.doc(lang, item.id));
+        }
+      }
+    }
+  }
+
+  return [...hrefs].sort();
+}
+
 export function redirectHtmlReferencesTarget(
   html: string,
   target: string,
@@ -106,7 +126,7 @@ export function extractRouteIntegrityHrefs(html: string): string[] {
   return [...hrefs].sort();
 }
 
-export function resolveInternalHrefToDistFile(
+export function resolveInternalHrefToRoutePath(
   href: string,
   canonicalOrigin = CANONICAL_ORIGIN
 ): string | null {
@@ -140,7 +160,20 @@ export function resolveInternalHrefToDistFile(
     pathname = pathPart.startsWith('/') ? pathPart : `/${pathPart}`;
   }
 
-  return routeToDistFile(pathname);
+  return normalizeRoutePath(pathname);
+}
+
+export function resolveInternalHrefToDistFile(
+  href: string,
+  canonicalOrigin = CANONICAL_ORIGIN
+): string | null {
+  const routePath = resolveInternalHrefToRoutePath(href, canonicalOrigin);
+
+  return routePath ? routeToDistFile(routePath) : null;
+}
+
+export function extractPrefetchHrefs(html: string): string[] {
+  return extractAnchorHrefs(html, (_tag, attrs) => hasActivePrefetch(attrs));
 }
 
 export function containsCanonicalOrigin(text: string, canonicalOrigin = CANONICAL_ORIGIN): boolean {
@@ -164,6 +197,7 @@ async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
     await smokeNotFoundLinks(distDir),
     await smokeCanonicalHosts(distDir),
     await smokeInternalLinkGraph(distDir),
+    await smokeSelectivePrefetch(distDir),
   ];
 }
 
@@ -339,6 +373,76 @@ async function smokeInternalLinkGraph(distDir: string): Promise<SmokeSection> {
   return { name: 'Internal link graph', errors };
 }
 
+async function smokeSelectivePrefetch(distDir: string): Promise<SmokeSection> {
+  const errors: string[] = [];
+  const htmlFiles = await findHtmlFiles(distDir);
+  const plannedDocHrefs = new Set(
+    derivePlannedDocHrefs(CONTENT_BY_LANG).map((href) => normalizeRoutePath(href))
+  );
+
+  for (const file of htmlFiles) {
+    const html = await readTextFile(join(distDir, file), errors);
+
+    if (!html) {
+      continue;
+    }
+
+    const sidebar = extractElementWithClass(html, 'docs-sidebar');
+
+    if (sidebar) {
+      for (const href of extractPrefetchHrefs(sidebar)) {
+        errors.push(`dist/${file} must not prefetch docs sidebar link ${href}.`);
+      }
+    }
+
+    for (const href of extractPrefetchHrefs(html)) {
+      const routePath = resolveInternalHrefToRoutePath(href);
+
+      if (!routePath) {
+        errors.push(`dist/${file} must not prefetch external or non-page link ${href}.`);
+        continue;
+      }
+
+      if (plannedDocHrefs.has(routePath)) {
+        errors.push(`dist/${file} must not prefetch planned docs link ${href}.`);
+      }
+    }
+  }
+
+  return { name: 'Selective Astro prefetch', errors };
+}
+
+async function findHtmlFiles(distDir: string): Promise<string[]> {
+  const files: string[] = [];
+  await collectHtmlFiles(distDir, distDir, files);
+  return files.sort();
+}
+
+async function collectHtmlFiles(
+  rootDir: string,
+  currentDir: string,
+  files: string[]
+): Promise<void> {
+  let entries: string[];
+
+  try {
+    entries = await readdir(currentDir);
+  } catch {
+    return;
+  }
+
+  for (const entry of entries) {
+    const path = join(currentDir, entry);
+    const info = await stat(path);
+
+    if (info.isDirectory()) {
+      await collectHtmlFiles(rootDir, path, files);
+    } else if (entry.endsWith('.html')) {
+      files.push(relative(rootDir, path));
+    }
+  }
+}
+
 async function findSitemapFiles(distDir: string): Promise<string[]> {
   try {
     return (await readdir(distDir))
@@ -438,6 +542,12 @@ function extractAnchorHrefs(
   return [...hrefs].sort();
 }
 
+function hasActivePrefetch(attrs: Map<string, string>): boolean {
+  return (
+    attrs.has('data-astro-prefetch') && attrs.get('data-astro-prefetch')?.toLowerCase() !== 'false'
+  );
+}
+
 function extractElementWithClass(html: string, className: string): string | undefined {
   // Match `className` as a whole class token. `\b` treats `-` as a boundary, so
   // a query for `nf` would also match `nf-code`; gate on chars that cannot be
@@ -454,12 +564,13 @@ function extractElementWithClass(html: string, className: string): string | unde
 
 function parseAttributes(tag: string): Map<string, string> {
   const attrs = new Map<string, string>();
-  const attrPattern = /([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+  const attrPattern =
+    /\s([A-Za-z_:][-A-Za-z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
   let match = attrPattern.exec(tag);
 
   while (match !== null) {
     const name = match[1]?.toLowerCase();
-    const value = match[2] ?? match[3] ?? '';
+    const value = match[2] ?? match[3] ?? match[4] ?? '';
 
     if (name) {
       attrs.set(name, value);
