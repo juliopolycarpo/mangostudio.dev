@@ -101,12 +101,25 @@ one place.
 
   **Blocks publish:** yes.
 
-- [ ] Static audit and production smoke tests are green.
+- [ ] Static audit and local dist smoke tests are green.
 
   **Verify:** run `bun run audit:static` and `bun run smoke:dist`, or confirm both steps passed as
-  part of `bun run qa`.
+  part of `bun run qa`. These checks run offline against the built `dist/` output and do not hit the
+  public internet.
 
   **Blocks publish:** yes.
+
+- [ ] Production URL smoke tests pass after deploy.
+
+  **Verify:** confirm the `Smoke test production URLs` step passed in the latest *Actions -> Deploy*
+  workflow run on `main`, or run `bun run smoke:production` locally once Cloudflare DNS, the apex
+  custom domain, and the `www -> apex` redirect rule are configured. The check issues `HEAD` requests
+  to `https://mangostudio.dev/` (expects `200`) and
+  `https://www.mangostudio.dev/docs/quickstart?smoke=1` (expects `301` or `308` to the apex with
+  path and query preserved).
+
+  **Blocks publish:** yes for public launch; no for the first deploy that only creates the Worker
+  before external routing is ready.
 
 - [ ] Content truthfulness work is merged.
 
