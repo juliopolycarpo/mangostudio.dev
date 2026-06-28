@@ -54,7 +54,7 @@ src/
   scripts/         theme · cmdk · install-tabs · terminal · copy (client modules)
   pages/           index, releases, docs/[slug], 404  (+ en/ mirror)
   styles/global.css design tokens + shared component CSS
-public/            favicon.svg, robots.txt, install.sh (placeholder)
+public/            favicons, site.webmanifest, robots.txt, install.sh (placeholder)
 ```
 
 ### Internationalization

@@ -75,7 +75,7 @@ run('resolveInternalHrefToDistFile maps internal routes to emitted files', () =>
     resolveInternalHrefToDistFile('https://mangostudio.dev/en/releases?ref=smoke'),
     'en/releases/index.html'
   );
-  strictEqual(resolveInternalHrefToDistFile('/favicon.svg'), 'favicon.svg');
+  strictEqual(resolveInternalHrefToDistFile('/favicon.ico'), 'favicon.ico');
   strictEqual(resolveInternalHrefToDistFile('#features'), null);
   strictEqual(resolveInternalHrefToDistFile('https://github.com/juliopolycarpo/mangostudio'), null);
 });

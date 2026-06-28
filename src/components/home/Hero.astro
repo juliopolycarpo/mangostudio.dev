@@ -1,6 +1,5 @@
 ---
 import Icon from '@/components/Icon.astro';
-import Logo from '@/components/Logo.astro';
 import { GITHUB_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
@@ -17,7 +16,15 @@ const { lang, content: c } = Astro.props;
 <section class="hero">
   <div class="hero-grid" aria-hidden="true"></div>
   <div class="hero-glow" aria-hidden="true"></div>
-  <Logo size={120} detailed class="hero-logo" />
+  <img
+    src="/mango-banner-256.png"
+    alt=""
+    width="256"
+    height="256"
+    class="hero-logo"
+    aria-hidden="true"
+    decoding="async"
+  />
 
   <div class="hero-inner">
     <div class="pill"><span class="dot"></span>{c.hero.badge}</div>
@@ -88,6 +95,8 @@ const { lang, content: c } = Astro.props;
     position: absolute;
     top: 44px;
     right: 6%;
+    width: 120px;
+    height: auto;
     filter: drop-shadow(0 18px 36px rgba(232, 89, 12, 0.4));
     animation: floaty 6.5s ease-in-out infinite;
     pointer-events: none;
