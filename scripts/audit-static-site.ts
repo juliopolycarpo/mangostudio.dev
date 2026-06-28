@@ -49,29 +49,16 @@ const DIST_EXPECTED_FILES = [
 export interface CacheHeaderRule {
   path: string;
   cacheControl: string;
-  immutable?: boolean;
 }
 
 export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
-  { path: '/_astro/*', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
-  { path: '/icon-192.png', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
-  { path: '/icon-512.png', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
-  {
-    path: '/apple-touch-icon.png',
-    cacheControl: 'public, max-age=31556952, immutable',
-    immutable: true,
-  },
-  { path: '/favicon.ico', cacheControl: 'public, max-age=31556952, immutable', immutable: true },
-  {
-    path: '/site.webmanifest',
-    cacheControl: 'public, max-age=3600, must-revalidate',
-    immutable: false,
-  },
-  {
-    path: '/install.sh',
-    cacheControl: 'public, max-age=300, must-revalidate',
-    immutable: false,
-  },
+  { path: '/_astro/*', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/icon-192.png', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/icon-512.png', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/apple-touch-icon.png', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/favicon.ico', cacheControl: 'public, max-age=31556952, immutable' },
+  { path: '/site.webmanifest', cacheControl: 'public, max-age=3600, must-revalidate' },
+  { path: '/install.sh', cacheControl: 'public, max-age=300, must-revalidate' },
 ];
 
 const DISALLOWED_WRANGLER_KEYS = [
@@ -472,7 +459,7 @@ export function validateCacheHeaders(text: string): string[] {
       continue;
     }
 
-    if (required.immutable === false && cacheControl.includes('immutable')) {
+    if (!required.cacheControl.includes('immutable') && cacheControl.includes('immutable')) {
       errors.push(`dist/_headers ${required.path} must not be marked immutable.`);
       continue;
     }
