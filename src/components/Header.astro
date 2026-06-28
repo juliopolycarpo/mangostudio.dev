@@ -4,7 +4,6 @@ import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
 import Icon from './Icon.astro';
 import LangToggle from './LangToggle.astro';
-import Logo from './Logo.astro';
 import ThemeToggle from './ThemeToggle.astro';
 
 interface Props {
@@ -26,7 +25,7 @@ const nav = [
 
 <header class="site-header">
   <a class="brand" href={routes.home(lang)} aria-label="MangoStudio">
-    <Logo size={28} detailed />
+    <img src="/icon-192.png" alt="" width="28" height="28" class="brand-logo" decoding="async" />
     <span class="brand-name">Mango<span class="brand-dim">Studio</span></span>
   </a>
 
@@ -84,6 +83,10 @@ const nav = [
     gap: 10px;
     text-decoration: none;
     color: var(--text);
+  }
+
+  .brand-logo {
+    display: block;
   }
 
   .brand-name {

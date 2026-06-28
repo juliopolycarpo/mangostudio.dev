@@ -50,11 +50,11 @@ src/
   i18n/            ui.ts helper + pt.ts / en.ts content (one shared SiteContent type)
   data/site.ts     language-neutral constants (URLs, install commands, providers)
   layouts/         BaseLayout (head, fonts, no-FOUC theme init, header/footer/palette)
-  components/       Header, Footer, CommandPalette, Icon, Logo + home/ releases/ docs/
+  components/       Header, Footer, CommandPalette, Icon + home/ releases/ docs/
   scripts/         theme · cmdk · install-tabs · terminal · copy (client modules)
   pages/           index, releases, docs/[slug], 404  (+ en/ mirror)
   styles/global.css design tokens + shared component CSS
-public/            favicon.svg, robots.txt, install.sh (placeholder)
+public/            favicons, site.webmanifest, robots.txt, install.sh (placeholder)
 ```
 
 ### Internationalization
