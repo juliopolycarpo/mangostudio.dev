@@ -17,6 +17,8 @@ export default defineConfig({
   build: {
     // Emit dist/<route>/index.html so Cloudflare's auto-trailing-slash handling works cleanly.
     format: 'directory',
+    // Inline CSS in HTML to avoid render-blocking external stylesheet requests (PageSpeed).
+    inlineStylesheets: 'always',
   },
   // Bare /docs lands on the quickstart entry point in each locale.
   redirects: {
