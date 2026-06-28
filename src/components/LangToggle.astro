@@ -1,6 +1,6 @@
 ---
 import type { Lang, SiteContent } from '@/i18n/types';
-import { alternatePath, findDocItem, isDocReady } from '@/i18n/ui';
+import { alternatePath, findDocItem, isDocReady, stripLocalePrefix } from '@/i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -18,8 +18,7 @@ const options: { code: Lang; label: string }[] = [
 ];
 
 function getDocId(pathname: string): string | undefined {
-  const defaultLocalePath = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
-  return /^\/docs\/([^/]+)\/?$/.exec(defaultLocalePath)?.[1];
+  return /^\/docs\/([^/]+)\/?$/.exec(stripLocalePrefix(pathname))?.[1];
 }
 ---
 

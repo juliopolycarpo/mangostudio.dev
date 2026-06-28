@@ -36,10 +36,14 @@ export const routes = {
   doc: (lang: Lang, id: string) => localizePath(`/docs/${id}`, lang),
 };
 
+/** Drop the "/en" locale prefix, yielding the default-locale path ("/en/docs" → "/docs"). */
+export function stripLocalePrefix(pathname: string): string {
+  return pathname.replace(/^\/en(?=\/|$)/, '') || '/';
+}
+
 /** The same route in the other locale — used by the language toggle. */
 export function alternatePath(pathname: string, target: Lang): string {
-  const stripped = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
-  return localizePath(stripped, target);
+  return localizePath(stripLocalePrefix(pathname), target);
 }
 
 export function otherLang(lang: Lang): Lang {

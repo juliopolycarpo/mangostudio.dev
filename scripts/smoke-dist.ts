@@ -1,3 +1,4 @@
+import type { Dirent } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
 
@@ -423,21 +424,20 @@ async function collectHtmlFiles(
   currentDir: string,
   files: string[]
 ): Promise<void> {
-  let entries: string[];
+  let entries: Dirent[];
 
   try {
-    entries = await readdir(currentDir);
+    entries = await readdir(currentDir, { withFileTypes: true });
   } catch {
     return;
   }
 
   for (const entry of entries) {
-    const path = join(currentDir, entry);
-    const info = await stat(path);
+    const path = join(currentDir, entry.name);
 
-    if (info.isDirectory()) {
+    if (entry.isDirectory()) {
       await collectHtmlFiles(rootDir, path, files);
-    } else if (entry.endsWith('.html')) {
+    } else if (entry.name.endsWith('.html')) {
       files.push(relative(rootDir, path));
     }
   }
