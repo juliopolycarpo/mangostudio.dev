@@ -15,8 +15,8 @@ const releaseDate = new Intl.DateTimeFormat(c.lang === 'pt' ? 'pt-BR' : 'en-US',
 }).format(new Date(`${RELEASE.releaseDate}T00:00:00.000Z`));
 
 const badge: Record<ReleaseType, { fg: string; bg: string }> = {
-  feat: { fg: 'var(--lime)', bg: 'color-mix(in srgb, var(--lime) 15%, transparent)' },
-  fix: { fg: 'var(--mango)', bg: 'color-mix(in srgb, var(--mango) 15%, transparent)' },
+  feat: { fg: 'var(--success-text)', bg: 'color-mix(in srgb, var(--lime) 15%, transparent)' },
+  fix: { fg: 'var(--accent-text)', bg: 'color-mix(in srgb, var(--mango) 15%, transparent)' },
   perf: {
     fg: 'var(--mango-light)',
     bg: 'color-mix(in srgb, var(--mango-light) 16%, transparent)',
@@ -140,12 +140,12 @@ const badge: Record<ReleaseType, { fg: string; bg: string }> = {
   }
 
   .rel-ver:hover {
-    color: var(--mango);
+    color: var(--accent-text);
   }
 
   .rel-badge-latest {
     font-size: 11px;
-    color: var(--lime);
+    color: var(--success-text);
     border: 1px solid color-mix(in srgb, var(--lime) 35%, transparent);
     border-radius: 999px;
     padding: 3px 10px;
@@ -174,7 +174,7 @@ const badge: Record<ReleaseType, { fg: string; bg: string }> = {
   }
 
   .prompt {
-    color: var(--mango);
+    color: var(--accent-text);
   }
 
   .timeline {
@@ -228,7 +228,7 @@ const badge: Record<ReleaseType, { fg: string; bg: string }> = {
   }
 
   .tl-ver a:hover {
-    color: var(--mango);
+    color: var(--accent-text);
   }
 
   .tl-date {

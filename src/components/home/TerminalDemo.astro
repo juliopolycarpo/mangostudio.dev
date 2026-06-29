@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { content: c } = Astro.props;
-const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--lime)'];
+const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--success-text)'];
 ---
 
 <section class="demo-section container">
@@ -90,11 +90,11 @@ const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--li
   }
 
   .arrow {
-    color: var(--lime);
+    color: var(--success-text);
   }
 
   .prompt {
-    color: var(--mango);
+    color: var(--accent-text);
   }
 
   .term-cursor {
@@ -158,7 +158,7 @@ const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--li
 
   .chat-online {
     font-size: 10.5px;
-    color: var(--lime);
+    color: var(--success-text);
     border: 1px solid color-mix(in srgb, var(--lime) 40%, transparent);
     border-radius: 5px;
     padding: 2px 7px;
