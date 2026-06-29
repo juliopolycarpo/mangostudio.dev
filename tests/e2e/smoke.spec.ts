@@ -42,6 +42,32 @@ test.describe('home page', () => {
   });
 });
 
+test.describe('docs pages', () => {
+  test('renders synced nested docs content', async ({ page }) => {
+    await page.goto('/docs/reference/cli');
+
+    await expect(page.getByRole('heading', { name: 'Referência da CLI' })).toBeVisible();
+    await expect(page.locator('.docs-sidebar a[href="/docs/reference/cli"]')).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    await expect(page.locator('.docs-markdown')).toContainText('mangostudio serve');
+    await expect(page.locator('.docs-source')).toHaveAttribute(
+      'href',
+      /^https:\/\/github\.com\/juliopolycarpo\/mangostudio\/blob\//
+    );
+  });
+
+  test('serves English synced docs at localized routes', async ({ page }) => {
+    await page.goto('/en/docs/operations/security');
+
+    await expect(page.getByRole('heading', { name: 'Security Policy' })).toBeVisible();
+    await expect(
+      page.locator('.docs-sidebar a[href="/en/docs/operations/security"]')
+    ).toHaveAttribute('aria-current', 'page');
+  });
+});
+
 test.describe('constrained viewport guardrails', () => {
   test.beforeEach(({ isMobile }) => {
     test.skip(!isMobile, 'phone-profile layout assertions');
@@ -70,6 +96,16 @@ test.describe('constrained viewport guardrails', () => {
       .locator('.site-header')
       .evaluate((el) => getComputedStyle(el).position);
     expect(position).toBe('sticky');
+  });
+
+  test('docs layout has no horizontal overflow', async ({ page }) => {
+    await page.goto('/docs/reference/cli');
+
+    const overflow = await page.evaluate(() => {
+      const el = document.documentElement;
+      return el.scrollWidth - el.clientWidth;
+    });
+    expect(overflow).toBeLessThanOrEqual(1);
   });
 });
 

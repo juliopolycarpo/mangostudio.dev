@@ -1,30 +1,29 @@
 ---
-import CopyButton from '@/components/CopyButton.astro';
 import Icon from '@/components/Icon.astro';
+import type { DocsEntry } from '@/data/docs';
+import { docsNav, previousNextDocs } from '@/data/docs';
 import type { Lang, SiteContent } from '@/i18n/types';
-import { findDocItem, isDocReady, routes } from '@/i18n/ui';
+import { routes } from '@/i18n/ui';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
 
 interface Props {
   lang: Lang;
   content: SiteContent;
-  docId: string;
+  entry: DocsEntry;
+  Content: any;
+  headings: Heading[];
 }
 
-const { lang, content: c, docId } = Astro.props;
-const q = c.docs.quickstart;
-const currentItem = findDocItem(c.docs.groups, docId);
-const isReadyPage = currentItem ? isDocReady(currentItem) : false;
-const pageLabel = currentItem?.label ?? docId;
-const prevDocId = 'install';
-const nextDocId = 'chat';
-const shouldPrefetchDoc = (id: string) => {
-  const item = findDocItem(c.docs.groups, id);
-  return item ? isDocReady(item) : false;
-};
-
-const crumbs = q.breadcrumb.split('/').map((part) => part.trim());
-const crumbLead = crumbs.slice(0, -1).join(' / ');
-const crumbLast = crumbs[crumbs.length - 1];
+const { lang, content: c, entry, Content, headings } = Astro.props;
+const nav = docsNav(lang);
+const slug = entry.data.slug;
+const { previous, next } = previousNextDocs(lang, slug);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3).slice(0, 12);
 ---
 
 <div class="docs">
@@ -36,30 +35,19 @@ const crumbLast = crumbs[crumbs.length - 1];
     </button>
 
     {
-      c.docs.groups.map((group) => (
+      nav.map((group) => (
         <div class="docs-group">
           <div class="docs-group-title">{group.title}</div>
           <div class="docs-group-items">
-            {group.items.map((item) => {
-              const planned = !isDocReady(item);
-              return (
-                <a
-                  href={routes.doc(lang, item.id)}
-                  class:list={[
-                    'docs-link',
-                    { 'is-active': item.id === docId, 'is-planned': planned },
-                  ]}
-                  aria-current={item.id === docId ? 'page' : undefined}
-                >
-                  <span class="docs-link-label">{item.label}</span>
-                  {planned && (
-                    <span class="docs-planned-pill mono" aria-label={c.docs.plannedSidebarHint}>
-                      {c.docs.plannedBadge}
-                    </span>
-                  )}
-                </a>
-              );
-            })}
+            {group.items.map((item) => (
+              <a
+                href={routes.doc(lang, item.slug)}
+                class:list={['docs-link', { 'is-active': item.slug === slug }]}
+                aria-current={item.slug === slug ? 'page' : undefined}
+              >
+                <span class="docs-link-label">{item.sidebarLabel}</span>
+              </a>
+            ))}
           </div>
         </div>
       ))
@@ -67,81 +55,58 @@ const crumbLast = crumbs[crumbs.length - 1];
   </aside>
 
   <article class="docs-article">
-    {
-      isReadyPage ? (
-        <>
-          <div class="docs-breadcrumb mono">
-            {crumbLead} / <span class="accent">{crumbLast}</span>
-          </div>
-          <h1 class="docs-h1">{q.title}</h1>
-          <p class="docs-lead">{q.intro}</p>
+    <div class="docs-meta">
+      <div class="docs-breadcrumb mono">
+        {entry.data.groupTitle} / <span class="accent">{entry.data.sidebarLabel}</span>
+      </div>
+      <a class="docs-source mono" href={entry.data.sourceUrl} target="_blank" rel="noopener">
+        {c.docs.sourceLabel}
+      </a>
+    </div>
 
-          <div class="docs-callout">
-            <span class="docs-callout-icon">
-              <Icon name="info" size={19} />
-            </span>
-            <p>
-              <strong>{q.prereqStrong}</strong>
-              {q.prereqText}
-            </p>
-          </div>
+    <div class="docs-markdown">
+      <Content />
+    </div>
 
-          {q.sections.map((section) => (
-            <Fragment>
-              <h2 class="docs-h2">{section.title}</h2>
-              <p class="docs-p">{section.body}</p>
-              <div class="docs-code-block">
-                <div class="docs-code-bar">
-                  <span class="mono docs-code-lang">{section.codeLang}</span>
-                  <CopyButton text={section.code} label={c.copyButtonLabel} size="sm" />
-                </div>
-                <pre class="docs-pre"><code class="mono">{section.code}</code></pre>
-              </div>
-            </Fragment>
-          ))}
-
-          <div class="docs-pager">
-            <a
-              class="docs-pager-link"
-              href={routes.doc(lang, prevDocId)}
-              data-astro-prefetch={shouldPrefetchDoc(prevDocId) ? 'hover' : undefined}
-            >
-              <span class="docs-pager-dir">{q.prevLabel}</span>
-              <span class="docs-pager-title">{q.prevTitle}</span>
-            </a>
-            <a
-              class="docs-pager-link docs-pager-next"
-              href={routes.doc(lang, nextDocId)}
-              data-astro-prefetch={shouldPrefetchDoc(nextDocId) ? 'hover' : undefined}
-            >
-              <span class="docs-pager-dir">{q.nextLabel}</span>
-              <span class="docs-pager-title">{q.nextTitle}</span>
-            </a>
-          </div>
-        </>
-      ) : (
-        <>
-          <div class="docs-breadcrumb mono">
-            Docs / <span class="accent">{pageLabel}</span>
-          </div>
-          <h1 class="docs-h1">{pageLabel}</h1>
-          <div class="docs-planned">
-            <span class="docs-planned-badge mono">{c.docs.plannedBadge}</span>
-            <span>{c.docs.plannedText}</span>
-          </div>
-        </>
-      )
-    }
+    <div class="docs-pager">
+      {
+        previous ? (
+          <a class="docs-pager-link" href={routes.doc(lang, previous.slug)}>
+            <span class="docs-pager-dir">{c.docs.previousLabel}</span>
+            <span class="docs-pager-title">{previous.sidebarLabel}</span>
+          </a>
+        ) : (
+          <span></span>
+        )
+      }
+      {
+        next && (
+          <a class="docs-pager-link docs-pager-next" href={routes.doc(lang, next.slug)}>
+            <span class="docs-pager-dir">{c.docs.nextLabel}</span>
+            <span class="docs-pager-title">{next.sidebarLabel}</span>
+          </a>
+        )
+      }
+    </div>
   </article>
 
   <aside class="docs-toc">
     {
-      isReadyPage && (
+      toc.length > 0 && (
         <div class="docs-toc-inner">
-          <div class="docs-toc-title">{q.tocTitle}</div>
+          <div class="docs-toc-title">{c.docs.tocTitle}</div>
           <div class="docs-toc-list">
-            {q.toc.map((entry, index) => (
-              <span class:list={['docs-toc-item', { 'is-active': index === 0 }]}>{entry}</span>
+            {toc.map((heading, index) => (
+              <a
+                class:list={[
+                  'docs-toc-item',
+                  `depth-${heading.depth}`,
+                  { 'is-active': index === 0 },
+                ]}
+                href={`#${heading.slug}`}
+              >
+                {heading.text}
+              </a>
             ))}
           </div>
         </div>
@@ -153,8 +118,8 @@ const crumbLast = crumbs[crumbs.length - 1];
 <style>
   .docs {
     display: grid;
-    grid-template-columns: 248px minmax(0, 1fr) 200px;
-    max-width: 1280px;
+    grid-template-columns: 266px minmax(0, 1fr) 220px;
+    max-width: 1360px;
     margin: 0 auto;
   }
 
@@ -223,24 +188,9 @@ const crumbLast = crumbs[crumbs.length - 1];
     font-weight: 500;
   }
 
-  .docs-link.is-planned {
-    color: var(--text-3);
-  }
-
   .docs-link-label {
     flex: 1;
     min-width: 0;
-  }
-
-  .docs-planned-pill {
-    flex-shrink: 0;
-    font-size: 9.5px;
-    font-weight: 600;
-    color: var(--accent-text);
-    border: 1px solid color-mix(in srgb, var(--mango) 35%, transparent);
-    border-radius: 4px;
-    padding: 1px 5px;
-    letter-spacing: 0.02em;
   }
 
   .docs-link:hover {
@@ -266,113 +216,172 @@ const crumbLast = crumbs[crumbs.length - 1];
   }
 
   .docs-article {
-    padding: 38px 48px 80px;
+    padding: 38px 52px 80px;
     min-width: 0;
   }
 
-  .docs-breadcrumb {
+  .docs-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .docs-breadcrumb,
+  .docs-source {
     font-size: 12.5px;
     color: var(--text-3);
+  }
+
+  .docs-source {
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .docs-source:hover {
+    color: var(--accent-text);
   }
 
   .accent {
     color: var(--accent-text);
   }
 
-  .docs-h1 {
+  .docs-markdown :global(h1) {
     margin: 12px 0 0;
     font-size: 38px;
     font-weight: 600;
-    letter-spacing: -0.025em;
+    letter-spacing: 0;
+    line-height: 1.15;
   }
 
-  .docs-lead {
-    margin: 14px 0 0;
-    font-size: 16.5px;
-    line-height: 1.65;
-    color: var(--text-2);
-  }
-
-  .docs-callout {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 28px;
-    border: 1px solid color-mix(in srgb, var(--mango) 30%, transparent);
-    background: color-mix(in srgb, var(--mango) 8%, transparent);
-    border-radius: 12px;
-    padding: 15px 18px;
-  }
-
-  .docs-callout-icon {
-    color: var(--accent-text);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  .docs-callout p {
-    margin: 0;
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: var(--text-2);
-  }
-
-  .docs-callout strong {
-    color: var(--text);
-  }
-
-  .docs-h2 {
+  .docs-markdown :global(h2) {
     margin: 38px 0 0;
     font-size: 23px;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     border-top: 1px solid var(--border);
     padding-top: 30px;
+    line-height: 1.25;
   }
 
-  .docs-p {
-    margin: 12px 0 0;
+  .docs-markdown :global(h3) {
+    margin: 28px 0 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+
+  .docs-markdown :global(h4) {
+    margin: 24px 0 0;
+    font-size: 15.5px;
+    font-weight: 650;
+  }
+
+  .docs-markdown :global(p),
+  .docs-markdown :global(li) {
     font-size: 15px;
-    line-height: 1.65;
+    line-height: 1.68;
     color: var(--text-2);
   }
 
-  .docs-code-block {
-    margin-top: 14px;
-    border: 1px solid var(--border);
-    border-radius: 11px;
-    background: var(--code-bg);
-    overflow: hidden;
+  .docs-markdown :global(p) {
+    margin: 14px 0 0;
   }
 
-  .docs-code-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
+  .docs-markdown :global(ul),
+  .docs-markdown :global(ol) {
+    margin: 14px 0 0;
+    padding-left: 24px;
   }
 
-  .docs-code-lang {
-    font-size: 11.5px;
-    color: var(--text-3);
+  .docs-markdown :global(li + li) {
+    margin-top: 6px;
   }
 
-  .docs-pre {
-    margin: 0;
-    padding: 14px 16px;
-    overflow-x: auto;
+  .docs-markdown :global(a) {
+    color: var(--accent-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
   }
 
-  .docs-pre code {
-    font-size: 13.5px;
-    line-height: 1.7;
+  .docs-markdown :global(strong) {
     color: var(--text);
   }
 
+  .docs-markdown :global(hr) {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .docs-markdown :global(blockquote) {
+    margin: 18px 0 0;
+    border-left: 3px solid var(--mango);
+    background: color-mix(in srgb, var(--mango) 7%, transparent);
+    padding: 13px 16px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .docs-markdown :global(blockquote p) {
+    margin: 0;
+  }
+
+  .docs-markdown :global(:not(pre) > code) {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--text);
+    background: color-mix(in srgb, var(--mango) 8%, var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.08em 0.32em;
+  }
+
+  .docs-markdown :global(pre) {
+    margin: 16px 0 0;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--code-bg);
+    overflow-x: auto;
+    padding: 14px 16px;
+  }
+
+  .docs-markdown :global(pre code) {
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+
+  .docs-markdown :global(table) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    margin: 18px 0 0;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .docs-markdown :global(th),
+  .docs-markdown :global(td) {
+    border: 1px solid var(--border);
+    padding: 9px 11px;
+    vertical-align: top;
+    color: var(--text-2);
+  }
+
+  .docs-markdown :global(th) {
+    color: var(--text);
+    font-weight: 600;
+    background: var(--surface);
+  }
+
   .docs-pager {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 14px;
     margin-top: 48px;
     border-top: 1px solid var(--border);
@@ -386,9 +395,10 @@ const crumbLast = crumbs[crumbs.length - 1];
     text-decoration: none;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: 8px;
     padding: 14px 18px;
     color: var(--text);
+    min-width: 0;
   }
 
   .docs-pager-link:hover {
@@ -407,27 +417,6 @@ const crumbLast = crumbs[crumbs.length - 1];
   .docs-pager-title {
     font-size: 14.5px;
     font-weight: 600;
-  }
-
-  .docs-planned {
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 1px dashed var(--border);
-    border-radius: 12px;
-    padding: 22px;
-    color: var(--text-3);
-    font-size: 14.5px;
-  }
-
-  .docs-planned-badge {
-    flex-shrink: 0;
-    font-size: 11px;
-    color: var(--accent-text);
-    border: 1px solid color-mix(in srgb, var(--mango) 35%, transparent);
-    border-radius: 5px;
-    padding: 3px 8px;
   }
 
   .docs-toc {
@@ -457,16 +446,22 @@ const crumbLast = crumbs[crumbs.length - 1];
   .docs-toc-item {
     font-size: 13px;
     color: var(--text-3);
+    text-decoration: none;
+    line-height: 1.35;
   }
 
+  .docs-toc-item.depth-3 {
+    padding-left: 12px;
+  }
+
+  .docs-toc-item:hover,
   .docs-toc-item.is-active {
     color: var(--accent-text);
-    font-weight: 500;
   }
 
-  @media (max-width: 1100px) {
+  @media (max-width: 1120px) {
     .docs {
-      grid-template-columns: 248px minmax(0, 1fr);
+      grid-template-columns: 266px minmax(0, 1fr);
     }
     .docs-toc {
       display: none;
@@ -485,6 +480,23 @@ const crumbLast = crumbs[crumbs.length - 1];
     }
     .docs-article {
       padding: 32px 24px 64px;
+    }
+    .docs-meta {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .docs-markdown :global(h1) {
+      font-size: 31px;
+    }
+    .docs-pager {
+      grid-template-columns: 1fr;
+    }
+    .docs-pager-next {
+      text-align: left;
     }
   }
 </style>

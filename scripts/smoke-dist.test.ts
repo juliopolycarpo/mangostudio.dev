@@ -2,8 +2,7 @@ import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
 
 import {
   containsCanonicalOrigin,
-  deriveDocIds,
-  derivePlannedDocHrefs,
+  deriveDocSlugs,
   deriveRequiredDistFiles,
   extractPrefetchHrefs,
   extractRouteIntegrityHrefs,
@@ -13,30 +12,20 @@ import {
   resolveInternalHrefToRoutePath,
 } from './smoke-dist';
 
-run('deriveDocIds returns unique sorted doc ids from grouped content', () => {
+run('deriveDocSlugs returns unique sorted doc slugs from grouped content', () => {
   deepStrictEqual(
-    deriveDocIds([
-      { items: [{ id: 'quickstart' }, { id: 'cli' }] },
-      { items: [{ id: 'quickstart' }, { id: 'providers' }] },
+    deriveDocSlugs([
+      { items: [{ slug: 'quickstart' }, { slug: 'reference/cli' }] },
+      { items: [{ slug: 'quickstart' }, { slug: 'providers/development' }] },
     ]),
-    ['cli', 'providers', 'quickstart']
+    ['providers/development', 'quickstart', 'reference/cli']
   );
 });
 
 run('deriveRequiredDistFiles derives locale routes from docs groups', () => {
   const required = deriveRequiredDistFiles({
-    pt: {
-      docs: {
-        plannedBadge: 'Planejado',
-        groups: [{ items: [{ id: 'quickstart' }, { id: 'cli' }] }],
-      },
-    },
-    en: {
-      docs: {
-        plannedBadge: 'Planned',
-        groups: [{ items: [{ id: 'quickstart' }, { id: 'install' }] }],
-      },
-    },
+    pt: [{ items: [{ slug: 'quickstart' }, { slug: 'reference/cli' }] }],
+    en: [{ items: [{ slug: 'quickstart' }, { slug: 'guides/contributing' }] }],
   });
 
   for (const expected of [
@@ -45,9 +34,9 @@ run('deriveRequiredDistFiles derives locale routes from docs groups', () => {
     'releases/index.html',
     'en/releases/index.html',
     'docs/quickstart/index.html',
-    'docs/cli/index.html',
+    'docs/reference/cli/index.html',
     'en/docs/quickstart/index.html',
-    'en/docs/install/index.html',
+    'en/docs/guides/contributing/index.html',
     '404.html',
     'robots.txt',
     'site.webmanifest',
@@ -96,32 +85,12 @@ run('resolveInternalHrefToRoutePath normalizes same-origin links', () => {
   );
 });
 
-run('derivePlannedDocHrefs derives localized planned docs only', () => {
-  deepStrictEqual(
-    derivePlannedDocHrefs({
-      pt: {
-        docs: {
-          plannedBadge: 'Planejado',
-          groups: [{ items: [{ id: 'quickstart', status: 'ready' }, { id: 'cli' }] }],
-        },
-      },
-      en: {
-        docs: {
-          plannedBadge: 'Planned',
-          groups: [{ items: [{ id: 'quickstart', status: 'ready' }, { id: 'install' }] }],
-        },
-      },
-    }),
-    ['/docs/cli', '/en/docs/install']
-  );
-});
-
 run('extractPrefetchHrefs returns only active Astro prefetch anchors', () => {
   const html = `
     <a href="/docs/quickstart" data-astro-prefetch>Quickstart</a>
     <a data-astro-prefetch="hover" href="/releases">Releases</a>
     <a href="https://github.com/juliopolycarpo/mangostudio" data-astro-prefetch="false">GitHub</a>
-    <a href="/docs/cli">CLI</a>
+    <a href="/docs/reference/cli">CLI</a>
   `;
 
   deepStrictEqual(extractPrefetchHrefs(html), ['/docs/quickstart', '/releases']);
@@ -157,7 +126,7 @@ run('extractRouteIntegrityHrefs scopes links to cmdk, docs sidebar, and footer',
     <header><a href="/not-checked">Header</a></header>
     <a class="cmdk-item" data-cmdk-item href="/docs/quickstart">Quickstart</a>
     <aside class="docs-sidebar">
-      <a class="docs-link" href="/docs/cli">CLI</a>
+      <a class="docs-link" href="/docs/reference/cli">CLI</a>
     </aside>
     <footer class="site-footer">
       <a href="/releases">Releases</a>
@@ -166,8 +135,8 @@ run('extractRouteIntegrityHrefs scopes links to cmdk, docs sidebar, and footer',
   `;
 
   deepStrictEqual(extractRouteIntegrityHrefs(html), [
-    '/docs/cli',
     '/docs/quickstart',
+    '/docs/reference/cli',
     '/releases',
     'https://github.com/juliopolycarpo/mangostudio',
   ]);

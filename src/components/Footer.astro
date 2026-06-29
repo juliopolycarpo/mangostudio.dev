@@ -3,7 +3,7 @@ import { getImage } from 'astro:assets';
 import { siteAssets } from '@/data/assets';
 import { CONTRIBUTING_URL, GITHUB_URL, ISSUES_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
-import { findDocItem, isDocReady, routes } from '@/i18n/ui';
+import { routes } from '@/i18n/ui';
 import LangToggle from './LangToggle.astro';
 
 interface Props {
@@ -16,28 +16,17 @@ const { lang, pathname, content: c } = Astro.props;
 
 const footerLogo = await getImage({ src: siteAssets.icon192, width: 26, height: 26 });
 
-function docLinkLabel(id: string, label: string): string {
-  const item = findDocItem(c.docs.groups, id);
-  if (item && !isDocReady(item)) {
-    return `${label} · ${c.docs.plannedBadge}`;
-  }
-  return label;
-}
-
 const product = [
   { label: c.footer.product.features, href: `${routes.home(lang)}#features` },
   { label: c.footer.product.releases, href: routes.releases(lang) },
   { label: c.footer.product.install, href: routes.doc(lang, 'quickstart') },
 ];
 const docs = [
+  { label: c.footer.docsLinks.quickstart, href: routes.doc(lang, 'quickstart') },
+  { label: c.footer.docsLinks.cli, href: routes.doc(lang, 'reference/cli') },
   {
-    label: docLinkLabel('quickstart', c.footer.docsLinks.quickstart),
-    href: routes.doc(lang, 'quickstart'),
-  },
-  { label: docLinkLabel('cli', c.footer.docsLinks.cli), href: routes.doc(lang, 'cli') },
-  {
-    label: docLinkLabel('continuation', c.footer.docsLinks.architecture),
-    href: routes.doc(lang, 'continuation'),
+    label: c.footer.docsLinks.architecture,
+    href: routes.doc(lang, 'architecture/overview'),
   },
 ];
 const community = [

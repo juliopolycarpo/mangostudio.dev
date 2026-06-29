@@ -39,19 +39,6 @@ export interface ReleaseGroup {
   items: ReleaseItem[];
 }
 
-export type DocStatus = 'ready' | 'planned';
-
-export interface DocItem {
-  id: string;
-  label: string;
-  status?: DocStatus;
-}
-
-export interface DocGroup {
-  title: string;
-  items: DocItem[];
-}
-
 export type CmdkAction =
   | { type: 'nav'; page: 'home' | 'releases' }
   | { type: 'doc'; doc: string }
@@ -64,13 +51,6 @@ export interface CmdkItem {
   sub: string;
   kind: string;
   action: CmdkAction;
-}
-
-export interface QuickstartSection {
-  title: string;
-  body: string;
-  codeLang: string;
-  code: string;
 }
 
 export interface SiteContent {
@@ -131,24 +111,10 @@ export interface SiteContent {
   };
   docs: {
     searchSidebar: string;
-    groups: DocGroup[];
-    quickstart: {
-      breadcrumb: string;
-      title: string;
-      intro: string;
-      prereqStrong: string;
-      prereqText: string;
-      sections: QuickstartSection[];
-      prevLabel: string;
-      prevTitle: string;
-      nextLabel: string;
-      nextTitle: string;
-      tocTitle: string;
-      toc: string[];
-    };
-    plannedBadge: string;
-    plannedText: string;
-    plannedSidebarHint: string;
+    tocTitle: string;
+    sourceLabel: string;
+    previousLabel: string;
+    nextLabel: string;
   };
   cmdk: {
     placeholder: string;

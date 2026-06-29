@@ -2,6 +2,8 @@
   - changed-files:
       - any-glob-to-any-file:
           - "src/i18n/**"
+          - "src/content/docs/**"
+          - "src/data/docs.generated.ts"
           - "src/data/site.ts"
           - "README.md"
           - "CLAUDE.md"
@@ -85,6 +87,7 @@
       - any-glob-to-any-file:
           - "*.md"
           - "docs/**/*.md"
+          - "src/content/docs/**/*.md"
           - ".github/**/*.md"
           - ".github/ISSUE_TEMPLATE/**"
           - ".github/pull_request_template.md"

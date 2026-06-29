@@ -2,13 +2,12 @@ import type { Dirent } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
 
-import { en } from '../src/i18n/en';
-import { pt } from '../src/i18n/pt';
+import { DOCS_DEFAULT_SLUG, DOCS_NAV } from '../src/data/docs.generated';
 import type { Lang } from '../src/i18n/types';
 import { routes } from '../src/i18n/ui';
 
 const CANONICAL_ORIGIN = 'https://mangostudio.dev';
-const CONTENT_BY_LANG = { pt, en } satisfies LocaleRouteContent;
+const DOCS_BY_LANG = DOCS_NAV satisfies LocaleRouteContent;
 
 interface SmokeSection {
   name: string;
@@ -16,23 +15,14 @@ interface SmokeSection {
 }
 
 interface DocRouteItem {
-  id: string;
-  status?: 'ready' | 'planned';
+  slug: string;
 }
 
 interface DocRouteGroup {
   items: readonly DocRouteItem[];
 }
 
-type LocaleRouteContent = Record<
-  Lang,
-  {
-    docs: {
-      groups: readonly DocRouteGroup[];
-      plannedBadge: string;
-    };
-  }
->;
+type LocaleRouteContent = Record<Lang, readonly DocRouteGroup[]>;
 
 export function deriveRequiredDistFiles(contentByLang: LocaleRouteContent): string[] {
   const files = new Set([
@@ -46,47 +36,28 @@ export function deriveRequiredDistFiles(contentByLang: LocaleRouteContent): stri
     'site.webmanifest',
   ]);
 
-  for (const [lang, content] of Object.entries(contentByLang) as [
+  for (const [lang, groups] of Object.entries(contentByLang) as [
     Lang,
     LocaleRouteContent[Lang],
   ][]) {
-    for (const docId of deriveDocIds(content.docs.groups)) {
-      files.add(routeToDistFile(routes.doc(lang, docId)));
+    for (const slug of deriveDocSlugs(groups)) {
+      files.add(routeToDistFile(routes.doc(lang, slug)));
     }
   }
 
   return [...files].sort();
 }
 
-export function deriveDocIds(groups: readonly DocRouteGroup[]): string[] {
-  const ids = new Set<string>();
+export function deriveDocSlugs(groups: readonly DocRouteGroup[]): string[] {
+  const slugs = new Set<string>();
 
   for (const group of groups) {
     for (const item of group.items) {
-      ids.add(item.id);
+      slugs.add(item.slug);
     }
   }
 
-  return [...ids].sort();
-}
-
-export function derivePlannedDocHrefs(contentByLang: LocaleRouteContent): string[] {
-  const hrefs = new Set<string>();
-
-  for (const [lang, content] of Object.entries(contentByLang) as [
-    Lang,
-    LocaleRouteContent[Lang],
-  ][]) {
-    for (const group of content.docs.groups) {
-      for (const item of group.items) {
-        if (item.status !== 'ready') {
-          hrefs.add(routes.doc(lang, item.id));
-        }
-      }
-    }
-  }
-
-  return [...hrefs].sort();
+  return [...slugs].sort();
 }
 
 export function redirectHtmlReferencesTarget(
@@ -212,7 +183,7 @@ async function smokeRequiredRoutes(distDir: string): Promise<SmokeSection> {
     };
   }
 
-  for (const relativePath of deriveRequiredDistFiles(CONTENT_BY_LANG)) {
+  for (const relativePath of deriveRequiredDistFiles(DOCS_BY_LANG)) {
     if (!(await fileExists(join(distDir, relativePath)))) {
       errors.push(`dist/${relativePath} is missing from the static build.`);
     }
@@ -224,8 +195,8 @@ async function smokeRequiredRoutes(distDir: string): Promise<SmokeSection> {
 async function smokeRedirects(distDir: string): Promise<SmokeSection> {
   const errors: string[] = [];
   const redirects = [
-    { file: 'docs/index.html', target: '/docs/quickstart' },
-    { file: 'en/docs/index.html', target: '/en/docs/quickstart' },
+    { file: 'docs/index.html', target: routes.doc('pt', DOCS_DEFAULT_SLUG) },
+    { file: 'en/docs/index.html', target: routes.doc('en', DOCS_DEFAULT_SLUG) },
   ];
 
   for (const redirect of redirects) {
@@ -247,8 +218,10 @@ async function smokeRedirects(distDir: string): Promise<SmokeSection> {
 async function smokeReadyDocs(distDir: string): Promise<SmokeSection> {
   const errors: string[] = [];
   const readyDocs = [
-    { file: 'docs/quickstart/index.html', plannedBadge: pt.docs.plannedBadge },
-    { file: 'en/docs/quickstart/index.html', plannedBadge: en.docs.plannedBadge },
+    { file: routeToDistFile(routes.doc('pt', DOCS_DEFAULT_SLUG)) },
+    { file: routeToDistFile(routes.doc('en', DOCS_DEFAULT_SLUG)) },
+    { file: routeToDistFile(routes.doc('pt', 'reference/cli')) },
+    { file: routeToDistFile(routes.doc('en', 'reference/cli')) },
   ];
 
   for (const doc of readyDocs) {
@@ -258,10 +231,6 @@ async function smokeReadyDocs(distDir: string): Promise<SmokeSection> {
       continue;
     }
 
-    // Scope the ready/planned checks to the article: the sidebar lists every
-    // planned doc, so the planned badge and `docs-planned` marker appear all
-    // over a ready page. Falling back to the whole document would flag a
-    // correctly rendered page, so a missing article is itself the failure.
     const article = extractElementWithClass(html, 'docs-article');
 
     if (!article) {
@@ -273,8 +242,8 @@ async function smokeReadyDocs(distDir: string): Promise<SmokeSection> {
       errors.push(`dist/${doc.file} must not contain TODO placeholder copy in the article.`);
     }
 
-    if (article.includes(doc.plannedBadge) || /\bdocs-planned\b/.test(article)) {
-      errors.push(`dist/${doc.file} must render ready content, not the planned-page state.`);
+    if (/\bdocs-planned\b/.test(article)) {
+      errors.push(`dist/${doc.file} must render synced content, not the planned-page state.`);
     }
   }
 
@@ -338,8 +307,10 @@ async function smokeInternalLinkGraph(distDir: string): Promise<SmokeSection> {
     'en/index.html',
     'releases/index.html',
     'en/releases/index.html',
-    'docs/quickstart/index.html',
-    'en/docs/quickstart/index.html',
+    routeToDistFile(routes.doc('pt', DOCS_DEFAULT_SLUG)),
+    routeToDistFile(routes.doc('en', DOCS_DEFAULT_SLUG)),
+    routeToDistFile(routes.doc('pt', 'reference/cli')),
+    routeToDistFile(routes.doc('en', 'reference/cli')),
   ];
   const seen = new Set<string>();
 
@@ -377,9 +348,6 @@ async function smokeInternalLinkGraph(distDir: string): Promise<SmokeSection> {
 async function smokeSelectivePrefetch(distDir: string): Promise<SmokeSection> {
   const errors: string[] = [];
   const htmlFiles = await findHtmlFiles(distDir);
-  const plannedDocHrefs = new Set(
-    derivePlannedDocHrefs(CONTENT_BY_LANG).map((href) => normalizeRoutePath(href))
-  );
 
   for (const file of htmlFiles) {
     const html = await readTextFile(join(distDir, file), errors);
@@ -401,11 +369,6 @@ async function smokeSelectivePrefetch(distDir: string): Promise<SmokeSection> {
 
       if (!routePath) {
         errors.push(`dist/${file} must not prefetch external or non-page link ${href}.`);
-        continue;
-      }
-
-      if (plannedDocHrefs.has(routePath)) {
-        errors.push(`dist/${file} must not prefetch planned docs link ${href}.`);
       }
     }
   }

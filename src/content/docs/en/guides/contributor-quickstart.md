@@ -1,0 +1,101 @@
+---
+title: "Contributor Quickstart"
+sidebarLabel: "Contributor Quickstart"
+lang: "en"
+slug: "guides/contributor-quickstart"
+groupId: "guides"
+groupTitle: "Guides"
+order: 20
+sourcePath: "docs/guides/contributor-quickstart.md"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md"
+sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+---
+
+# Contributor Quickstart
+
+Use this guide when you want the shortest path from clone to a validated change.
+
+## 1. Set Up
+
+```bash
+git clone <repo-url>
+cd mangostudio
+bun install
+```
+
+Optional local config:
+
+```bash
+mkdir -p ~/.mango
+cp .mango/config.toml.example ~/.mango/config.toml
+cp .mango/.env.example ~/.mango/.env
+```
+
+## 2. Run The App
+
+```bash
+bun run dev
+```
+
+Default local URLs:
+
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:3001`
+
+## 3. Know Where To Start
+
+- Read [`../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) for repository rules and routing.
+- Use [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) when you need a feature-by-feature file map.
+- Use [`../reference/testing.md`](/en/docs/reference/testing) before adding or changing behavior.
+- Use [`../architecture/overview.md`](/en/docs/architecture/overview) for the workspace and module layout.
+
+## 4. Git Hooks
+
+A [lefthook](https://github.com/evilmartians/lefthook) pre-commit hook is installed automatically during `bun install`. It runs these checks on every commit:
+
+| Check              | Trigger      | Files targeted              | Fails commit on                    |
+| ------------------ | ------------ | --------------------------- | ---------------------------------- |
+| Biome format/lint  | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | Format or lint errors              |
+| dprint format      | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | Format errors                      |
+| dprint Dockerfile  | `pre-commit` | `{Dockerfile,Dockerfile.*}` | Format errors                      |
+| Typecheck affected | `pre-commit` | All staged files            | Type errors in affected workspaces |
+
+Formatted files are re-staged automatically. The typecheck step is skipped during merge or rebase.
+
+## 5. Common Commands
+
+```bash
+bun run check
+bun run test
+bun run verify   # full local CI gate: check → test --coverage → build --all
+bun run build
+```
+
+Targeted lanes:
+
+```bash
+bun run test --unit
+bun run test --integration
+bun run test:e2e:setup  # install Chromium before the first e2e run
+bun run test --e2e
+bun run check --staged    # only workspaces touched by staged files
+bun run fix --staged      # auto-fix only affected workspaces
+```
+
+## 6. Daily Workflow
+
+1. Start from the nearest route, component, hook, service, or contract.
+2. Trace one layer outward instead of reading the whole repo.
+3. Keep changes scoped to one concern.
+4. Run `bun run check` after each change set.
+5. Before handoff or PR, run `bun run verify` (or `bun run check && bun run test` for a lighter pass).
+
+## 7. PR Automation
+
+Pull requests are classified by `.github/labeler.yml`, and the `auto-assign.yml` workflow assigns you as the owner and requests reviews from contributors who have previously committed to the files your PR changes. Both run automatically — there is no per-label routing config to update when adding labels or onboarding contributors.
+
+## 8. Related Docs
+
+- [`../../.github/CONTRIBUTING.md`](/en/docs/guides/contributing) for contribution policy and commit rules
+- [`../reference/api.md`](/en/docs/reference/api) for endpoint mapping
+- [`../operations/deployment.md`](/en/docs/operations/deployment) for standalone builds
