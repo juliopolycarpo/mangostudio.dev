@@ -8,6 +8,7 @@ import {
   findTodoHtmlFiles,
   findUnversionedAppImageReferences,
   isPlaceholderInstallScript,
+  isPowerShellInstallerAdvertised,
   isShellInstallerAdvertised,
   parseHeadersFile,
   stripJsonComments,
@@ -129,6 +130,20 @@ run('isShellInstallerAdvertised reports built pages that mention the shell endpo
   );
 });
 
+run('isPowerShellInstallerAdvertised reports built pages that mention the ps1 endpoint', () => {
+  strictEqual(
+    isPowerShellInstallerAdvertised([
+      { relativePath: 'dist/index.html', text: 'irm https://mangostudio.dev/install.ps1 | iex' },
+    ]),
+    true
+  );
+
+  strictEqual(
+    isPowerShellInstallerAdvertised([{ relativePath: 'dist/index.html', text: 'bun add -g cli' }]),
+    false
+  );
+});
+
 run('findTodoHtmlFiles reports TODO placeholder copy in built pages', () => {
   deepStrictEqual(
     findTodoHtmlFiles([
@@ -157,9 +172,61 @@ run('extractDataCopyTargets leaves out-of-range numeric entities intact', () => 
 run('validateInstallChannels accepts ready npm/bun primary channels', () => {
   deepStrictEqual(
     validateInstallChannels({
+      installPlatforms: [
+        { id: 'windows', defaultChannel: 'powershell' },
+        { id: 'linux', defaultChannel: 'curl' },
+        { id: 'macos', defaultChannel: 'curl' },
+        { id: 'docker', defaultChannel: 'docker' },
+      ],
       installTabs: [
-        { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
-        { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
+        {
+          id: 'bun',
+          cmd: 'bun add -g mangostudio',
+          status: 'ready',
+          platforms: ['windows', 'linux', 'macos'],
+        },
+        {
+          id: 'npm',
+          cmd: 'npm i -g mangostudio',
+          status: 'ready',
+          platforms: ['windows', 'linux', 'macos'],
+        },
+        {
+          id: 'powershell',
+          cmd: 'irm https://mangostudio.dev/install.ps1 | iex',
+          status: 'ready',
+          platforms: ['windows'],
+        },
+        {
+          id: 'curl',
+          cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+          status: 'ready',
+          platforms: ['linux', 'macos'],
+        },
+        {
+          id: 'brew',
+          cmd: 'brew install juliopolycarpo/tap/mangostudio',
+          status: 'ready',
+          platforms: ['linux', 'macos'],
+        },
+        {
+          id: 'scoop',
+          cmd: 'scoop install mangostudio',
+          status: 'ready',
+          platforms: ['windows'],
+        },
+        {
+          id: 'cargo',
+          cmd: 'cargo install mangostudio',
+          status: 'ready',
+          platforms: ['windows', 'linux', 'macos'],
+        },
+        {
+          id: 'docker',
+          cmd: 'docker run ghcr.io/juliopolycarpo/mangostudio',
+          status: 'ready',
+          platforms: ['docker'],
+        },
       ],
       channels: [
         { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
@@ -185,7 +252,13 @@ run('validateTruthfulSiteMetrics rejects hardcoded star counts', () => {
 run('validateInstallChannels rejects planned copy targets and missing ready primaries', () => {
   deepStrictEqual(
     validateInstallChannels({
-      installTabs: [{ id: 'shell', cmd: 'shell installer planned', status: 'planned' }],
+      installPlatforms: [
+        { id: 'linux', defaultChannel: 'shell' },
+        { id: 'docker', defaultChannel: 'docker' },
+      ],
+      installTabs: [
+        { id: 'shell', cmd: 'shell installer planned', status: 'planned', platforms: ['linux'] },
+      ],
       channels: [
         { id: 'brew', cmd: 'brew install juliopolycarpo/tap/mangostudio', status: 'planned' },
       ],
@@ -196,6 +269,27 @@ run('validateInstallChannels rejects planned copy targets and missing ready prim
       'At least one install channel must be ready.',
       'INSTALL_TABS[0] must be the ready npm/bun install command.',
       'CHANNELS[0] must be the ready npm/bun install command.',
+      'INSTALL_PLATFORMS must include windows.',
+      'INSTALL_PLATFORMS must include macos.',
+      'INSTALL_PLATFORMS linux defaultChannel must be ready.',
+      'INSTALL_PLATFORMS docker defaultChannel must be available on that platform.',
+      'INSTALL_PLATFORMS docker defaultChannel must be ready.',
+      'INSTALL_TABS must expose powershell on windows.',
+      'INSTALL_TABS must expose bun on windows.',
+      'INSTALL_TABS must expose npm on windows.',
+      'INSTALL_TABS must expose scoop on windows.',
+      'INSTALL_TABS must expose cargo on windows.',
+      'INSTALL_TABS must expose curl on linux.',
+      'INSTALL_TABS must expose bun on linux.',
+      'INSTALL_TABS must expose npm on linux.',
+      'INSTALL_TABS must expose cargo on linux.',
+      'INSTALL_TABS must expose brew on linux.',
+      'INSTALL_TABS must expose curl on macos.',
+      'INSTALL_TABS must expose bun on macos.',
+      'INSTALL_TABS must expose npm on macos.',
+      'INSTALL_TABS must expose cargo on macos.',
+      'INSTALL_TABS must expose brew on macos.',
+      'INSTALL_TABS must expose docker on docker.',
     ]
   );
 });
@@ -329,6 +423,9 @@ run('parseHeadersFile reads Cloudflare _headers path rules', () => {
 
 /install.sh
   Cache-Control: public, max-age=300, must-revalidate
+
+/install.ps1
+  Cache-Control: public, max-age=300, must-revalidate
 `);
 
   deepStrictEqual(rules.get('/_astro/*'), {
@@ -352,6 +449,9 @@ run('validateCacheHeaders accepts the required static asset cache rules', () => 
 
 /install.sh
   Cache-Control: public, max-age=300, must-revalidate
+
+/install.ps1
+  Cache-Control: public, max-age=300, must-revalidate
 `),
     []
   );
@@ -363,6 +463,9 @@ run('validateCacheHeaders rejects missing or weakened cache rules', () => {
 
 /install.sh
   Cache-Control: public, max-age=31556952, immutable
+
+/install.ps1
+  Cache-Control: public, max-age=300, must-revalidate
 `);
 
   ok(errors.some((error) => error.includes('/_astro/*')));
@@ -385,11 +488,15 @@ run('validateCacheHeaders rejects immutable on short-lived stable assets', () =>
 
 /install.sh
   Cache-Control: public, max-age=300, must-revalidate, immutable
+
+/install.ps1
+  Cache-Control: public, max-age=300, must-revalidate, immutable
 `);
 
   deepStrictEqual(errors, [
     'dist/_headers /favicon.ico must not be marked immutable.',
     'dist/_headers /install.sh must not be marked immutable.',
+    'dist/_headers /install.ps1 must not be marked immutable.',
     'dist/_headers /static/hero.png must not use long-lived immutable caching unless the image URL is versioned.',
   ]);
 });
@@ -409,6 +516,9 @@ run('validateCacheHeaders accepts long-lived cache rules for hashed image URLs',
   Cache-Control: public, max-age=3600, must-revalidate
 
 /install.sh
+  Cache-Control: public, max-age=300, must-revalidate
+
+/install.ps1
   Cache-Control: public, max-age=300, must-revalidate
 `),
     []

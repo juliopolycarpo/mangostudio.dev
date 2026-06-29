@@ -40,6 +40,35 @@ test.describe('home page', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
   });
+
+  test('install widget filters methods by selected platform', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('tab', { name: 'Windows' }).click();
+    await expect(page.locator('#hero-cmd')).toHaveText(
+      'irm https://mangostudio.dev/install.ps1 | iex'
+    );
+    await expect(page.locator('#hero-copy')).toHaveAttribute(
+      'data-copy',
+      'irm https://mangostudio.dev/install.ps1 | iex'
+    );
+    await expect(page.locator('#install-tab-powershell')).toBeVisible();
+    await expect(page.locator('#install-tab-curl')).toBeHidden();
+
+    await page.getByRole('tab', { name: 'Linux' }).click();
+    await expect(page.locator('#hero-cmd')).toHaveText(
+      'curl -fsSL https://mangostudio.dev/install.sh | bash'
+    );
+    await expect(page.locator('#install-tab-brew')).toBeVisible();
+    await expect(page.locator('#install-tab-docker')).toBeHidden();
+
+    await page.getByRole('tab', { name: 'Docker' }).click();
+    await expect(page.locator('#hero-cmd')).toHaveText(
+      'docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio'
+    );
+    await expect(page.locator('#install-tab-docker')).toBeVisible();
+    await expect(page.locator('#install-tab-bun')).toBeHidden();
+  });
 });
 
 test.describe('docs pages', () => {

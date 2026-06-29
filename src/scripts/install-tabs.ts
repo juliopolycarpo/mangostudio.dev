@@ -1,43 +1,80 @@
-const STORAGE_KEY = 'mango.installCh';
+const CHANNEL_STORAGE_KEY = 'mango.installCh';
+const PLATFORM_STORAGE_KEY = 'mango.installPlatform';
+const DEFAULT_PLATFORM = 'linux';
 const DEFAULT_CHANNEL = 'bun';
 
 export function initInstallTabs(): void {
-  const root = document.getElementById('install-tabs');
+  const platformRoot = document.getElementById('install-platform-tabs');
+  const channelRoot = document.getElementById('install-tabs');
   const cmdElOrNull = document.getElementById('hero-cmd');
-  if (!root || !cmdElOrNull) return;
+  const promptElOrNull = document.getElementById('hero-prompt');
+  if (!platformRoot || !channelRoot || !cmdElOrNull || !promptElOrNull) return;
   const cmdEl = cmdElOrNull;
+  const promptEl = promptElOrNull;
 
-  const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-channel]'));
+  const platformTabs = Array.from(
+    platformRoot.querySelectorAll<HTMLButtonElement>('[data-platform]')
+  );
+  const tabs = Array.from(channelRoot.querySelectorAll<HTMLButtonElement>('[data-channel]'));
   const copyBtn = document.getElementById('hero-copy');
   const panel = document.getElementById('install-panel');
-  if (tabs.length === 0) return;
+  if (platformTabs.length === 0 || tabs.length === 0) return;
+
+  let selectedPlatform = DEFAULT_PLATFORM;
 
   function navigableTabs(): HTMLButtonElement[] {
-    return tabs.filter((tab) => tab.getAttribute('aria-disabled') !== 'true');
+    return tabs.filter((tab) => !tab.hidden && tab.getAttribute('aria-disabled') !== 'true');
+  }
+
+  function platformForClient(): string | undefined {
+    const value = `${navigator.platform} ${navigator.userAgent}`.toLowerCase();
+
+    if (value.includes('win')) return 'windows';
+    if (value.includes('mac')) return 'macos';
+    if (value.includes('linux') || value.includes('x11')) return 'linux';
+
+    return undefined;
+  }
+
+  function tabSupportsPlatform(tab: HTMLButtonElement, platform: string): boolean {
+    return (tab.dataset.platforms ?? '').split(/\s+/).includes(platform);
+  }
+
+  function setTabState(tab: HTMLButtonElement, active: boolean): void {
+    tab.classList.toggle('is-active', active);
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
   }
 
   function select(id: string): void {
     const tab = tabs.find((t) => t.dataset.channel === id);
-    if (!tab || tab.getAttribute('aria-disabled') === 'true') return;
+    if (
+      !tab ||
+      tab.hidden ||
+      tab.getAttribute('aria-disabled') === 'true' ||
+      !tabSupportsPlatform(tab, selectedPlatform)
+    ) {
+      return;
+    }
 
     for (const t of tabs) {
-      const active = t === tab;
-      t.classList.toggle('is-active', active);
-      t.setAttribute('aria-selected', String(active));
-      t.tabIndex = active ? 0 : -1;
+      setTabState(t, t === tab);
     }
 
     if (panel instanceof HTMLElement && tab.id) {
       panel.setAttribute('aria-labelledby', tab.id);
+      panel.setAttribute('data-platform', selectedPlatform);
     }
 
     if (tab.dataset.status === 'ready') {
       const cmd = tab.dataset.cmd ?? '';
+      const prompt = tab.dataset.prompt ?? '$ ';
+      promptEl.textContent = prompt;
       cmdEl.textContent = cmd;
       if (copyBtn) copyBtn.dataset.copy = cmd;
       panel?.setAttribute('data-state', 'ready');
       try {
-        localStorage.setItem(STORAGE_KEY, tab.dataset.channel ?? id);
+        localStorage.setItem(CHANNEL_STORAGE_KEY, tab.dataset.channel ?? id);
       } catch {
         /* storage may be unavailable */
       }
@@ -48,6 +85,50 @@ export function initInstallTabs(): void {
     panel?.setAttribute('data-state', 'planned');
   }
 
+  function defaultChannelForPlatform(platform: string): string {
+    const platformTab = platformTabs.find((tab) => tab.dataset.platform === platform);
+    return platformTab?.dataset.defaultChannel ?? DEFAULT_CHANNEL;
+  }
+
+  function selectPlatform(platform: string, preferredChannel?: string): void {
+    const platformTab = platformTabs.find((tab) => tab.dataset.platform === platform);
+    if (!platformTab) return;
+
+    selectedPlatform = platform;
+
+    for (const tab of platformTabs) {
+      setTabState(tab, tab === platformTab);
+    }
+
+    for (const tab of tabs) {
+      const available = tabSupportsPlatform(tab, platform);
+      tab.hidden = !available;
+      if (!available) {
+        setTabState(tab, false);
+      }
+    }
+
+    const nextChannel =
+      preferredChannel && tabs.some((tab) => tab.dataset.channel === preferredChannel)
+        ? preferredChannel
+        : defaultChannelForPlatform(platform);
+    const next = tabs.find(
+      (tab) =>
+        tab.dataset.channel === nextChannel &&
+        tabSupportsPlatform(tab, platform) &&
+        tab.getAttribute('aria-disabled') !== 'true'
+    );
+    const fallback = navigableTabs()[0];
+    const target = next ?? fallback;
+    if (target) select(target.dataset.channel ?? '');
+
+    try {
+      localStorage.setItem(PLATFORM_STORAGE_KEY, platform);
+    } catch {
+      /* storage may be unavailable */
+    }
+  }
+
   for (const t of tabs) {
     t.addEventListener('click', () => {
       if (t.getAttribute('aria-disabled') === 'true') return;
@@ -55,12 +136,50 @@ export function initInstallTabs(): void {
     });
   }
 
-  root.addEventListener('keydown', (event) => {
+  for (const platformTab of platformTabs) {
+    platformTab.addEventListener('click', () => {
+      selectPlatform(platformTab.dataset.platform ?? DEFAULT_PLATFORM);
+    });
+  }
+
+  platformRoot.addEventListener('keydown', (event) => {
+    const current = platformTabs.find((tab) => tab.classList.contains('is-active'));
+    const currentIndex = current ? platformTabs.indexOf(current) : 0;
+    if (currentIndex === -1) return;
+
+    let nextIndex: number | undefined;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        nextIndex = (currentIndex + 1) % platformTabs.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        nextIndex = (currentIndex - 1 + platformTabs.length) % platformTabs.length;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = platformTabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    const next = platformTabs[nextIndex];
+    if (!next) return;
+    selectPlatform(next.dataset.platform ?? DEFAULT_PLATFORM);
+    next.focus();
+  });
+
+  channelRoot.addEventListener('keydown', (event) => {
     const navigable = navigableTabs();
     if (navigable.length === 0) return;
 
-    const current = navigable.find((tab) => tab.classList.contains('is-active')) ?? navigable[0];
-    const currentIndex = navigable.indexOf(current ?? navigable[0]);
+    const current = navigable.find((tab) => tab.classList.contains('is-active'));
+    const currentIndex = current ? navigable.indexOf(current) : 0;
     if (currentIndex === -1) return;
 
     let nextIndex: number | undefined;
@@ -90,15 +209,28 @@ export function initInstallTabs(): void {
     next.focus();
   });
 
-  let initial = DEFAULT_CHANNEL;
+  let initialPlatform = platformForClient() ?? DEFAULT_PLATFORM;
+  let initialChannel = defaultChannelForPlatform(initialPlatform);
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const match = tabs.find((t) => t.dataset.channel === stored);
-      if (match && match.dataset.status === 'ready') initial = stored;
+    const storedPlatform = localStorage.getItem(PLATFORM_STORAGE_KEY);
+    if (storedPlatform && platformTabs.some((tab) => tab.dataset.platform === storedPlatform)) {
+      initialPlatform = storedPlatform;
+    }
+
+    const storedChannel = localStorage.getItem(CHANNEL_STORAGE_KEY);
+    if (storedChannel) {
+      const match = tabs.find((t) => t.dataset.channel === storedChannel);
+      if (
+        match &&
+        match.dataset.status === 'ready' &&
+        tabSupportsPlatform(match, initialPlatform)
+      ) {
+        initialChannel = storedChannel;
+      }
     }
   } catch {
     /* storage may be unavailable */
   }
-  select(initial);
+
+  selectPlatform(initialPlatform, initialChannel);
 }

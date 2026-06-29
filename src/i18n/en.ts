@@ -24,7 +24,7 @@ export const en = {
     titlePost: '.',
     subtitle:
       'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — running on your machine, with your own keys. No cloud, no telemetry, no Node.',
-    terminalTitle: 'install — bash',
+    terminalTitle: 'install',
     ctaPrimary: 'Get started',
     ctaSecondary: 'View on GitHub',
     requirements: 'requires Bun v1.3.14+ · macOS · Linux · Windows',
@@ -44,7 +44,7 @@ export const en = {
       {
         n: '1',
         title: 'Install',
-        desc: 'One command with the package manager you already use — the only published channel for now.',
+        desc: 'Pick the platform and installer that fit your machine. Every ready channel installs the same binary.',
         cmd: RELEASE.installCmd,
       },
       {
@@ -124,6 +124,8 @@ export const en = {
     readyLabel: 'available',
     plannedLabel: 'soon',
     plannedHint: 'Planned channel — not available yet',
+    platformTabsLabel: 'Install platform',
+    methodTabsLabel: 'Install method',
   },
   contribute: {
     badge: '★ Open source · MIT',

@@ -1,6 +1,6 @@
 ---
 import CopyButton from '@/components/CopyButton.astro';
-import { INSTALL_TABS } from '@/data/site';
+import { DEFAULT_INSTALL_PLATFORM, INSTALL_PLATFORMS, INSTALL_TABS } from '@/data/site';
 import type { SiteContent } from '@/i18n/types';
 
 interface Props {
@@ -8,7 +8,19 @@ interface Props {
 }
 
 const { content: c } = Astro.props;
-const initial = INSTALL_TABS[0];
+const initialPlatform = INSTALL_PLATFORMS.find(
+  (platform) => platform.id === DEFAULT_INSTALL_PLATFORM
+);
+
+if (!initialPlatform) {
+  throw new Error(`Missing default install platform: ${DEFAULT_INSTALL_PLATFORM}`);
+}
+
+const initial = INSTALL_TABS.find((tab) => tab.id === initialPlatform.defaultChannel);
+
+if (!initial) {
+  throw new Error(`Missing default install channel: ${initialPlatform.defaultChannel}`);
+}
 ---
 
 <div class="install">
@@ -19,23 +31,56 @@ const initial = INSTALL_TABS[0];
     <span class="terminal-title">{c.hero.terminalTitle}</span>
   </div>
 
-  <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.hero.terminalTitle}>
+  <div
+    class="install-platforms"
+    id="install-platform-tabs"
+    role="tablist"
+    aria-label={c.channels.platformTabsLabel}
+  >
     {
-      INSTALL_TABS.map((tab, index) => {
+      INSTALL_PLATFORMS.map((platform) => {
+        const isActive = platform.id === initialPlatform.id;
+        return (
+          <button
+            type="button"
+            class:list={['install-platform', { 'is-active': isActive }]}
+            id={`install-platform-${platform.id}`}
+            role="tab"
+            aria-selected={isActive ? 'true' : 'false'}
+            aria-controls="install-panel"
+            tabindex={isActive ? 0 : -1}
+            data-platform={platform.id}
+            data-default-channel={platform.defaultChannel}
+          >
+            {platform.label}
+          </button>
+        );
+      })
+    }
+  </div>
+
+  <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.channels.methodTabsLabel}>
+    {
+      INSTALL_TABS.map((tab) => {
         const isPlanned = tab.status === 'planned';
+        const isActive = tab.id === initial.id;
+        const isAvailable = tab.platforms.includes(initialPlatform.id);
         const tabId = `install-tab-${tab.id}`;
         return (
           <button
             type="button"
-            class:list={['install-tab', { 'is-active': index === 0, 'is-planned': isPlanned }]}
+            class:list={['install-tab', { 'is-active': isActive, 'is-planned': isPlanned }]}
             id={tabId}
             role="tab"
-            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-selected={isActive ? 'true' : 'false'}
             aria-controls="install-panel"
             aria-disabled={isPlanned ? 'true' : undefined}
-            tabindex={index === 0 ? 0 : -1}
+            tabindex={isActive ? 0 : -1}
+            hidden={!isAvailable}
             data-channel={tab.id}
             data-cmd={tab.cmd}
+            data-platforms={tab.platforms.join(' ')}
+            data-prompt={tab.prompt}
             data-status={tab.status}
           >
             {tab.label}
@@ -51,10 +96,11 @@ const initial = INSTALL_TABS[0];
     id="install-panel"
     role="tabpanel"
     aria-labelledby={`install-tab-${initial.id}`}
+    data-platform={initialPlatform.id}
     data-state={initial.status}
   >
     <code class="install-code">
-      <span class="prompt">$ </span><span id="hero-cmd">{initial.cmd}</span>
+      <span class="prompt" id="hero-prompt">{initial.prompt}</span><span id="hero-cmd">{initial.cmd}</span>
     </code>
     <span class="install-hint" id="hero-hint">{c.channels.plannedHint}</span>
     <CopyButton text={initial.cmd} label={c.copyButtonLabel} id="hero-copy" />
@@ -71,7 +117,40 @@ const initial = INSTALL_TABS[0];
     overflow: hidden;
     box-shadow: 0 30px 70px -28px var(--shadow), 0 0 0 1px var(--hair);
     text-align: left;
-    min-height: 176px;
+    min-height: 224px;
+  }
+
+  .install-platforms {
+    display: flex;
+    gap: 6px;
+    padding: 10px 10px 8px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .install-platform {
+    flex: 1 0 auto;
+    min-width: 92px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text-3);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-weight: 650;
+  }
+
+  .install-platform:hover {
+    color: var(--text-2);
+    border-color: var(--border);
+  }
+
+  .install-platform.is-active {
+    color: var(--text);
+    border-color: color-mix(in srgb, var(--mango) 42%, var(--border));
+    background: color-mix(in srgb, var(--mango) 11%, transparent);
   }
 
   .install-tabs {
@@ -79,6 +158,10 @@ const initial = INSTALL_TABS[0];
     gap: 2px;
     padding: 8px 10px 0;
     flex-wrap: wrap;
+  }
+
+  .install-tab[hidden] {
+    display: none;
   }
 
   .install-tab {
@@ -155,6 +238,7 @@ const initial = INSTALL_TABS[0];
     color: var(--text);
     overflow-x: auto;
     white-space: nowrap;
+    min-width: 0;
   }
 
   .install-hint {
