@@ -24,37 +24,15 @@ function showToast(kind: ToastKind): void {
   toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 1500);
 }
 
-function execCommandCopy(text: string): boolean {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-
-  try {
-    return document.execCommand('copy');
-  } catch {
-    return false;
-  } finally {
-    document.body.removeChild(textarea);
-  }
-}
-
 async function copyText(text: string): Promise<void> {
   try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      showToast('success');
-      return;
+    if (!navigator.clipboard?.writeText) {
+      throw new Error('clipboard API unavailable');
     }
-    throw new Error('clipboard API unavailable');
+
+    await navigator.clipboard.writeText(text);
+    showToast('success');
   } catch {
-    if (execCommandCopy(text)) {
-      showToast('success');
-      return;
-    }
     showToast('error');
   }
 }
