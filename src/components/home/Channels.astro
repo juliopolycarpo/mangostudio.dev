@@ -35,7 +35,7 @@ const { content: c } = Astro.props;
             {isPlanned ? (
               <span class="visually-hidden">{c.channels.plannedHint}</span>
             ) : (
-              <CopyButton text={channel.cmd} label="Copy" size="sm" />
+              <CopyButton text={channel.cmd} label={c.copyButtonLabel} size="sm" />
             )}
           </div>
         );

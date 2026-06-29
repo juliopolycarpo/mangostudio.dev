@@ -93,7 +93,7 @@ const crumbLast = crumbs[crumbs.length - 1];
               <div class="docs-code-block">
                 <div class="docs-code-bar">
                   <span class="mono docs-code-lang">{section.codeLang}</span>
-                  <CopyButton text={section.code} label="Copy" size="sm" />
+                  <CopyButton text={section.code} label={c.copyButtonLabel} size="sm" />
                 </div>
                 <pre class="docs-pre"><code class="mono">{section.code}</code></pre>
               </div>

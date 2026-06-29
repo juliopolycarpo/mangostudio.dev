@@ -158,6 +158,7 @@ export interface SiteContent {
     footer: string;
     items: CmdkItem[];
   };
+  copyButtonLabel: string;
   copyToast: string;
   copyToastError: string;
   terminalLines: string[];

@@ -355,6 +355,7 @@ export const en = {
       },
     ],
   },
+  copyButtonLabel: 'Copy',
   copyToast: 'Copied to clipboard',
   copyToastError: "Couldn't copy — select and copy manually.",
   terminalLines: [

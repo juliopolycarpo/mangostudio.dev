@@ -26,7 +26,7 @@ const { content: c } = Astro.props;
           <p class="qs-desc">{step.desc}</p>
           <div class="qs-cmd">
             <code class="qs-code mono">{step.cmd}</code>
-            <CopyButton text={step.cmd} label="Copy" size="sm" />
+            <CopyButton text={step.cmd} label={c.copyButtonLabel} size="sm" />
           </div>
         </div>
       ))
