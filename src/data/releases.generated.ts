@@ -9,6 +9,6 @@ export interface GeneratedRelease {
 export const RELEASE: GeneratedRelease = {
   version: 'v0.1.0-canary.b7be89c',
   releaseDate: '2026-06-23',
-  installCmd: 'bun add -g @mangostudio/cli@canary',
+  installCmd: 'bun add -g mangostudio',
   source: 'https://www.npmjs.com/package/@mangostudio/cli/v/0.1.0-canary.b7be89c',
 };

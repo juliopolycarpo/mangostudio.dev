@@ -118,10 +118,9 @@ export const pt = {
   },
   channels: {
     eyebrow: 'Instalação',
-    title: 'Um comando hoje, mais canais em breve',
-    noteBefore: 'Só o canal abaixo está publicado e verificado contra o ',
-    noteAfter:
-      '. Brew, shell, scoop, cargo, docker e download manual chegam assim que os pipelines publicarem.',
+    title: 'Instale do seu jeito',
+    noteBefore: 'Todos os canais entregam o mesmo binário pré-compilado, verificado contra ',
+    noteAfter: ' quando aplicável.',
     readyLabel: 'disponível',
     plannedLabel: 'em breve',
     plannedHint: 'Canal planejado — ainda não disponível',
@@ -263,9 +262,9 @@ export const pt = {
       sections: [
         {
           title: '1. Instale o CLI',
-          body: 'Por enquanto, só este canal está publicado. O mais rápido com Bun:',
+          body: 'Instale globalmente com Bun ou npm:',
           codeLang: 'bash',
-          code: `# instala globalmente\n${RELEASE.installCmd}`,
+          code: `# instala globalmente\n${RELEASE.installCmd}\nnpm i -g mangostudio`,
         },
         {
           title: '2. Adicione uma chave',

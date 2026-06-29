@@ -22,7 +22,7 @@ export function releaseFromGitHub(input: ReleaseInput): GeneratedRelease {
   return {
     version: normalizeVersion(input.tag_name),
     releaseDate: input.published_at.slice(0, 10),
-    installCmd: 'bun add -g @mangostudio/cli',
+    installCmd: 'bun add -g mangostudio',
     source: input.html_url,
   };
 }

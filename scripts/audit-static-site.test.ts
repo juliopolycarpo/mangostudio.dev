@@ -158,14 +158,14 @@ run('validateInstallChannels accepts ready npm/bun primary channels', () => {
   deepStrictEqual(
     validateInstallChannels({
       installTabs: [
-        { id: 'bun', cmd: 'bun add -g @mangostudio/cli@canary', status: 'ready' },
+        { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
         { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
       ],
       channels: [
-        { id: 'bun', cmd: 'bun add -g @mangostudio/cli@canary', status: 'ready' },
+        { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
         { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
       ],
-      copyTargets: ['bun add -g @mangostudio/cli@canary'],
+      copyTargets: ['bun add -g mangostudio'],
     }),
     []
   );
@@ -206,7 +206,7 @@ run('validateReleaseSource accepts generated facts and curated highlights copy',
       release: {
         version: 'v0.1.0',
         releaseDate: '2026-06-24',
-        installCmd: 'bun add -g @mangostudio/cli',
+        installCmd: 'bun add -g mangostudio',
       },
       localizedReleases: [
         {

@@ -28,34 +28,40 @@ export const INSTALL_TABS: InstallTab[] = [
     status: 'ready',
   },
   {
+    id: 'npm',
+    label: 'npm',
+    cmd: 'npm i -g mangostudio',
+    status: 'ready',
+  },
+  {
     id: 'brew',
     label: 'brew',
     cmd: 'brew install juliopolycarpo/tap/mangostudio',
-    status: 'planned',
+    status: 'ready',
   },
   {
     id: 'curl',
     label: 'shell',
-    cmd: 'shell installer planned',
-    status: 'planned',
+    cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+    status: 'ready',
   },
   {
     id: 'scoop',
     label: 'scoop',
-    cmd: 'scoop install mangostudio',
-    status: 'planned',
+    cmd: 'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
+    status: 'ready',
   },
   {
     id: 'cargo',
     label: 'cargo',
     cmd: 'cargo install mangostudio',
-    status: 'planned',
+    status: 'ready',
   },
   {
     id: 'docker',
     label: 'docker',
-    cmd: 'docker run -p 3001:3001 ghcr.io/juliopolycarpo/mangostudio',
-    status: 'planned',
+    cmd: 'docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio',
+    status: 'ready',
   },
 ];
 
@@ -66,34 +72,39 @@ export interface Channel {
   status: ChannelStatus;
 }
 
-/** Install grid on the home page. Only `bun` is shipped; the rest are planned. */
+/** Install grid on the home page — every channel ships the same prebuilt binary. */
 export const CHANNELS: Channel[] = [
   { id: 'bun', label: 'npm / bun', cmd: RELEASE.installCmd, status: 'ready' },
   {
     id: 'brew',
     label: 'homebrew',
     cmd: 'brew install juliopolycarpo/tap/mangostudio',
-    status: 'planned',
+    status: 'ready',
   },
   {
     id: 'curl',
     label: 'shell',
-    cmd: 'shell installer planned',
-    status: 'planned',
+    cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+    status: 'ready',
   },
-  { id: 'scoop', label: 'scoop', cmd: 'scoop install mangostudio', status: 'planned' },
-  { id: 'cargo', label: 'cargo', cmd: 'cargo install mangostudio', status: 'planned' },
+  {
+    id: 'scoop',
+    label: 'scoop',
+    cmd: 'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
+    status: 'ready',
+  },
+  { id: 'cargo', label: 'cargo', cmd: 'cargo install mangostudio', status: 'ready' },
   {
     id: 'docker',
     label: 'docker',
-    cmd: 'docker run -p 3001:3001 ghcr.io/juliopolycarpo/mangostudio',
-    status: 'planned',
+    cmd: 'docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio',
+    status: 'ready',
   },
   {
     id: 'manual',
     label: 'manual',
-    cmd: 'gh release download --pattern "*.tar.gz" && sha256sum -c SHA256SUMS',
-    status: 'planned',
+    cmd: 'gh release download -R juliopolycarpo/mangostudio --pattern "*.tar.gz" --pattern SHA256SUMS && sha256sum -c SHA256SUMS',
+    status: 'ready',
   },
 ];
 
