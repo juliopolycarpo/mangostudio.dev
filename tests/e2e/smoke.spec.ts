@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 const HERO_TITLE = '.hero-title';
@@ -54,6 +55,13 @@ test.describe('home page', () => {
     );
     await expect(page.locator('#install-tab-powershell')).toBeVisible();
     await expect(page.locator('#install-tab-curl')).toBeHidden();
+    await expect(visibleInstallMethodLabels(page)).resolves.toEqual([
+      'powershell',
+      'bun',
+      'npm',
+      'scoop',
+      'cargo',
+    ]);
 
     await page.getByRole('tab', { name: 'Linux' }).click();
     await expect(page.locator('#hero-cmd')).toHaveText(
@@ -61,6 +69,13 @@ test.describe('home page', () => {
     );
     await expect(page.locator('#install-tab-brew')).toBeVisible();
     await expect(page.locator('#install-tab-docker')).toBeHidden();
+    await expect(visibleInstallMethodLabels(page)).resolves.toEqual([
+      'shell',
+      'bun',
+      'npm',
+      'brew',
+      'cargo',
+    ]);
 
     await page.getByRole('tab', { name: 'Docker' }).click();
     await expect(page.locator('#hero-cmd')).toHaveText(
@@ -68,8 +83,15 @@ test.describe('home page', () => {
     );
     await expect(page.locator('#install-tab-docker')).toBeVisible();
     await expect(page.locator('#install-tab-bun')).toBeHidden();
+    await expect(visibleInstallMethodLabels(page)).resolves.toEqual(['docker']);
   });
 });
+
+function visibleInstallMethodLabels(page: Page) {
+  return page
+    .locator('#install-tabs [role="tab"]:visible')
+    .evaluateAll((tabs) => tabs.map((tab) => tab.textContent?.trim() ?? ''));
+}
 
 test.describe('docs pages', () => {
   test('renders synced nested docs content', async ({ page }) => {

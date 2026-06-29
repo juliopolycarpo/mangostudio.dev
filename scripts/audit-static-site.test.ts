@@ -169,7 +169,76 @@ run('extractDataCopyTargets leaves out-of-range numeric entities intact', () => 
   ]);
 });
 
-run('validateInstallChannels accepts ready npm/bun primary channels', () => {
+run('validateInstallChannels accepts native-shell-first platform channels', () => {
+  deepStrictEqual(
+    validateInstallChannels({
+      installPlatforms: [
+        { id: 'windows', defaultChannel: 'powershell' },
+        { id: 'linux', defaultChannel: 'curl' },
+        { id: 'macos', defaultChannel: 'curl' },
+        { id: 'docker', defaultChannel: 'docker' },
+      ],
+      installTabs: [
+        {
+          id: 'powershell',
+          cmd: 'irm https://mangostudio.dev/install.ps1 | iex',
+          status: 'ready',
+          platforms: ['windows'],
+        },
+        {
+          id: 'curl',
+          cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
+          status: 'ready',
+          platforms: ['linux', 'macos'],
+        },
+        {
+          id: 'bun',
+          cmd: 'bun add -g mangostudio',
+          status: 'ready',
+          platforms: ['windows', 'linux', 'macos'],
+        },
+        {
+          id: 'npm',
+          cmd: 'npm i -g mangostudio',
+          status: 'ready',
+          platforms: ['windows', 'linux', 'macos'],
+        },
+        {
+          id: 'scoop',
+          cmd: 'scoop install mangostudio',
+          status: 'ready',
+          platforms: ['windows'],
+        },
+        {
+          id: 'brew',
+          cmd: 'brew install juliopolycarpo/tap/mangostudio',
+          status: 'ready',
+          platforms: ['linux', 'macos'],
+        },
+        {
+          id: 'cargo',
+          cmd: 'cargo install mangostudio',
+          status: 'ready',
+          platforms: ['windows', 'linux', 'macos'],
+        },
+        {
+          id: 'docker',
+          cmd: 'docker run ghcr.io/juliopolycarpo/mangostudio',
+          status: 'ready',
+          platforms: ['docker'],
+        },
+      ],
+      channels: [
+        { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
+        { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
+      ],
+      copyTargets: ['bun add -g mangostudio'],
+    }),
+    []
+  );
+});
+
+run('validateInstallChannels rejects platform channel order regressions', () => {
   deepStrictEqual(
     validateInstallChannels({
       installPlatforms: [
@@ -198,6 +267,12 @@ run('validateInstallChannels accepts ready npm/bun primary channels', () => {
           platforms: ['windows'],
         },
         {
+          id: 'scoop',
+          cmd: 'scoop install mangostudio',
+          status: 'ready',
+          platforms: ['windows'],
+        },
+        {
           id: 'curl',
           cmd: 'curl -fsSL https://mangostudio.dev/install.sh | bash',
           status: 'ready',
@@ -208,12 +283,6 @@ run('validateInstallChannels accepts ready npm/bun primary channels', () => {
           cmd: 'brew install juliopolycarpo/tap/mangostudio',
           status: 'ready',
           platforms: ['linux', 'macos'],
-        },
-        {
-          id: 'scoop',
-          cmd: 'scoop install mangostudio',
-          status: 'ready',
-          platforms: ['windows'],
         },
         {
           id: 'cargo',
@@ -228,13 +297,14 @@ run('validateInstallChannels accepts ready npm/bun primary channels', () => {
           platforms: ['docker'],
         },
       ],
-      channels: [
-        { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
-        { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
-      ],
+      channels: [{ id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' }],
       copyTargets: ['bun add -g mangostudio'],
     }),
-    []
+    [
+      'INSTALL_TABS order for windows must be powershell, bun, npm, scoop, cargo.',
+      'INSTALL_TABS order for linux must be curl, bun, npm, brew, cargo.',
+      'INSTALL_TABS order for macos must be curl, bun, npm, brew, cargo.',
+    ]
   );
 });
 
@@ -267,7 +337,6 @@ run('validateInstallChannels rejects planned copy targets and missing ready prim
     [
       'CHANNELS[0] is planned, but its command is exposed as a copy target.',
       'At least one install channel must be ready.',
-      'INSTALL_TABS[0] must be the ready npm/bun install command.',
       'CHANNELS[0] must be the ready npm/bun install command.',
       'INSTALL_PLATFORMS must include windows.',
       'INSTALL_PLATFORMS must include macos.',
@@ -282,13 +351,13 @@ run('validateInstallChannels rejects planned copy targets and missing ready prim
       'INSTALL_TABS must expose curl on linux.',
       'INSTALL_TABS must expose bun on linux.',
       'INSTALL_TABS must expose npm on linux.',
-      'INSTALL_TABS must expose cargo on linux.',
       'INSTALL_TABS must expose brew on linux.',
+      'INSTALL_TABS must expose cargo on linux.',
       'INSTALL_TABS must expose curl on macos.',
       'INSTALL_TABS must expose bun on macos.',
       'INSTALL_TABS must expose npm on macos.',
-      'INSTALL_TABS must expose cargo on macos.',
       'INSTALL_TABS must expose brew on macos.',
+      'INSTALL_TABS must expose cargo on macos.',
       'INSTALL_TABS must expose docker on docker.',
     ]
   );

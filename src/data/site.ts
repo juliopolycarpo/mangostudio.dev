@@ -44,6 +44,22 @@ export const INSTALL_PLATFORMS: InstallPlatform[] = [
 /** Hero install widget — channel tabs filtered by the selected platform. */
 export const INSTALL_TABS: InstallTab[] = [
   {
+    id: 'powershell',
+    label: 'powershell',
+    cmd: POWERSHELL_INSTALL_CMD,
+    status: 'ready',
+    platforms: ['windows'],
+    prompt: 'PS> ',
+  },
+  {
+    id: 'curl',
+    label: 'shell',
+    cmd: SHELL_INSTALL_CMD,
+    status: 'ready',
+    platforms: ['linux', 'macos'],
+    prompt: '$ ',
+  },
+  {
     id: 'bun',
     label: 'bun',
     cmd: RELEASE.installCmd,
@@ -60,9 +76,9 @@ export const INSTALL_TABS: InstallTab[] = [
     prompt: '$ ',
   },
   {
-    id: 'powershell',
-    label: 'powershell',
-    cmd: POWERSHELL_INSTALL_CMD,
+    id: 'scoop',
+    label: 'scoop',
+    cmd: 'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
     status: 'ready',
     platforms: ['windows'],
     prompt: 'PS> ',
@@ -74,22 +90,6 @@ export const INSTALL_TABS: InstallTab[] = [
     status: 'ready',
     platforms: ['linux', 'macos'],
     prompt: '$ ',
-  },
-  {
-    id: 'curl',
-    label: 'shell',
-    cmd: SHELL_INSTALL_CMD,
-    status: 'ready',
-    platforms: ['linux', 'macos'],
-    prompt: '$ ',
-  },
-  {
-    id: 'scoop',
-    label: 'scoop',
-    cmd: 'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
-    status: 'ready',
-    platforms: ['windows'],
-    prompt: 'PS> ',
   },
   {
     id: 'cargo',

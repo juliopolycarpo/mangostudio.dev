@@ -156,22 +156,22 @@ const INSTALL_PLATFORM_ID_SET: ReadonlySet<string> = new Set(INSTALL_PLATFORM_ID
 const INSTALL_PLATFORM_REQUIREMENTS = [
   {
     id: 'windows',
-    requiredChannels: ['powershell', 'bun', 'npm', 'scoop', 'cargo'],
+    orderedChannels: ['powershell', 'bun', 'npm', 'scoop', 'cargo'],
     forbiddenChannels: ['curl', 'brew', 'docker'],
   },
   {
     id: 'linux',
-    requiredChannels: ['curl', 'bun', 'npm', 'cargo', 'brew'],
+    orderedChannels: ['curl', 'bun', 'npm', 'brew', 'cargo'],
     forbiddenChannels: ['powershell', 'scoop', 'docker'],
   },
   {
     id: 'macos',
-    requiredChannels: ['curl', 'bun', 'npm', 'cargo', 'brew'],
+    orderedChannels: ['curl', 'bun', 'npm', 'brew', 'cargo'],
     forbiddenChannels: ['powershell', 'scoop', 'docker'],
   },
   {
     id: 'docker',
-    requiredChannels: ['docker'],
+    orderedChannels: ['docker'],
     forbiddenChannels: ['powershell', 'curl', 'bun', 'npm', 'cargo', 'brew', 'scoop'],
   },
 ] as const;
@@ -403,7 +403,6 @@ export function validateInstallChannels(input: InstallChannelsAuditInput): strin
     errors.push('At least one install channel must be ready.');
   }
 
-  assertPublishedPrimary(errors, 'INSTALL_TABS[0]', input.installTabs[0]);
   assertPublishedPrimary(errors, 'CHANNELS[0]', input.channels[0]);
   validateInstallPlatformMatrix(errors, input.installPlatforms, input.installTabs);
 
@@ -418,6 +417,7 @@ function validateInstallPlatformMatrix(
   const platformIds = new Set<string>();
   const platformDefaults = new Map<string, string>();
   const channelsByPlatform = new Map<string, Set<string>>();
+  const orderedChannelsByPlatform = new Map<string, string[]>();
   const channelStatus = new Map<string, unknown>();
 
   for (const platform of installPlatforms) {
@@ -481,6 +481,10 @@ function validateInstallPlatformMatrix(
       const channels = channelsByPlatform.get(platform) ?? new Set<string>();
       channels.add(id);
       channelsByPlatform.set(platform, channels);
+
+      const orderedChannels = orderedChannelsByPlatform.get(platform) ?? [];
+      orderedChannels.push(id);
+      orderedChannelsByPlatform.set(platform, orderedChannels);
     }
   }
 
@@ -500,11 +504,25 @@ function validateInstallPlatformMatrix(
 
   for (const requirement of INSTALL_PLATFORM_REQUIREMENTS) {
     const channels = channelsByPlatform.get(requirement.id) ?? new Set<string>();
+    const orderedChannels = orderedChannelsByPlatform.get(requirement.id) ?? [];
 
-    for (const channel of requirement.requiredChannels) {
+    for (const channel of requirement.orderedChannels) {
       if (!channels.has(channel)) {
         errors.push(`INSTALL_TABS must expose ${channel} on ${requirement.id}.`);
       }
+    }
+
+    const hasRequiredChannels = requirement.orderedChannels.every((channel) =>
+      channels.has(channel)
+    );
+
+    if (
+      hasRequiredChannels &&
+      orderedChannels.join(',') !== requirement.orderedChannels.join(',')
+    ) {
+      errors.push(
+        `INSTALL_TABS order for ${requirement.id} must be ${requirement.orderedChannels.join(', ')}.`
+      );
     }
 
     for (const channel of requirement.forbiddenChannels) {
