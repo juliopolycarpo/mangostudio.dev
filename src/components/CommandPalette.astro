@@ -1,6 +1,8 @@
 ---
 import type { CmdkAction, Lang, SiteContent } from '@/i18n/types';
-import { findDocItem, isDocReady, routes } from '@/i18n/ui';
+import { docsItems } from '@/data/docs';
+import type { DocGroupId } from '@/data/docs.generated';
+import { routes } from '@/i18n/ui';
 import Icon from './Icon.astro';
 
 interface Props {
@@ -9,6 +11,16 @@ interface Props {
 }
 
 const { lang, content: c } = Astro.props;
+
+const DOC_GLYPHS: Record<DocGroupId, string> = {
+  'getting-started': '⌘',
+  guides: '□',
+  features: '✦',
+  providers: '◍',
+  architecture: '⌥',
+  reference: '$',
+  operations: '⎈',
+};
 
 function hrefFor(action: CmdkAction): string | undefined {
   switch (action.type) {
@@ -23,20 +35,31 @@ function hrefFor(action: CmdkAction): string | undefined {
   }
 }
 
-const plannedSearch = c.docs.plannedBadge.toLowerCase();
+const generatedDocItems = docsItems(lang).map((item) => ({
+  glyph: DOC_GLYPHS[item.groupId],
+  title: item.sidebarLabel,
+  sub: item.groupTitle,
+  kind: c.nav.docs,
+  action: { type: 'doc', doc: item.slug } satisfies CmdkAction,
+}));
 
-const items = c.cmdk.items.map((item) => {
-  const docItem =
-    item.action.type === 'doc' ? findDocItem(c.docs.groups, item.action.doc) : undefined;
-  const planned = docItem !== undefined && !isDocReady(docItem);
+const themeIndex = c.cmdk.items.findIndex((item) => item.action.type === 'theme');
+const baseItems =
+  themeIndex >= 0
+    ? [
+        ...c.cmdk.items.slice(0, themeIndex),
+        ...generatedDocItems,
+        ...c.cmdk.items.slice(themeIndex),
+      ]
+    : [...c.cmdk.items, ...generatedDocItems];
 
+const items = baseItems.map((item) => {
   return {
     ...item,
     href: hrefFor(item.action),
     external: item.action.type === 'external',
     isTheme: item.action.type === 'theme',
-    planned,
-    search: `${item.title} ${item.sub} ${item.kind}${planned ? ` ${plannedSearch}` : ''}`.toLowerCase(),
+    search: `${item.title} ${item.sub} ${item.kind}`.toLowerCase(),
   };
 });
 ---
@@ -70,11 +93,6 @@ const items = c.cmdk.items.map((item) => {
                 <span class="cmdk-title">{item.title}</span>
                 <span class="cmdk-sub-row">
                   <span class="cmdk-sub">{item.sub}</span>
-                  {item.planned && (
-                    <span class="cmdk-planned-pill mono" aria-label={c.docs.plannedSidebarHint}>
-                      {c.docs.plannedBadge}
-                    </span>
-                  )}
                 </span>
               </span>
               <span class="cmdk-kind">{item.kind}</span>

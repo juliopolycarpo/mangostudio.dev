@@ -1,5 +1,5 @@
 import { RELEASE } from '@/data/releases.generated';
-import { GITHUB_URL, NPM_INSTALL_CMD } from '@/data/site';
+import { GITHUB_URL } from '@/data/site';
 import type { SiteContent } from './types';
 
 export const pt = {
@@ -207,88 +207,10 @@ export const pt = {
   },
   docs: {
     searchSidebar: 'Buscar nos docs',
-    groups: [
-      {
-        title: 'Getting Started',
-        items: [
-          { id: 'install', label: 'Install' },
-          { id: 'quickstart', label: 'Quickstart', status: 'ready' },
-        ],
-      },
-      { title: 'Guides', items: [{ id: 'contributing', label: 'Contributor Quickstart' }] },
-      {
-        title: 'Features',
-        items: [
-          { id: 'chat', label: 'Chat' },
-          { id: 'image', label: 'Image generation' },
-          { id: 'attachments', label: 'Attachments' },
-          { id: 'settings', label: 'Settings' },
-          { id: 'tools', label: 'Tools' },
-        ],
-      },
-      {
-        title: 'Providers',
-        items: [
-          { id: 'providers', label: 'Visão geral' },
-          { id: 'gemini', label: 'Gemini' },
-          { id: 'openai', label: 'OpenAI' },
-        ],
-      },
-      { title: 'Architecture', items: [{ id: 'continuation', label: 'Continuation' }] },
-      {
-        title: 'Reference',
-        items: [
-          { id: 'cli', label: 'CLI' },
-          { id: 'api', label: 'API' },
-          { id: 'testing', label: 'Testing' },
-          { id: 'releasing', label: 'Releasing' },
-        ],
-      },
-      {
-        title: 'Operations',
-        items: [
-          { id: 'deployment', label: 'Deployment' },
-          { id: 'security', label: 'Security' },
-        ],
-      },
-    ],
-    quickstart: {
-      breadcrumb: 'Getting Started / Quickstart',
-      title: 'Quickstart',
-      intro:
-        'Suba o MangoStudio na sua máquina e abra o estúdio em menos de um minuto. Você só precisa do Bun e de uma chave de API de algum provider.',
-      prereqStrong: 'Pré-requisito:',
-      prereqText: ' Bun v1.3.14 ou superior. Verifique com bun --version.',
-      sections: [
-        {
-          title: '1. Instale o CLI',
-          body: 'Instale globalmente com Bun ou npm:',
-          codeLang: 'bash',
-          code: `# instala globalmente\n${RELEASE.installCmd}\n${NPM_INSTALL_CMD}`,
-        },
-        {
-          title: '2. Adicione uma chave',
-          body: 'Guarde a chave no ~/.mango/config.toml ou exporte como variável de ambiente:',
-          codeLang: 'toml',
-          code: '[gemini_api_keys]\npersonal = "sua-chave-aqui"',
-        },
-        {
-          title: '3. Suba o servidor',
-          body: 'Inicie em foreground (padrão localhost:3001) e abra o estúdio:',
-          codeLang: 'bash',
-          code: 'mangostudio serve              # foreground\nmangostudio serve lan:3001 -d  # background',
-        },
-      ],
-      prevLabel: '← Anterior',
-      prevTitle: 'Instalação',
-      nextLabel: 'Próximo →',
-      nextTitle: 'Chat',
-      tocTitle: 'Nesta página',
-      toc: ['1. Instale o CLI', '2. Adicione uma chave', '3. Suba o servidor'],
-    },
-    plannedBadge: 'Planejado',
-    plannedText: 'Esta página ainda não foi escrita — está no roadmap.',
-    plannedSidebarHint: 'Página planejada — ainda não publicada',
+    tocTitle: 'Nesta página',
+    sourceLabel: 'Fonte no GitHub',
+    previousLabel: '← Anterior',
+    nextLabel: 'Próximo →',
   },
   cmdk: {
     placeholder: 'Buscar páginas, comandos, docs…',
@@ -310,41 +232,6 @@ export const pt = {
         sub: 'Timeline de versões',
         kind: 'página',
         action: { type: 'nav', page: 'releases' },
-      },
-      {
-        glyph: '⌘',
-        title: 'Quickstart',
-        sub: 'Do zero ao estúdio',
-        kind: 'doc',
-        action: { type: 'doc', doc: 'quickstart' },
-      },
-      {
-        glyph: '$',
-        title: 'CLI Reference',
-        sub: 'serve · status · stop · doctor',
-        kind: 'doc',
-        action: { type: 'doc', doc: 'cli' },
-      },
-      {
-        glyph: '◍',
-        title: 'Providers',
-        sub: 'Gemini, OpenAI, Anthropic, DeepSeek',
-        kind: 'doc',
-        action: { type: 'doc', doc: 'providers' },
-      },
-      {
-        glyph: '⌥',
-        title: 'Arquitetura',
-        sub: 'Continuation runtime',
-        kind: 'doc',
-        action: { type: 'doc', doc: 'continuation' },
-      },
-      {
-        glyph: '⎈',
-        title: 'Deployment',
-        sub: 'Docker · Cloudflare',
-        kind: 'doc',
-        action: { type: 'doc', doc: 'deployment' },
       },
       {
         glyph: '⊟',

@@ -1,0 +1,25 @@
+---
+import { getCollection, render } from 'astro:content';
+import DocsPage from '@/components/docs/DocsPage.astro';
+import { getLangFromUrl, useContent } from '@/i18n/ui';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs', (entry) => entry.data.lang === 'pt');
+
+  return docs.map((entry) => ({
+    params: { slug: entry.data.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const content = useContent(lang);
+const { Content, headings } = await render(entry);
+const title = `${entry.data.title} — MangoStudio Docs`;
+---
+
+<BaseLayout page="docs" title={title}>
+  <DocsPage lang={lang} content={content} entry={entry} Content={Content} headings={headings} />
+</BaseLayout>

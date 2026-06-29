@@ -1,0 +1,154 @@
+---
+title: "Contribuindo com o MangoStudio"
+sidebarLabel: "Contribuindo com o MangoStudio"
+lang: "pt"
+slug: "guides/contributing"
+groupId: "guides"
+groupTitle: "Guias"
+order: 10
+sourcePath: "docs/pt-br/CONTRIBUTING.md"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/CONTRIBUTING.md"
+sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+---
+
+# Contribuindo com o MangoStudio
+
+Obrigado pelo seu interesse em contribuir com o MangoStudio!
+
+> 🇺🇸 [Read in English](/en/docs/guides/contributing)
+
+## Pré-requisitos
+
+- [Bun](https://bun.sh/) v1.3.14 ou superior
+- Git com assinatura GPG configurada (veja [Diretrizes de Commit](#diretrizes-de-commit))
+
+## Configuração do Ambiente
+
+```bash
+# Clone o repositório
+git clone <repo-url>
+cd mangostudio
+
+# Instale todas as dependências do workspace
+bun install
+
+# Copie e configure
+mkdir -p ~/.mango
+cp .mango/config.toml.example ~/.mango/config.toml
+cp .mango/.env.example ~/.mango/.env
+# Edite ~/.mango/.env e adicione suas chaves de API
+```
+
+## Fluxo de Desenvolvimento
+
+```bash
+# Inicia todos os servidores de dev (API em :3001, frontend em :5173)
+bun run dev
+
+# Ou inicie cada workspace individualmente
+bun run dev --api
+bun run dev --frontend
+```
+
+## Mapa da Documentação
+
+- [`../README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — ponto de entrada da árvore de documentação
+- [`../guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart) — caminho mais curto para começar a contribuir
+- [`../reference/testing.md`](/en/docs/reference/testing) — taxonomia de testes, runners e regras de suporte
+- [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) — mapa de arquivos por feature para trabalho direcionado
+
+## Padrões de Código
+
+Consulte [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) para o guia completo de estilo, convenções de nomes, regras de i18n e diretrizes de testes. Pontos principais:
+
+- TypeScript em todo o projeto — nenhum arquivo `.js` puro
+- Indentação de 2 espaços, aspas simples, ponto e vírgula
+- Todas as strings visíveis ao usuário devem vir de `@mangostudio/shared/i18n` — nunca codifique texto diretamente
+- Hooks que contêm JSX devem usar a extensão `.tsx`
+- Arquivos `CLAUDE.md` com `@imports`
+- Agentes de IA: use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) como fonte de orientações agnósticas
+
+## Executando os Testes
+
+```bash
+# Qualidade de código
+bun run check
+
+# Todas as suítes
+bun run test
+
+# Apenas unitários
+bun run test --unit
+
+# Apenas integração
+bun run test --integration
+
+# Setup end-to-end, depois teste
+bun run test:e2e:setup
+bun run test --e2e
+```
+
+## Checks e Verificação de Tipos
+
+```bash
+bun run check
+```
+
+Executa Biome, dprint, verificação de dependências circulares e verificação de tipos TypeScript em todos os workspaces.
+
+## Build
+
+```bash
+bun run build
+```
+
+Gera o build do frontend com Vite por padrão. Use `bun run build --binary` para binários standalone.
+
+## Diretrizes de Commit
+
+Este projeto usa [Conventional Commits](https://www.conventionalcommits.org/). Todo commit deve ser assinado com GPG e incluir um sign-off:
+
+```bash
+git commit -S -s -m "feat(scope): resumo imperativo curto"
+```
+
+Tipos comuns: `feat`, `fix`, `chore`, `test`, `docs`, `refactor`, `ci`.
+
+Mantenha cada commit com escopo único. Prefira vários commits pequenos a um único commit grande.
+
+**Todas as mensagens de commit devem ser escritas em inglês.**
+
+## Template de Mensagem de Commit
+
+Configure o Git para pré-preencher o editor de commit com o template do projeto:
+
+```bash
+git config commit.template .gitmessage
+```
+
+Esta é uma configuração local única. O template está em `.gitmessage` na raiz do repositório.
+
+## Processo de Pull Request
+
+1. Crie um branch a partir de `main` com um nome descritivo (ex: `feat/add-gallery-empty-state`).
+2. Execute a suíte de validação completa localmente antes de fazer push:
+   ```bash
+   bun run check && bun run test
+   ```
+3. Abra um PR contra `main` e preencha o template de PR.
+4. PRs exigem que todas as verificações de CI passem antes do merge.
+5. Screenshots ou GIFs são obrigatórios para mudanças de UI.
+
+## Migrações de Banco de Dados
+
+```bash
+bun run --filter @mangostudio/api migrate
+```
+
+Se sua mudança exigir uma migração de schema, adicione o arquivo de migração em `apps/api/src/db/migrations/` e execute o comando acima localmente para verificar que ele é aplicado corretamente.
+
+## Segurança
+
+Nunca faça commit de arquivos `.env` populados ou chaves de API. O `GEMINI_API_KEY` é acessado apenas no lado do servidor e não deve ser exposto ao bundle do frontend.
+
+Se você descobrir uma vulnerabilidade de segurança, por favor reporte-a de forma privada em vez de abrir uma issue pública.
