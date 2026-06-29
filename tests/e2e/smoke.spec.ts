@@ -1,0 +1,102 @@
+import { expect, test } from '@playwright/test';
+
+const HERO_TITLE = '.hero-title';
+
+// These run on both the desktop and mobile projects defined in playwright.config.ts.
+test.describe('home page', () => {
+  test('renders the hero without uncaught page errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+
+    await page.goto('/');
+
+    await expect(page.locator(HERO_TITLE)).toBeVisible();
+    await expect(page.locator(HERO_TITLE)).not.toBeEmpty();
+    expect(errors, `unexpected page errors:\n${errors.join('\n')}`).toEqual([]);
+  });
+
+  test('serves the English locale at /en/ with hero parity', async ({ page }) => {
+    await page.goto('/en/');
+
+    await expect(page.locator(HERO_TITLE)).toBeVisible();
+    await expect(page.locator(HERO_TITLE)).not.toBeEmpty();
+  });
+
+  test('command palette opens by button and shortcut, closes on Escape', async ({ page }) => {
+    await page.goto('/');
+    const dialog = page.locator('#cmdk');
+    const input = page.locator('[data-cmdk-input]');
+
+    // Button trigger focuses the search input.
+    await page.locator('[data-cmdk-open]').first().click();
+    await expect(dialog).toBeVisible();
+    await expect(input).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    // Keyboard shortcut toggles the same dialog.
+    await page.keyboard.press('ControlOrMeta+k');
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+  });
+});
+
+test.describe('constrained viewport guardrails', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(!isMobile, 'phone-profile layout assertions');
+  });
+
+  test('layout has no horizontal overflow', async ({ page }) => {
+    await page.goto('/');
+
+    const overflow = await page.evaluate(() => {
+      const el = document.documentElement;
+      return el.scrollWidth - el.clientWidth;
+    });
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+
+  test('decorative hero logo is hidden on phones', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.locator('.hero-logo')).toBeHidden();
+  });
+
+  test('header remains sticky', async ({ page }) => {
+    await page.goto('/');
+
+    const position = await page
+      .locator('.site-header')
+      .evaluate((el) => getComputedStyle(el).position);
+    expect(position).toBe('sticky');
+  });
+});
+
+test.describe('reduced motion', () => {
+  test.beforeEach(({ isMobile }) => {
+    // The phone breakpoint already disables the decorative animation, so assert the
+    // global reduced-motion guard where it would otherwise run continuously.
+    test.skip(isMobile, 'decorative animation is disabled on the phone breakpoint');
+  });
+
+  test('neutralizes continuous decorative animation', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+
+    // Sanity: the glow animates indefinitely without a reduced-motion preference.
+    const glow = page.locator('.hero-glow');
+    expect(await glow.evaluate((el) => getComputedStyle(el).animationIterationCount)).toBe(
+      'infinite'
+    );
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    expect(await glow.evaluate((el) => getComputedStyle(el).animationIterationCount)).toBe('1');
+    expect(
+      await page
+        .locator('.hero-logo')
+        .evaluate((el) => getComputedStyle(el).animationIterationCount)
+    ).toBe('1');
+  });
+});

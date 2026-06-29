@@ -21,3 +21,9 @@ dist/
 # ─── Caches ─── #
 **/.tsbuildinfo
 **/node_modules/.cache/
+
+# ─── Playwright ─── #
+test-results/
+playwright-report/
+/blob-report/
+/playwright/.cache/
