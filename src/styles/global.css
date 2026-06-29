@@ -65,6 +65,9 @@
   --mango: #ff9f43;
   --mango-deep: #e8590c;
   --lime: #a3d55c;
+  --accent-text: var(--mango);
+  --accent-text-2: var(--mango-light);
+  --success-text: var(--lime);
   --text: #f5f5f4;
   --text-2: #a1a1a0;
   --text-3: #6b6b68;
@@ -87,9 +90,12 @@
   --border: #ece5d9;
   --text: #1a1814;
   --text-2: #5c564b;
-  --text-3: #988f7e;
-  --link: #d2570a;
+  --text-3: #6b6255;
+  --link: #a83d00;
   --mango: #e8730f;
+  --accent-text: #a83d00;
+  --accent-text-2: #7a5200;
+  --success-text: #476f00;
   --code-bg: #f0ebe3;
   --shadow: rgba(90, 60, 20, 0.14);
   --hair: rgba(0, 0, 0, 0.04);
@@ -231,7 +237,7 @@ html.js [data-term-line]:not(.is-visible) {
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 12.5px;
-  color: var(--mango);
+  color: var(--accent-text);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -494,7 +500,7 @@ pre {
 }
 
 .copy-toast-icon--success {
-  color: var(--lime);
+  color: var(--success-text);
 }
 
 .copy-toast-icon--error {
