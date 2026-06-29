@@ -415,9 +415,8 @@ function groupIdForSlug(slug: string): DocGroupId {
     case 'providers':
     case 'reference':
     case 'operations':
-      return group;
     case 'guides':
-      return 'guides';
+      return group;
     default:
       return 'getting-started';
   }
