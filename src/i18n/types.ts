@@ -89,6 +89,8 @@ export interface SiteContent {
     readyLabel: string;
     plannedLabel: string;
     plannedHint: string;
+    platformTabsLabel: string;
+    methodTabsLabel: string;
   };
   contribute: { badge: string; title: string; desc: string; ctaStar: string; ctaGuide: string };
   footer: {

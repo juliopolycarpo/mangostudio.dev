@@ -24,6 +24,7 @@ interface LocalizedContent {
 }
 
 export interface InstallChannelsAuditInput {
+  installPlatforms: readonly unknown[];
   installTabs: readonly unknown[];
   channels: readonly unknown[];
   copyTargets: readonly string[];
@@ -61,6 +62,7 @@ export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
   { path: '/favicon.ico', cacheControl: SHORT_IMAGE_CACHE_CONTROL },
   { path: '/site.webmanifest', cacheControl: 'public, max-age=3600, must-revalidate' },
   { path: '/install.sh', cacheControl: 'public, max-age=300, must-revalidate' },
+  { path: '/install.ps1', cacheControl: 'public, max-age=300, must-revalidate' },
 ];
 const REQUIRED_CACHE_HEADER_PATHS = new Set(REQUIRED_CACHE_HEADER_RULES.map((rule) => rule.path));
 
@@ -141,13 +143,38 @@ const SECRET_PATTERNS = [
   { label: 'GitHub token-like value', pattern: /\bgh[pousr]_[A-Za-z0-9_]{30,}\b/ },
 ];
 
-const INSTALLER_URL_MARKER = 'mangostudio.dev/install.sh';
+const SHELL_INSTALLER_URL_MARKER = 'mangostudio.dev/install.sh';
+const POWERSHELL_INSTALLER_URL_MARKER = 'mangostudio.dev/install.ps1';
 const TODO_HTML_ALLOWLIST = new Set<string>();
 const INSTALL_PLACEHOLDER_PATTERNS = [
   /\bplaceholder\b/i,
   /performs no installation/i,
   /\bno installation\b/i,
 ];
+const INSTALL_PLATFORM_IDS = ['windows', 'linux', 'macos', 'docker'] as const;
+const INSTALL_PLATFORM_ID_SET: ReadonlySet<string> = new Set(INSTALL_PLATFORM_IDS);
+const INSTALL_PLATFORM_REQUIREMENTS = [
+  {
+    id: 'windows',
+    orderedChannels: ['powershell', 'bun', 'npm', 'scoop', 'cargo'],
+    forbiddenChannels: ['curl', 'brew', 'docker'],
+  },
+  {
+    id: 'linux',
+    orderedChannels: ['curl', 'bun', 'npm', 'brew', 'cargo'],
+    forbiddenChannels: ['powershell', 'scoop', 'docker'],
+  },
+  {
+    id: 'macos',
+    orderedChannels: ['curl', 'bun', 'npm', 'brew', 'cargo'],
+    forbiddenChannels: ['powershell', 'scoop', 'docker'],
+  },
+  {
+    id: 'docker',
+    orderedChannels: ['docker'],
+    forbiddenChannels: ['powershell', 'curl', 'bun', 'npm', 'cargo', 'brew', 'scoop'],
+  },
+] as const;
 
 const PUBLISHED_CLI_INSTALL_PATTERN =
   /^(?:bun\s+add|npm\s+(?:install|i))\s+-g\s+mangostudio(?:@\S+)?$/;
@@ -317,7 +344,11 @@ export function isPlaceholderInstallScript(script: string): boolean {
 }
 
 export function isShellInstallerAdvertised(htmlFiles: readonly TextFile[]): boolean {
-  return htmlFiles.some((file) => file.text.includes(INSTALLER_URL_MARKER));
+  return htmlFiles.some((file) => file.text.includes(SHELL_INSTALLER_URL_MARKER));
+}
+
+export function isPowerShellInstallerAdvertised(htmlFiles: readonly TextFile[]): boolean {
+  return htmlFiles.some((file) => file.text.includes(POWERSHELL_INSTALLER_URL_MARKER));
 }
 
 export function findTodoHtmlFiles(htmlFiles: readonly TextFile[]): string[] {
@@ -372,10 +403,134 @@ export function validateInstallChannels(input: InstallChannelsAuditInput): strin
     errors.push('At least one install channel must be ready.');
   }
 
-  assertPublishedPrimary(errors, 'INSTALL_TABS[0]', input.installTabs[0]);
   assertPublishedPrimary(errors, 'CHANNELS[0]', input.channels[0]);
+  validateInstallPlatformMatrix(errors, input.installPlatforms, input.installTabs);
 
   return errors;
+}
+
+function validateInstallPlatformMatrix(
+  errors: string[],
+  installPlatforms: readonly unknown[],
+  installTabs: readonly unknown[]
+): void {
+  const platformIds = new Set<string>();
+  const platformDefaults = new Map<string, string>();
+  const channelsByPlatform = new Map<string, Set<string>>();
+  const orderedChannelsByPlatform = new Map<string, string[]>();
+  const channelStatus = new Map<string, unknown>();
+
+  for (const platform of installPlatforms) {
+    if (!isRecord(platform)) {
+      errors.push('INSTALL_PLATFORMS entries must be objects.');
+      continue;
+    }
+
+    const { id, defaultChannel } = platform;
+
+    if (typeof id !== 'string' || !INSTALL_PLATFORM_ID_SET.has(id)) {
+      errors.push('INSTALL_PLATFORMS entries must use windows, linux, macos, or docker ids.');
+      continue;
+    }
+
+    if (platformIds.has(id)) {
+      errors.push(`INSTALL_PLATFORMS must not repeat ${id}.`);
+    }
+
+    platformIds.add(id);
+
+    if (typeof defaultChannel !== 'string' || defaultChannel.trim() === '') {
+      errors.push(`INSTALL_PLATFORMS ${id} must declare a defaultChannel.`);
+      continue;
+    }
+
+    platformDefaults.set(id, defaultChannel);
+  }
+
+  for (const id of INSTALL_PLATFORM_IDS) {
+    if (!platformIds.has(id)) {
+      errors.push(`INSTALL_PLATFORMS must include ${id}.`);
+    }
+  }
+
+  for (const entry of installTabs) {
+    if (!isRecord(entry)) {
+      continue;
+    }
+
+    const { id, platforms, status } = entry;
+
+    if (typeof id !== 'string' || id.trim() === '') {
+      errors.push('INSTALL_TABS entries must declare a non-empty id.');
+      continue;
+    }
+
+    channelStatus.set(id, status);
+
+    if (!Array.isArray(platforms) || platforms.length === 0) {
+      errors.push(`INSTALL_TABS ${id} must declare at least one platform.`);
+      continue;
+    }
+
+    for (const platform of platforms) {
+      if (typeof platform !== 'string' || !INSTALL_PLATFORM_ID_SET.has(platform)) {
+        errors.push(`INSTALL_TABS ${id} declares an unknown platform.`);
+        continue;
+      }
+
+      const channels = channelsByPlatform.get(platform) ?? new Set<string>();
+      channels.add(id);
+      channelsByPlatform.set(platform, channels);
+
+      const orderedChannels = orderedChannelsByPlatform.get(platform) ?? [];
+      orderedChannels.push(id);
+      orderedChannelsByPlatform.set(platform, orderedChannels);
+    }
+  }
+
+  for (const [platform, defaultChannel] of platformDefaults) {
+    const channels = channelsByPlatform.get(platform);
+
+    if (!channels?.has(defaultChannel)) {
+      errors.push(
+        `INSTALL_PLATFORMS ${platform} defaultChannel must be available on that platform.`
+      );
+    }
+
+    if (channelStatus.get(defaultChannel) !== 'ready') {
+      errors.push(`INSTALL_PLATFORMS ${platform} defaultChannel must be ready.`);
+    }
+  }
+
+  for (const requirement of INSTALL_PLATFORM_REQUIREMENTS) {
+    const channels = channelsByPlatform.get(requirement.id) ?? new Set<string>();
+    const orderedChannels = orderedChannelsByPlatform.get(requirement.id) ?? [];
+
+    for (const channel of requirement.orderedChannels) {
+      if (!channels.has(channel)) {
+        errors.push(`INSTALL_TABS must expose ${channel} on ${requirement.id}.`);
+      }
+    }
+
+    const hasRequiredChannels = requirement.orderedChannels.every((channel) =>
+      channels.has(channel)
+    );
+
+    if (
+      hasRequiredChannels &&
+      orderedChannels.join(',') !== requirement.orderedChannels.join(',')
+    ) {
+      errors.push(
+        `INSTALL_TABS order for ${requirement.id} must be ${requirement.orderedChannels.join(', ')}.`
+      );
+    }
+
+    for (const channel of requirement.forbiddenChannels) {
+      if (channels.has(channel)) {
+        errors.push(`INSTALL_TABS must not expose ${channel} on ${requirement.id}.`);
+      }
+    }
+  }
 }
 
 export function validateTruthfulSiteMetrics(siteData: Record<string, unknown>): string[] {
@@ -784,24 +939,48 @@ async function auditWorkflows(repoRoot: string): Promise<AuditSection> {
 
 async function auditInstallEndpoint(repoRoot: string): Promise<AuditSection> {
   const errors: string[] = [];
-  const installPath = join(repoRoot, 'public', 'install.sh');
-  const installScript = await readFileText(installPath, errors);
+  const htmlFiles = await readDistHtmlFiles(repoRoot);
+  const shellInstallPath = join(repoRoot, 'public', 'install.sh');
+  const shellInstallScript = await readFileText(shellInstallPath, errors);
 
-  if (installScript) {
-    if (!installScript.startsWith('#!/usr/bin/env bash')) {
+  if (shellInstallScript) {
+    if (!shellInstallScript.startsWith('#!/usr/bin/env bash')) {
       errors.push('public/install.sh must keep an explicit bash shebang.');
     }
 
-    if (!installScript.includes('set -euo pipefail')) {
+    if (!shellInstallScript.includes('set -euo pipefail')) {
       errors.push('public/install.sh must keep strict shell mode.');
     }
 
+    if (isPlaceholderInstallScript(shellInstallScript) && isShellInstallerAdvertised(htmlFiles)) {
+      errors.push(
+        `public/install.sh is a placeholder, but built pages advertise ${SHELL_INSTALLER_URL_MARKER}.`
+      );
+    }
+  }
+
+  const powershellInstallPath = join(repoRoot, 'public', 'install.ps1');
+  const powershellInstallScript = await readFileText(powershellInstallPath, errors);
+
+  if (powershellInstallScript) {
+    if (!powershellInstallScript.startsWith('#!/usr/bin/env pwsh')) {
+      errors.push('public/install.ps1 must keep an explicit pwsh shebang.');
+    }
+
+    if (!powershellInstallScript.includes("$ErrorActionPreference = 'Stop'")) {
+      errors.push('public/install.ps1 must stop on PowerShell errors.');
+    }
+
+    if (!powershellInstallScript.includes('Add-UserPath')) {
+      errors.push('public/install.ps1 must add the shim directory to the user PATH.');
+    }
+
     if (
-      isPlaceholderInstallScript(installScript) &&
-      isShellInstallerAdvertised(await readDistHtmlFiles(repoRoot))
+      isPlaceholderInstallScript(powershellInstallScript) &&
+      isPowerShellInstallerAdvertised(htmlFiles)
     ) {
       errors.push(
-        `public/install.sh is a placeholder, but built pages advertise ${INSTALLER_URL_MARKER}.`
+        `public/install.ps1 is a placeholder, but built pages advertise ${POWERSHELL_INSTALLER_URL_MARKER}.`
       );
     }
   }
@@ -910,8 +1089,13 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
   if (siteData) {
     errors.push(...validateTruthfulSiteMetrics(siteData));
 
+    const installPlatforms = siteData.INSTALL_PLATFORMS;
     const installTabs = siteData.INSTALL_TABS;
     const channels = siteData.CHANNELS;
+
+    if (!Array.isArray(installPlatforms)) {
+      errors.push('src/data/site.ts must export INSTALL_PLATFORMS as an array.');
+    }
 
     if (!Array.isArray(installTabs)) {
       errors.push('src/data/site.ts must export INSTALL_TABS as an array.');
@@ -921,8 +1105,10 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
       errors.push('src/data/site.ts must export CHANNELS as an array.');
     }
 
-    if (Array.isArray(installTabs) && Array.isArray(channels)) {
-      errors.push(...validateInstallChannels({ installTabs, channels, copyTargets }));
+    if (Array.isArray(installPlatforms) && Array.isArray(installTabs) && Array.isArray(channels)) {
+      errors.push(
+        ...validateInstallChannels({ installPlatforms, installTabs, channels, copyTargets })
+      );
     }
   }
 

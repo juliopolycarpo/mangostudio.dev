@@ -24,7 +24,7 @@ export const pt = {
     titlePost: '.',
     subtitle:
       'Chat e geração de imagem com Gemini, OpenAI, Anthropic e DeepSeek — rodando na sua máquina, com as suas chaves. Sem nuvem, sem telemetria, sem Node.',
-    terminalTitle: 'instalar — bash',
+    terminalTitle: 'instalar',
     ctaPrimary: 'Começar agora',
     ctaSecondary: 'Ver no GitHub',
     requirements: 'requer Bun v1.3.14+ · macOS · Linux · Windows',
@@ -44,7 +44,7 @@ export const pt = {
       {
         n: '1',
         title: 'Instale',
-        desc: 'Um comando com o gerenciador que você já usa — o único canal publicado por enquanto.',
+        desc: 'Escolha a plataforma e o instalador da sua máquina. Todo canal disponível instala o mesmo binário.',
         cmd: RELEASE.installCmd,
       },
       {
@@ -124,6 +124,8 @@ export const pt = {
     readyLabel: 'disponível',
     plannedLabel: 'em breve',
     plannedHint: 'Canal planejado — ainda não disponível',
+    platformTabsLabel: 'Plataforma de instalação',
+    methodTabsLabel: 'Método de instalação',
   },
   contribute: {
     badge: '★ Open source · MIT',

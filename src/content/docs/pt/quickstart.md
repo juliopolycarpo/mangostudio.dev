@@ -29,8 +29,9 @@ downloads contra `SHA256SUMS` quando aplicável.
 | Canal                  | Comando                                                                                                                |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | npm / bun              | `npm i -g mangostudio` / `bun add -g mangostudio`                                                                      |
+| PowerShell (Windows)   | `irm https://mangostudio.dev/install.ps1 \| iex`                                                                       |
 | Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio`                                                                          |
-| Instalador shell       | `curl -fsSL https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh \| bash`                 |
+| Instalador shell       | `curl -fsSL https://mangostudio.dev/install.sh \| bash`                                                                |
 | Scoop (Windows)        | `scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket` e depois `scoop install mangostudio`  |
 | Cargo                  | `cargo install mangostudio` (ou `cargo binstall mangostudio`)                                                          |
 | Docker                 | `docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio`                                       |
@@ -39,12 +40,16 @@ downloads contra `SHA256SUMS` quando aplicável.
 Início rápido com o instalador shell:
 
 ```bash
-curl -fsSL https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh | bash
+curl -fsSL https://mangostudio.dev/install.sh | bash
 mangostudio serve # inicia em http://localhost:3001
 ```
 
-No Windows, baixe e execute `install.ps1` na
-[release mais recente](https://github.com/juliopolycarpo/mangostudio/releases/latest),
+No Windows, execute o instalador PowerShell hospedado:
+
+```powershell
+irm https://mangostudio.dev/install.ps1 | iex
+```
+
 ou use Scoop (veja a tabela acima). O canal Cargo instala um
 [launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) que baixa o mesmo
 arquivo verificado por checksum na primeira execução.

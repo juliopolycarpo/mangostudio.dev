@@ -9,3 +9,6 @@
 
 /install.sh
   Cache-Control: public, max-age=300, must-revalidate
+
+/install.ps1
+  Cache-Control: public, max-age=300, must-revalidate
