@@ -9,6 +9,7 @@ export const CONTRIBUTING_URL =
   'https://github.com/juliopolycarpo/mangostudio.dev/blob/main/CONTRIBUTING.md';
 export const REPO = 'juliopolycarpo/mangostudio';
 export const VERSION = RELEASE.version;
+export const NPM_INSTALL_CMD = 'npm i -g mangostudio';
 
 export type ChannelStatus = 'ready' | 'planned';
 
@@ -30,7 +31,7 @@ export const INSTALL_TABS: InstallTab[] = [
   {
     id: 'npm',
     label: 'npm',
-    cmd: 'npm i -g mangostudio',
+    cmd: NPM_INSTALL_CMD,
     status: 'ready',
   },
   {

@@ -98,7 +98,7 @@ version_from_local_archive() {
 
   [[ "$name" == mangostudio-*"$suffix" ]] || fail "local archive does not match ${platform}: ${name}"
   value="${name#mangostudio-}"
-  normalize_version "${value%$suffix}"
+  normalize_version "${value%"$suffix"}"
 }
 
 resolve_version() {

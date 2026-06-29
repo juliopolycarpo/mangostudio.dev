@@ -150,7 +150,7 @@ const INSTALL_PLACEHOLDER_PATTERNS = [
 ];
 
 const PUBLISHED_CLI_INSTALL_PATTERN =
-  /^(?:bun\s+add|npm\s+(?:install|i))\s+-g\s+(?:mangostudio|@mangostudio\/cli)(?:@\S+)?$/;
+  /^(?:bun\s+add|npm\s+(?:install|i))\s+-g\s+mangostudio(?:@\S+)?$/;
 
 const DISALLOWED_RELEASE_COPY_PATTERNS = [
   { label: 'git-cliff generated highlights', pattern: /git-cliff/i },

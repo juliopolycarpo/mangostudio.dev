@@ -1,5 +1,5 @@
 import { RELEASE } from '@/data/releases.generated';
-import { GITHUB_URL } from '@/data/site';
+import { GITHUB_URL, NPM_INSTALL_CMD } from '@/data/site';
 import type { SiteContent } from './types';
 
 export const pt = {
@@ -155,7 +155,7 @@ export const pt = {
         title: 'Features',
         count: '52',
         items: [
-          { type: 'feat', scope: '(cli)', text: 'pacote wrapper @mangostudio/cli para npm/bun' },
+          { type: 'feat', scope: '(cli)', text: 'pacote wrapper mangostudio para npm/bun' },
           { type: 'feat', scope: '(tools)', text: 'ferramentas built-in grep, glob e shell' },
           { type: 'feat', scope: '(api)', text: 'delegação de subagentes e lifecycle' },
           { type: 'feat', scope: '(chat)', text: 'troca de modo de agente com persistência' },
@@ -264,7 +264,7 @@ export const pt = {
           title: '1. Instale o CLI',
           body: 'Instale globalmente com Bun ou npm:',
           codeLang: 'bash',
-          code: `# instala globalmente\n${RELEASE.installCmd}\nnpm i -g mangostudio`,
+          code: `# instala globalmente\n${RELEASE.installCmd}\n${NPM_INSTALL_CMD}`,
         },
         {
           title: '2. Adicione uma chave',
