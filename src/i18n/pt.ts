@@ -1,5 +1,5 @@
 import { RELEASE } from '@/data/releases.generated';
-import { GITHUB_URL } from '@/data/site';
+import { GITHUB_URL, NPM_INSTALL_CMD } from '@/data/site';
 import type { SiteContent } from './types';
 
 export const pt = {
@@ -118,10 +118,9 @@ export const pt = {
   },
   channels: {
     eyebrow: 'Instalação',
-    title: 'Um comando hoje, mais canais em breve',
-    noteBefore: 'Só o canal abaixo está publicado e verificado contra o ',
-    noteAfter:
-      '. Brew, shell, scoop, cargo, docker e download manual chegam assim que os pipelines publicarem.',
+    title: 'Instale do seu jeito',
+    noteBefore: 'Todos os canais entregam o mesmo binário pré-compilado, verificado contra ',
+    noteAfter: ' quando aplicável.',
     readyLabel: 'disponível',
     plannedLabel: 'em breve',
     plannedHint: 'Canal planejado — ainda não disponível',
@@ -156,7 +155,7 @@ export const pt = {
         title: 'Features',
         count: '52',
         items: [
-          { type: 'feat', scope: '(cli)', text: 'pacote wrapper @mangostudio/cli para npm/bun' },
+          { type: 'feat', scope: '(cli)', text: 'pacote wrapper mangostudio para npm/bun' },
           { type: 'feat', scope: '(tools)', text: 'ferramentas built-in grep, glob e shell' },
           { type: 'feat', scope: '(api)', text: 'delegação de subagentes e lifecycle' },
           { type: 'feat', scope: '(chat)', text: 'troca de modo de agente com persistência' },
@@ -263,9 +262,9 @@ export const pt = {
       sections: [
         {
           title: '1. Instale o CLI',
-          body: 'Por enquanto, só este canal está publicado. O mais rápido com Bun:',
+          body: 'Instale globalmente com Bun ou npm:',
           codeLang: 'bash',
-          code: `# instala globalmente\n${RELEASE.installCmd}`,
+          code: `# instala globalmente\n${RELEASE.installCmd}\n${NPM_INSTALL_CMD}`,
         },
         {
           title: '2. Adicione uma chave',

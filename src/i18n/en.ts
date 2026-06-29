@@ -1,5 +1,5 @@
 import { RELEASE } from '@/data/releases.generated';
-import { GITHUB_URL } from '@/data/site';
+import { GITHUB_URL, NPM_INSTALL_CMD } from '@/data/site';
 import type { SiteContent } from './types';
 
 export const en = {
@@ -118,10 +118,9 @@ export const en = {
   },
   channels: {
     eyebrow: 'Installation',
-    title: 'One command today, more channels soon',
-    noteBefore: 'Only the channel below is published and verified against ',
-    noteAfter:
-      '. Brew, shell, scoop, cargo, docker, and manual downloads land as soon as the pipelines publish them.',
+    title: 'Install it your way',
+    noteBefore: 'Every channel ships the same prebuilt binary, verified against ',
+    noteAfter: ' where applicable.',
     readyLabel: 'available',
     plannedLabel: 'soon',
     plannedHint: 'Planned channel — not available yet',
@@ -156,7 +155,7 @@ export const en = {
         title: 'Features',
         count: '52',
         items: [
-          { type: 'feat', scope: '(cli)', text: '@mangostudio/cli wrapper package for npm/bun' },
+          { type: 'feat', scope: '(cli)', text: 'mangostudio wrapper package for npm/bun' },
           { type: 'feat', scope: '(tools)', text: 'built-in grep, glob, and shell tools' },
           { type: 'feat', scope: '(api)', text: 'subagent delegation and lifecycle' },
           { type: 'feat', scope: '(chat)', text: 'agent mode switching with persistence' },
@@ -255,9 +254,9 @@ export const en = {
       sections: [
         {
           title: '1. Install the CLI',
-          body: 'For now, only this channel is published. The fastest with Bun:',
+          body: 'Install globally with Bun or npm:',
           codeLang: 'bash',
-          code: `# install globally\n${RELEASE.installCmd}`,
+          code: `# install globally\n${RELEASE.installCmd}\n${NPM_INSTALL_CMD}`,
         },
         {
           title: '2. Add a key',
