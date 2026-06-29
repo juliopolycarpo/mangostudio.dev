@@ -49,7 +49,7 @@ export const INSTALL_TABS: InstallTab[] = [
     cmd: POWERSHELL_INSTALL_CMD,
     status: 'ready',
     platforms: ['windows'],
-    prompt: 'PS> ',
+    prompt: '$ ',
   },
   {
     id: 'curl',
@@ -81,7 +81,7 @@ export const INSTALL_TABS: InstallTab[] = [
     cmd: 'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
     status: 'ready',
     platforms: ['windows'],
-    prompt: 'PS> ',
+    prompt: '$ ',
   },
   {
     id: 'brew',
