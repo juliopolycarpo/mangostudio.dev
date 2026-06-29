@@ -56,6 +56,29 @@
     U+FEFF, U+FFFD;
 }
 
+/* Metric-matched local fallbacks keep layout stable while Geist swaps in. */
+@font-face {
+  font-family: "Geist Fallback";
+  font-style: normal;
+  font-weight: 100 900;
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Helvetica Neue");
+  ascent-override: 94.56%;
+  descent-override: 27.76%;
+  line-gap-override: 0%;
+  size-adjust: 106.28%;
+}
+
+@font-face {
+  font-family: "Geist Mono Fallback";
+  font-style: normal;
+  font-weight: 100 900;
+  src: local("Courier New"), local("Liberation Mono"), local("DejaVu Sans Mono");
+  ascent-override: 100.52%;
+  descent-override: 29.5%;
+  line-gap-override: 0%;
+  size-adjust: 99.98%;
+}
+
 :root {
   --bg: #0b0b0d;
   --surface: #141417;
@@ -76,8 +99,9 @@
   --shadow: rgba(0, 0, 0, 0.55);
   --hair: rgba(255, 255, 255, 0.05);
 
-  --font-sans: "Geist Variable", system-ui, -apple-system, sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+  --font-sans: "Geist Variable", "Geist Fallback", system-ui, -apple-system, sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "Geist Mono Fallback", ui-monospace, "SFMono-Regular", monospace;
 
   --maxw: 1120px;
   --header-h: 57px;

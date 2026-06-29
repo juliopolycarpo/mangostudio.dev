@@ -1,4 +1,5 @@
 ---
+import { getImage } from 'astro:assets';
 import Icon from '@/components/Icon.astro';
 import { siteAssets } from '@/data/assets';
 import { GITHUB_URL } from '@/data/site';
@@ -12,13 +13,15 @@ interface Props {
 }
 
 const { lang, content: c } = Astro.props;
+
+const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 192 });
 ---
 
 <section class="hero">
   <div class="hero-grid" aria-hidden="true"></div>
   <div class="hero-glow" aria-hidden="true"></div>
   <img
-    src={siteAssets.icon192.src}
+    src={heroLogo.src}
     alt=""
     width="192"
     height="192"
@@ -120,6 +123,7 @@ const { lang, content: c } = Astro.props;
     letter-spacing: -0.035em;
     font-weight: 600;
     text-wrap: balance;
+    min-height: 2.08em;
   }
 
   .accent {

@@ -1,4 +1,5 @@
 ---
+import { getImage } from 'astro:assets';
 import { siteAssets } from '@/data/assets';
 import type { SiteContent } from '@/i18n/types';
 
@@ -8,6 +9,8 @@ interface Props {
 
 const { content: c } = Astro.props;
 const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--success-text)'];
+const chatAvatar = await getImage({ src: siteAssets.icon192, width: 20, height: 20 });
+const demoIcon = await getImage({ src: siteAssets.icon192, width: 40, height: 40 });
 ---
 
 <section class="demo-section container">
@@ -46,7 +49,7 @@ const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--su
       </div>
       <div class="browser-body">
         <div class="chat-head">
-          <img src={siteAssets.icon192.src} alt="" width="20" height="20" decoding="async" />
+          <img src={chatAvatar.src} alt="" width="20" height="20" loading="lazy" decoding="async" />
           <span class="chat-name">MangoStudio</span>
           <span class="bspace"></span>
           <span class="chat-online mono">{c.demo.online}</span>
@@ -55,7 +58,7 @@ const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--su
         <div class="bubble bubble-assistant">
           <span>{c.demo.assistant}</span>
           <div class="gen-image">
-            <img src={siteAssets.icon192.src} alt="" width="40" height="40" decoding="async" />
+            <img src={demoIcon.src} alt="" width="40" height="40" loading="lazy" decoding="async" />
           </div>
         </div>
       </div>
