@@ -54,7 +54,7 @@ test.describe('docs pages', () => {
     await expect(page.locator('.docs-markdown')).toContainText('mangostudio serve');
     await expect(page.locator('.docs-source')).toHaveAttribute(
       'href',
-      /github\.com\/juliopolycarpo\/mangostudio\/blob\//
+      /^https:\/\/github\.com\/juliopolycarpo\/mangostudio\/blob\//
     );
   });
 
