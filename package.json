@@ -53,9 +53,9 @@
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/geist-mono": "^5.2.8",
     "@playwright/test": "^1.61.1",
-    "@typescript/native-preview": "^7.0.0-dev.20260624.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260629.1",
     "astro": "^7.0.3",
-    "dprint": "^0.54.0",
+    "dprint": "^0.55.1",
     "lefthook": "^2.1.9",
     "typescript": "~6.0.3",
     "wrangler": "^4.105.0"
