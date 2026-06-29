@@ -75,6 +75,9 @@ const { content: c } = Astro.props;
     display: flex;
     align-items: center;
     gap: 16px;
+    /* Let the grid item shrink to its track so a long command scrolls inside
+       .channel-cmd instead of widening the row past a narrow viewport. */
+    min-width: 0;
     border: 1px solid var(--border);
     border-radius: 13px;
     background: var(--surface);
@@ -99,6 +102,9 @@ const { content: c } = Astro.props;
 
   .channel-cmd {
     flex: 1;
+    /* Allow the flex item to shrink so its own overflow-x scroll engages instead of
+       stretching the row past the viewport on narrow screens. */
+    min-width: 0;
     font-size: 12.5px;
     color: var(--text-2);
     overflow-x: auto;

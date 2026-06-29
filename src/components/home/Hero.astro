@@ -157,5 +157,12 @@ const { lang, content: c } = Astro.props;
     .hero-logo {
       display: none;
     }
+    /* Drop the continuous compositing pass and shrink the blur raster area on phones,
+       where the pulsing glow is the most expensive decorative paint. The glow stays
+       visible so the brand still reads. */
+    .hero-glow {
+      animation: none;
+      filter: blur(22px);
+    }
   }
 </style>

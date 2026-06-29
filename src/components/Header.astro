@@ -263,6 +263,10 @@ const nav = [
     .site-header {
       gap: 12px;
       padding: 11px 16px;
+      /* Avoid the per-scroll-frame backdrop blur repaint on phones; a near-opaque
+         background keeps the sticky header legible at a fraction of the paint cost. */
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
+      backdrop-filter: none;
     }
     .header-cta {
       display: none;
