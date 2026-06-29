@@ -142,71 +142,51 @@ export function initInstallTabs(): void {
     });
   }
 
-  platformRoot.addEventListener('keydown', (event) => {
-    const current = platformTabs.find((tab) => tab.classList.contains('is-active'));
-    const currentIndex = current ? platformTabs.indexOf(current) : 0;
-    if (currentIndex === -1) return;
+  function handleTablistKeydown(
+    event: KeyboardEvent,
+    items: HTMLButtonElement[],
+    activate: (tab: HTMLButtonElement) => void
+  ): void {
+    if (items.length === 0) return;
+
+    const current = items.find((tab) => tab.classList.contains('is-active'));
+    const currentIndex = current ? items.indexOf(current) : 0;
 
     let nextIndex: number | undefined;
     switch (event.key) {
       case 'ArrowRight':
       case 'ArrowDown':
-        nextIndex = (currentIndex + 1) % platformTabs.length;
+        nextIndex = (currentIndex + 1) % items.length;
         break;
       case 'ArrowLeft':
       case 'ArrowUp':
-        nextIndex = (currentIndex - 1 + platformTabs.length) % platformTabs.length;
+        nextIndex = (currentIndex - 1 + items.length) % items.length;
         break;
       case 'Home':
         nextIndex = 0;
         break;
       case 'End':
-        nextIndex = platformTabs.length - 1;
+        nextIndex = items.length - 1;
         break;
       default:
         return;
     }
 
     event.preventDefault();
-    const next = platformTabs[nextIndex];
+    const next = items[nextIndex];
     if (!next) return;
-    selectPlatform(next.dataset.platform ?? DEFAULT_PLATFORM);
+    activate(next);
     next.focus();
+  }
+
+  platformRoot.addEventListener('keydown', (event) => {
+    handleTablistKeydown(event, platformTabs, (tab) =>
+      selectPlatform(tab.dataset.platform ?? DEFAULT_PLATFORM)
+    );
   });
 
   channelRoot.addEventListener('keydown', (event) => {
-    const navigable = navigableTabs();
-    if (navigable.length === 0) return;
-
-    const current = navigable.find((tab) => tab.classList.contains('is-active'));
-    const currentIndex = current ? navigable.indexOf(current) : 0;
-    if (currentIndex === -1) return;
-
-    let nextIndex: number | undefined;
-    switch (event.key) {
-      case 'ArrowRight':
-      case 'ArrowDown':
-        nextIndex = (currentIndex + 1) % navigable.length;
-        break;
-      case 'ArrowLeft':
-      case 'ArrowUp':
-        nextIndex = (currentIndex - 1 + navigable.length) % navigable.length;
-        break;
-      case 'Home':
-        nextIndex = 0;
-        break;
-      case 'End':
-        nextIndex = navigable.length - 1;
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
-    const next = navigable[nextIndex];
-    if (!next) return;
-    select(next.dataset.channel ?? '');
-    next.focus();
+    handleTablistKeydown(event, navigableTabs(), (tab) => select(tab.dataset.channel ?? ''));
   });
 
   let initialPlatform = platformForClient() ?? DEFAULT_PLATFORM;
@@ -215,6 +195,7 @@ export function initInstallTabs(): void {
     const storedPlatform = localStorage.getItem(PLATFORM_STORAGE_KEY);
     if (storedPlatform && platformTabs.some((tab) => tab.dataset.platform === storedPlatform)) {
       initialPlatform = storedPlatform;
+      initialChannel = defaultChannelForPlatform(initialPlatform);
     }
 
     const storedChannel = localStorage.getItem(CHANNEL_STORAGE_KEY);

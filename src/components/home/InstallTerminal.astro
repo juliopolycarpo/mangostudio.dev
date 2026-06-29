@@ -32,7 +32,7 @@ if (!initial) {
   </div>
 
   <div
-    class="install-platforms"
+    class="install-tabs"
     id="install-platform-tabs"
     role="tablist"
     aria-label={c.channels.platformTabsLabel}
@@ -43,7 +43,7 @@ if (!initial) {
         return (
           <button
             type="button"
-            class:list={['install-platform', { 'is-active': isActive }]}
+            class:list={['install-tab', { 'is-active': isActive }]}
             id={`install-platform-${platform.id}`}
             role="tab"
             aria-selected={isActive ? 'true' : 'false'}
@@ -118,39 +118,6 @@ if (!initial) {
     box-shadow: 0 30px 70px -28px var(--shadow), 0 0 0 1px var(--hair);
     text-align: left;
     min-height: 224px;
-  }
-
-  .install-platforms {
-    display: flex;
-    gap: 6px;
-    padding: 10px 10px 8px;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-  }
-
-  .install-platform {
-    flex: 1 0 auto;
-    min-width: 92px;
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--text-3);
-    padding: 7px 12px;
-    border-radius: 8px;
-    font-weight: 650;
-  }
-
-  .install-platform:hover {
-    color: var(--text-2);
-    border-color: var(--border);
-  }
-
-  .install-platform.is-active {
-    color: var(--text);
-    border-color: color-mix(in srgb, var(--mango) 42%, var(--border));
-    background: color-mix(in srgb, var(--mango) 11%, transparent);
   }
 
   .install-tabs {
