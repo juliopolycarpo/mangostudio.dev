@@ -1,4 +1,5 @@
 ---
+import { getImage } from 'astro:assets';
 import { siteAssets } from '@/data/assets';
 import { GITHUB_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
@@ -15,6 +16,8 @@ interface Props {
 }
 
 const { lang, pathname, content: c, page } = Astro.props;
+
+const brandLogo = await getImage({ src: siteAssets.icon192, width: 28, height: 28 });
 
 const nav = [
   {
@@ -52,7 +55,7 @@ const nav = [
     data-astro-prefetch={page === 'home' ? undefined : 'hover'}
   >
     <img
-      src={siteAssets.icon192.src}
+      src={brandLogo.src}
       alt=""
       width="28"
       height="28"
