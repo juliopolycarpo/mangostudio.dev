@@ -228,10 +228,6 @@ run('validateInstallChannels accepts native-shell-first platform channels', () =
           platforms: ['docker'],
         },
       ],
-      channels: [
-        { id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' },
-        { id: 'shell', cmd: 'shell installer planned', status: 'planned' },
-      ],
       copyTargets: ['bun add -g mangostudio'],
     }),
     []
@@ -297,7 +293,6 @@ run('validateInstallChannels rejects platform channel order regressions', () => 
           platforms: ['docker'],
         },
       ],
-      channels: [{ id: 'bun', cmd: 'bun add -g mangostudio', status: 'ready' }],
       copyTargets: ['bun add -g mangostudio'],
     }),
     [
@@ -327,19 +322,21 @@ run('validateInstallChannels rejects planned copy targets and missing ready prim
         { id: 'docker', defaultChannel: 'docker' },
       ],
       installTabs: [
-        { id: 'shell', cmd: 'shell installer planned', status: 'planned', platforms: ['linux'] },
-      ],
-      channels: [
-        { id: 'brew', cmd: 'brew install juliopolycarpo/tap/mangostudio', status: 'planned' },
+        {
+          id: 'brew',
+          cmd: 'brew install juliopolycarpo/tap/mangostudio',
+          status: 'planned',
+          platforms: ['linux'],
+        },
       ],
       copyTargets: ['brew install juliopolycarpo/tap/mangostudio'],
     }),
     [
-      'CHANNELS[0] is planned, but its command is exposed as a copy target.',
+      'INSTALL_TABS[0] is planned, but its command is exposed as a copy target.',
       'At least one install channel must be ready.',
-      'CHANNELS[0] must be the ready npm/bun install command.',
       'INSTALL_PLATFORMS must include windows.',
       'INSTALL_PLATFORMS must include macos.',
+      'INSTALL_PLATFORMS linux defaultChannel must be available on that platform.',
       'INSTALL_PLATFORMS linux defaultChannel must be ready.',
       'INSTALL_PLATFORMS docker defaultChannel must be available on that platform.',
       'INSTALL_PLATFORMS docker defaultChannel must be ready.',
@@ -351,7 +348,6 @@ run('validateInstallChannels rejects planned copy targets and missing ready prim
       'INSTALL_TABS must expose curl on linux.',
       'INSTALL_TABS must expose bun on linux.',
       'INSTALL_TABS must expose npm on linux.',
-      'INSTALL_TABS must expose brew on linux.',
       'INSTALL_TABS must expose cargo on linux.',
       'INSTALL_TABS must expose curl on macos.',
       'INSTALL_TABS must expose bun on macos.',

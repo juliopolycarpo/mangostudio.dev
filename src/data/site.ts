@@ -109,50 +109,6 @@ export const INSTALL_TABS: InstallTab[] = [
   },
 ];
 
-export interface Channel {
-  id: string;
-  label: string;
-  cmd: string;
-  status: ChannelStatus;
-}
-
-/** Install grid on the home page — every channel ships the same prebuilt binary. */
-export const CHANNELS: Channel[] = [
-  { id: 'bun', label: 'npm / bun', cmd: RELEASE.installCmd, status: 'ready' },
-  { id: 'powershell', label: 'powershell', cmd: POWERSHELL_INSTALL_CMD, status: 'ready' },
-  {
-    id: 'brew',
-    label: 'homebrew',
-    cmd: 'brew install juliopolycarpo/tap/mangostudio',
-    status: 'ready',
-  },
-  {
-    id: 'curl',
-    label: 'shell',
-    cmd: SHELL_INSTALL_CMD,
-    status: 'ready',
-  },
-  {
-    id: 'scoop',
-    label: 'scoop',
-    cmd: 'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
-    status: 'ready',
-  },
-  { id: 'cargo', label: 'cargo', cmd: 'cargo install mangostudio', status: 'ready' },
-  {
-    id: 'docker',
-    label: 'docker',
-    cmd: 'docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio',
-    status: 'ready',
-  },
-  {
-    id: 'manual',
-    label: 'manual',
-    cmd: 'gh release download -R juliopolycarpo/mangostudio --pattern "*.tar.gz" --pattern SHA256SUMS && sha256sum -c SHA256SUMS',
-    status: 'ready',
-  },
-];
-
 export interface Provider {
   name: string;
   glyph: string;

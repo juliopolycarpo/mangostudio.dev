@@ -26,7 +26,6 @@ interface LocalizedContent {
 export interface InstallChannelsAuditInput {
   installPlatforms: readonly unknown[];
   installTabs: readonly unknown[];
-  channels: readonly unknown[];
   copyTargets: readonly string[];
 }
 
@@ -175,9 +174,6 @@ const INSTALL_PLATFORM_REQUIREMENTS = [
     forbiddenChannels: ['powershell', 'curl', 'bun', 'npm', 'cargo', 'brew', 'scoop'],
   },
 ] as const;
-
-const PUBLISHED_CLI_INSTALL_PATTERN =
-  /^(?:bun\s+add|npm\s+(?:install|i))\s+-g\s+mangostudio(?:@\S+)?$/;
 
 const DISALLOWED_RELEASE_COPY_PATTERNS = [
   { label: 'git-cliff generated highlights', pattern: /git-cliff/i },
@@ -361,41 +357,35 @@ export function findTodoHtmlFiles(htmlFiles: readonly TextFile[]): string[] {
 export function validateInstallChannels(input: InstallChannelsAuditInput): string[] {
   const errors: string[] = [];
   const copyTargets = new Set(input.copyTargets);
-  const groups = [
-    { name: 'INSTALL_TABS', entries: input.installTabs },
-    { name: 'CHANNELS', entries: input.channels },
-  ];
   let readyCount = 0;
 
-  for (const group of groups) {
-    for (const [index, entry] of group.entries.entries()) {
-      const label = `${group.name}[${index}]`;
+  for (const [index, entry] of input.installTabs.entries()) {
+    const label = `INSTALL_TABS[${index}]`;
 
-      if (!isRecord(entry)) {
-        errors.push(`${label} must be an object.`);
-        continue;
-      }
+    if (!isRecord(entry)) {
+      errors.push(`${label} must be an object.`);
+      continue;
+    }
 
-      const status = entry.status;
-      const cmd = entry.cmd;
+    const status = entry.status;
+    const cmd = entry.cmd;
 
-      if (status !== 'ready' && status !== 'planned') {
-        errors.push(`${label} must declare status "ready" or "planned".`);
-        continue;
-      }
+    if (status !== 'ready' && status !== 'planned') {
+      errors.push(`${label} must declare status "ready" or "planned".`);
+      continue;
+    }
 
-      if (typeof cmd !== 'string' || cmd.trim() === '') {
-        errors.push(`${label} must declare a non-empty command.`);
-        continue;
-      }
+    if (typeof cmd !== 'string' || cmd.trim() === '') {
+      errors.push(`${label} must declare a non-empty command.`);
+      continue;
+    }
 
-      if (status === 'ready') {
-        readyCount += 1;
-      }
+    if (status === 'ready') {
+      readyCount += 1;
+    }
 
-      if (status === 'planned' && copyTargets.has(cmd)) {
-        errors.push(`${label} is planned, but its command is exposed as a copy target.`);
-      }
+    if (status === 'planned' && copyTargets.has(cmd)) {
+      errors.push(`${label} is planned, but its command is exposed as a copy target.`);
     }
   }
 
@@ -403,7 +393,6 @@ export function validateInstallChannels(input: InstallChannelsAuditInput): strin
     errors.push('At least one install channel must be ready.');
   }
 
-  assertPublishedPrimary(errors, 'CHANNELS[0]', input.channels[0]);
   validateInstallPlatformMatrix(errors, input.installPlatforms, input.installTabs);
 
   return errors;
@@ -1091,7 +1080,6 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
 
     const installPlatforms = siteData.INSTALL_PLATFORMS;
     const installTabs = siteData.INSTALL_TABS;
-    const channels = siteData.CHANNELS;
 
     if (!Array.isArray(installPlatforms)) {
       errors.push('src/data/site.ts must export INSTALL_PLATFORMS as an array.');
@@ -1101,14 +1089,8 @@ async function auditFirstPublishReadiness(repoRoot: string): Promise<AuditSectio
       errors.push('src/data/site.ts must export INSTALL_TABS as an array.');
     }
 
-    if (!Array.isArray(channels)) {
-      errors.push('src/data/site.ts must export CHANNELS as an array.');
-    }
-
-    if (Array.isArray(installPlatforms) && Array.isArray(installTabs) && Array.isArray(channels)) {
-      errors.push(
-        ...validateInstallChannels({ installPlatforms, installTabs, channels, copyTargets })
-      );
+    if (Array.isArray(installPlatforms) && Array.isArray(installTabs)) {
+      errors.push(...validateInstallChannels({ installPlatforms, installTabs, copyTargets }));
     }
   }
 
@@ -1395,21 +1377,6 @@ function assertEquals(
 ): void {
   if (actual !== expected) {
     errors.push(errorMessage);
-  }
-}
-
-function assertPublishedPrimary(errors: string[], label: string, entry: unknown): void {
-  if (!isRecord(entry)) {
-    errors.push(`${label} must be the ready npm/bun install command.`);
-    return;
-  }
-
-  if (
-    entry.status !== 'ready' ||
-    typeof entry.cmd !== 'string' ||
-    !PUBLISHED_CLI_INSTALL_PATTERN.test(entry.cmd.trim())
-  ) {
-    errors.push(`${label} must be the ready npm/bun install command.`);
   }
 }
 
