@@ -7,8 +7,8 @@ export interface GeneratedRelease {
 }
 
 export const RELEASE: GeneratedRelease = {
-  version: 'v0.1.0-canary.b7be89c',
-  releaseDate: '2026-06-23',
+  version: 'v0.1.0',
+  releaseDate: '2026-06-30',
   installCmd: 'bun add -g mangostudio',
-  source: 'https://www.npmjs.com/package/mangostudio',
+  source: 'https://github.com/juliopolycarpo/mangostudio/releases/tag/v0.1.0',
 };
