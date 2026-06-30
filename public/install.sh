@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Vendored from juliopolycarpo/mangostudio scripts/install/install.sh — sync when upstream changes.
+# Canonical MangoStudio installer, served from https://mangostudio.dev/install.sh.
+# Downloads the platform release archive from GitHub Releases and verifies it against SHA256SUMS.
 set -euo pipefail
 
 REPO="juliopolycarpo/mangostudio"

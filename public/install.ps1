@@ -1,5 +1,6 @@
 #!/usr/bin/env pwsh
-# Vendored from juliopolycarpo/mangostudio scripts/install/install.ps1 - sync when upstream changes.
+# Canonical MangoStudio installer, served from https://mangostudio.dev/install.ps1.
+# Downloads the platform release archive from GitHub Releases and verifies it against SHA256SUMS.
 param(
   [string]$Local,
   [switch]$Help
