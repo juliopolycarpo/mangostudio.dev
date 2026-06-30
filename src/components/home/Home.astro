@@ -1,7 +1,5 @@
 ---
 import type { Lang, SiteContent } from '@/i18n/types';
-import Channels from './Channels.astro';
-import Comparison from './Comparison.astro';
 import Contribute from './Contribute.astro';
 import Features from './Features.astro';
 import Hero from './Hero.astro';
@@ -22,6 +20,4 @@ const { lang, content } = Astro.props;
 <Quickstart content={content} />
 <Features content={content} />
 <Providers content={content} />
-<Comparison content={content} />
-<Channels content={content} />
 <Contribute lang={lang} content={content} />

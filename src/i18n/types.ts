@@ -18,12 +18,6 @@ export interface Feature {
   desc: string;
 }
 
-export interface CompareRow {
-  label: string;
-  us: string;
-  them: string;
-}
-
 export type ReleaseType = 'feat' | 'fix' | 'perf' | 'refactor';
 
 export interface ReleaseItem {
@@ -73,24 +67,11 @@ export interface SiteContent {
   quickstart: { eyebrow: string; title: string; steps: Step[] };
   features: { eyebrow: string; title: string; items: Feature[] };
   providers: { eyebrow: string; title: string };
-  comparison: {
-    eyebrow: string;
-    title: string;
-    criterion: string;
-    us: string;
-    them: string;
-    rows: CompareRow[];
-  };
-  channels: {
-    eyebrow: string;
-    title: string;
-    noteBefore: string;
-    noteAfter: string;
-    readyLabel: string;
-    plannedLabel: string;
-    plannedHint: string;
+  install: {
     platformTabsLabel: string;
     methodTabsLabel: string;
+    plannedLabel: string;
+    plannedHint: string;
   };
   contribute: { badge: string; title: string; desc: string; ctaStar: string; ctaGuide: string };
   footer: {

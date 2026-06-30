@@ -35,7 +35,7 @@ if (!initial) {
     class="install-tabs"
     id="install-platform-tabs"
     role="tablist"
-    aria-label={c.channels.platformTabsLabel}
+    aria-label={c.install.platformTabsLabel}
   >
     {
       INSTALL_PLATFORMS.map((platform) => {
@@ -59,7 +59,7 @@ if (!initial) {
     }
   </div>
 
-  <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.channels.methodTabsLabel}>
+  <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.install.methodTabsLabel}>
     {
       INSTALL_TABS.map((tab) => {
         const isPlanned = tab.status === 'planned';
@@ -84,7 +84,7 @@ if (!initial) {
             data-status={tab.status}
           >
             {tab.label}
-            {isPlanned && <span class="planned-pill">{c.channels.plannedLabel}</span>}
+            {isPlanned && <span class="planned-pill">{c.install.plannedLabel}</span>}
           </button>
         );
       })
@@ -102,7 +102,7 @@ if (!initial) {
     <code class="install-code">
       <span class="prompt" id="hero-prompt">{initial.prompt}</span><span id="hero-cmd">{initial.cmd}</span>
     </code>
-    <span class="install-hint" id="hero-hint">{c.channels.plannedHint}</span>
+    <span class="install-hint" id="hero-hint">{c.install.plannedHint}</span>
     <CopyButton text={initial.cmd} label={c.copyButtonLabel} id="hero-copy" />
   </div>
 </div>
