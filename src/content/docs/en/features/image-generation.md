@@ -7,8 +7,8 @@ groupId: "features"
 groupTitle: "Features"
 order: 40
 sourcePath: "docs/features/image-generation.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/image-generation.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/image-generation.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # Image Generation

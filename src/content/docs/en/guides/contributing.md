@@ -7,8 +7,8 @@ groupId: "guides"
 groupTitle: "Guides"
 order: 10
 sourcePath: ".github/CONTRIBUTING.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/CONTRIBUTING.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/.github/CONTRIBUTING.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # Contributing to MangoStudio
@@ -50,21 +50,21 @@ bun run dev --frontend
 
 ## Documentation Map
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — entry point to the documentation tree
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/README.md) — entry point to the documentation tree
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart) — shortest contributor onboarding path
 - [`docs/reference/testing.md`](/en/docs/reference/testing) — testing taxonomy, runners, and support rules
 - [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) — feature-by-feature file map for targeted work
 
 ## Code Standards
 
-Refer to [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) for the full coding style, naming conventions, i18n rules, and testing guidelines. Key points:
+Refer to [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/AGENTS.md) for the full coding style, naming conventions, i18n rules, and testing guidelines. Key points:
 
 - TypeScript throughout — no plain JS files
 - 2-space indentation, single quotes, semicolons
 - All UI strings must come from `@mangostudio/shared/i18n` — never hardcode user-visible text
 - Hooks that contain JSX must use `.tsx` extension
 - `CLAUDE.md` files with `@imports`
-- AI related Agents: Use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) as a source of agentic stuff
+- AI related Agents: Use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/AGENTS.md) as a source of agentic stuff
 
 ### Module Architecture
 

@@ -7,8 +7,8 @@ groupId: "providers"
 groupTitle: "Provedores"
 order: 10
 sourcePath: "docs/pt-br/providers/development.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/development.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/providers/development.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # Guia De Desenvolvimento De Provedores

@@ -7,8 +7,8 @@ groupId: "guides"
 groupTitle: "Guides"
 order: 20
 sourcePath: "docs/guides/contributor-quickstart.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/guides/contributor-quickstart.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # Contributor Quickstart
@@ -44,7 +44,7 @@ Default local URLs:
 
 ## 3. Know Where To Start
 
-- Read [`../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) for repository rules and routing.
+- Read [`../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/AGENTS.md) for repository rules and routing.
 - Use [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) when you need a feature-by-feature file map.
 - Use [`../reference/testing.md`](/en/docs/reference/testing) before adding or changing behavior.
 - Use [`../architecture/overview.md`](/en/docs/architecture/overview) for the workspace and module layout.

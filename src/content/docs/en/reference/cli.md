@@ -7,8 +7,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 10
 sourcePath: "docs/reference/cli.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/cli.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/cli.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # CLI Reference
@@ -25,11 +25,11 @@ copy-paste commands, or:
 
 | Channel            | Entry point                                                                                                                                                                                    |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| npm / bun          | `mangostudio` — see [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md)                             |
+| npm / bun          | `mangostudio` — see [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cli/README.md)                             |
 | Homebrew           | `brew install juliopolycarpo/tap/mangostudio`                                                                                                                                                  |
-| Shell / PowerShell | `install.sh` / `install.ps1` from GitHub Releases                                                                                                                                              |
+| Shell / PowerShell | `install.sh` / `install.ps1` from [mangostudio.dev](https://mangostudio.dev)                                                                                                                   |
 | Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                    |
-| Cargo              | `cargo install mangostudio` — see [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) |
+| Cargo              | `cargo install mangostudio` — see [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cargo-shim/README.md) |
 | Docker             | `ghcr.io/juliopolycarpo/mangostudio` — see [`docs/operations/deployment.md`](/en/docs/operations/deployment#docker)                                                                            |
 | Manual             | Download platform archives from GitHub Releases and verify `SHA256SUMS`                                                                                                                        |
 
@@ -114,7 +114,7 @@ Host, port, and other settings follow the standard resolution order
 host/port on `serve` is applied as `API_HOST` / `API_PORT` before the server
 reads its config. See
 [`apps/api/src/lib/config.ts`](../../apps/api/src/lib/config.ts) and
-[`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) for the full environment.
+[`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cli/README.md) for the full environment.
 
 If no auth secret is configured, interactive `mangostudio serve` generates a
 strong `BETTER_AUTH_SECRET` and asks whether to persist it in `~/.mango/.env`

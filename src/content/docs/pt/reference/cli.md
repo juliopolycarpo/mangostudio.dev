@@ -7,8 +7,8 @@ groupId: "reference"
 groupTitle: "Referência"
 order: 10
 sourcePath: "docs/pt-br/reference/cli.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/cli.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/cli.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # Referência da CLI
@@ -28,11 +28,11 @@ pré-compilado e sidecar do frontend. Veja a
 
 | Canal              | Ponto de entrada                                                                                                                                                                                |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| npm / bun          | `mangostudio` — veja [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md)                             |
+| npm / bun          | `mangostudio` — veja [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cli/README.md)                             |
 | Homebrew           | `brew install juliopolycarpo/tap/mangostudio`                                                                                                                                                   |
-| Shell / PowerShell | `install.sh` / `install.ps1` do GitHub Releases                                                                                                                                                 |
+| Shell / PowerShell | `install.sh` / `install.ps1` de [mangostudio.dev](https://mangostudio.dev)                                                                                                                      |
 | Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                     |
-| Cargo              | `cargo install mangostudio` — veja [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) |
+| Cargo              | `cargo install mangostudio` — veja [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cargo-shim/README.md) |
 | Docker             | `ghcr.io/juliopolycarpo/mangostudio` — veja [`deployment.md`](/docs/operations/deployment#docker)                                                                                               |
 | Manual             | Baixe arquivos de plataforma do GitHub Releases e verifique `SHA256SUMS`                                                                                                                        |
 

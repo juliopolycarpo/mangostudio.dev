@@ -7,8 +7,8 @@ groupId: "getting-started"
 groupTitle: "Começando"
 order: 10
 sourcePath: "docs/pt-br/README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/README.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/README.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # MangoStudio
@@ -51,7 +51,7 @@ irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 ou use Scoop (veja a tabela acima). O canal Cargo instala um
-[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) que baixa o mesmo
+[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cargo-shim/README.md) que baixa o mesmo
 arquivo verificado por checksum na primeira execução.
 
 `mangostudio` é um CLI de binário único que gerencia um servidor local:
@@ -71,7 +71,7 @@ Na primeira execução, `mangostudio serve` pode gerar um `BETTER_AUTH_SECRET` f
 e armazená-lo em `~/.mango/.env` ou `~/.mango/config.toml`. Configure chaves de
 provedor como `GEMINI_API_KEY` quando estiver pronto para usar modelos hospedados. Configurações
 opcionais de runtime incluem `API_HOST`, `API_PORT` e `DATABASE_PATH`.
-Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) para o ambiente completo.
+Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cli/README.md) para o ambiente completo.
 Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operations/deployment#docker).
 
 ## Pré-requisitos (desenvolvimento)

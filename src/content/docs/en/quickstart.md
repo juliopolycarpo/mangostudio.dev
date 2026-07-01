@@ -7,8 +7,8 @@ groupId: "getting-started"
 groupTitle: "Getting Started"
 order: 10
 sourcePath: "README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/README.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/README.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # MangoStudio
@@ -51,7 +51,7 @@ irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 or use Scoop (see table above). The Cargo channel installs a
-[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) that downloads the same
+[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cargo-shim/README.md) that downloads the same
 checksum-verified archive on first run.
 
 `mangostudio` is a single-binary CLI that manages one local server:
@@ -69,7 +69,7 @@ Run `mangostudio` with no arguments for the full command list. See
 
 On first run, `mangostudio serve` can generate a strong `BETTER_AUTH_SECRET` and store it in `~/.mango/.env` or `~/.mango/config.toml`.
 Set provider keys such as `GEMINI_API_KEY` when you are ready to use hosted models. Optional runtime settings include `API_HOST`, `API_PORT`, and `DATABASE_PATH`.
-See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) for the full environment.
+See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/packages/cli/README.md) for the full environment.
 For container deployment details, see [`docs/operations/deployment.md`](/en/docs/operations/deployment#docker).
 
 ## Prerequisites
@@ -367,7 +367,7 @@ The `Messages` type is inferred directly from the `pt-BR.ts` dictionary (`as con
 
 ## Documentation
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — docs hub, audiences, and reading order
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/README.md) — docs hub, audiences, and reading order
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart) — fastest contributor onboarding path
 - [`docs/architecture/continuation.md`](/en/docs/architecture/continuation) — continuation architecture deep-dive
 - [`docs/providers/development.md`](/en/docs/providers/development) — provider integration guide

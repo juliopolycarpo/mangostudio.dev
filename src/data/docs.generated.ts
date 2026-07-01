@@ -31,7 +31,7 @@ export const DOCS_DEFAULT_SLUG = 'quickstart';
 
 export const DOCS_SOURCE = {
   repo: 'https://github.com/juliopolycarpo/mangostudio',
-  commit: '5490f9a050c73225da1673d7dce7f6f1300b548c',
+  commit: 'c8a260ecd3cf98c5fb630b756a93afe762cb2af8',
 } as const;
 
 export const DOCS_NAV = {
@@ -46,7 +46,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Início rápido',
           sourcePath: 'docs/pt-br/README.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/README.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/README.md',
           groupId: 'getting-started',
           groupTitle: 'Começando',
           order: 10,
@@ -63,7 +63,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Contribuindo com o MangoStudio',
           sourcePath: 'docs/pt-br/CONTRIBUTING.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/CONTRIBUTING.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/CONTRIBUTING.md',
           groupId: 'guides',
           groupTitle: 'Guias',
           order: 10,
@@ -74,7 +74,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Início Rápido Para Contribuidores',
           sourcePath: 'docs/pt-br/guides/contributor-quickstart.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/guides/contributor-quickstart.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/guides/contributor-quickstart.md',
           groupId: 'guides',
           groupTitle: 'Guias',
           order: 20,
@@ -91,7 +91,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Arquitetura De Settings',
           sourcePath: 'docs/pt-br/features/settings.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/settings.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/settings.md',
           groupId: 'features',
           groupTitle: 'Recursos',
           order: 10,
@@ -102,7 +102,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Sistema De Tools',
           sourcePath: 'docs/pt-br/features/tools.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/tools.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/tools.md',
           groupId: 'features',
           groupTitle: 'Recursos',
           order: 20,
@@ -113,7 +113,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Attachments',
           sourcePath: 'docs/pt-br/features/attachments.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/attachments.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/attachments.md',
           groupId: 'features',
           groupTitle: 'Recursos',
           order: 30,
@@ -124,7 +124,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Geração De Imagem',
           sourcePath: 'docs/pt-br/features/image-generation.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/image-generation.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/image-generation.md',
           groupId: 'features',
           groupTitle: 'Recursos',
           order: 40,
@@ -141,7 +141,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Guia De Desenvolvimento De Provedores',
           sourcePath: 'docs/pt-br/providers/development.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/development.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/providers/development.md',
           groupId: 'providers',
           groupTitle: 'Provedores',
           order: 10,
@@ -152,7 +152,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Provedor DeepSeek',
           sourcePath: 'docs/pt-br/providers/deepseek.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/deepseek.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/providers/deepseek.md',
           groupId: 'providers',
           groupTitle: 'Provedores',
           order: 20,
@@ -169,7 +169,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Visão Geral Da Arquitetura',
           sourcePath: 'docs/pt-br/architecture/overview.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/overview.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/overview.md',
           groupId: 'architecture',
           groupTitle: 'Arquitetura',
           order: 10,
@@ -180,7 +180,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Arquitetura De Streaming',
           sourcePath: 'docs/pt-br/architecture/streaming.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/streaming.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/streaming.md',
           groupId: 'architecture',
           groupTitle: 'Arquitetura',
           order: 20,
@@ -191,7 +191,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Arquitetura De Continuação',
           sourcePath: 'docs/pt-br/architecture/continuation.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/continuation.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/continuation.md',
           groupId: 'architecture',
           groupTitle: 'Arquitetura',
           order: 30,
@@ -202,7 +202,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Compactação De Contexto',
           sourcePath: 'docs/pt-br/architecture/context-compaction.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/context-compaction.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/context-compaction.md',
           groupId: 'architecture',
           groupTitle: 'Arquitetura',
           order: 40,
@@ -213,7 +213,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Internacionalização (i18n)',
           sourcePath: 'docs/pt-br/architecture/i18n.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/i18n.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/i18n.md',
           groupId: 'architecture',
           groupTitle: 'Arquitetura',
           order: 50,
@@ -230,7 +230,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Referência da CLI',
           sourcePath: 'docs/pt-br/reference/cli.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/cli.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/cli.md',
           groupId: 'reference',
           groupTitle: 'Referência',
           order: 10,
@@ -241,7 +241,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Referência Da API',
           sourcePath: 'docs/pt-br/reference/api.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/api.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/api.md',
           groupId: 'reference',
           groupTitle: 'Referência',
           order: 20,
@@ -252,7 +252,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Estratégia De Testes',
           sourcePath: 'docs/pt-br/reference/testing.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/testing.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/testing.md',
           groupId: 'reference',
           groupTitle: 'Referência',
           order: 30,
@@ -263,7 +263,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Ferramentas',
           sourcePath: 'docs/pt-br/reference/tooling.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/tooling.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/tooling.md',
           groupId: 'reference',
           groupTitle: 'Referência',
           order: 40,
@@ -274,7 +274,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Playbooks De Agentes',
           sourcePath: 'docs/pt-br/reference/agent-playbooks.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/agent-playbooks.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/agent-playbooks.md',
           groupId: 'reference',
           groupTitle: 'Referência',
           order: 50,
@@ -285,7 +285,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Releases',
           sourcePath: 'docs/pt-br/reference/releasing.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/releasing.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/releasing.md',
           groupId: 'reference',
           groupTitle: 'Referência',
           order: 60,
@@ -302,7 +302,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Deploy',
           sourcePath: 'docs/pt-br/operations/deployment.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/deployment.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/operations/deployment.md',
           groupId: 'operations',
           groupTitle: 'Operações',
           order: 10,
@@ -313,7 +313,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Política De Segurança',
           sourcePath: 'docs/pt-br/operations/security.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/security.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/operations/security.md',
           groupId: 'operations',
           groupTitle: 'Operações',
           order: 20,
@@ -332,7 +332,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Quickstart',
           sourcePath: 'README.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/README.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/README.md',
           groupId: 'getting-started',
           groupTitle: 'Getting Started',
           order: 10,
@@ -349,7 +349,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Contributing to MangoStudio',
           sourcePath: '.github/CONTRIBUTING.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/CONTRIBUTING.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/.github/CONTRIBUTING.md',
           groupId: 'guides',
           groupTitle: 'Guides',
           order: 10,
@@ -360,7 +360,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Contributor Quickstart',
           sourcePath: 'docs/guides/contributor-quickstart.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/guides/contributor-quickstart.md',
           groupId: 'guides',
           groupTitle: 'Guides',
           order: 20,
@@ -377,7 +377,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Settings Architecture',
           sourcePath: 'docs/features/settings.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/settings.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/settings.md',
           groupId: 'features',
           groupTitle: 'Features',
           order: 10,
@@ -388,7 +388,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Tools System',
           sourcePath: 'docs/features/tools.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/tools.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/tools.md',
           groupId: 'features',
           groupTitle: 'Features',
           order: 20,
@@ -399,7 +399,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Attachments',
           sourcePath: 'docs/features/attachments.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/attachments.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/attachments.md',
           groupId: 'features',
           groupTitle: 'Features',
           order: 30,
@@ -410,7 +410,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Image Generation',
           sourcePath: 'docs/features/image-generation.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/image-generation.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/image-generation.md',
           groupId: 'features',
           groupTitle: 'Features',
           order: 40,
@@ -427,7 +427,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Provider Development Guide',
           sourcePath: 'docs/providers/development.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/development.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/providers/development.md',
           groupId: 'providers',
           groupTitle: 'Providers',
           order: 10,
@@ -438,7 +438,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'DeepSeek Provider',
           sourcePath: 'docs/providers/deepseek.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/deepseek.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/providers/deepseek.md',
           groupId: 'providers',
           groupTitle: 'Providers',
           order: 20,
@@ -455,7 +455,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Architecture Overview',
           sourcePath: 'docs/architecture/overview.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/overview.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/overview.md',
           groupId: 'architecture',
           groupTitle: 'Architecture',
           order: 10,
@@ -466,7 +466,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Streaming Architecture',
           sourcePath: 'docs/architecture/streaming.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/streaming.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/streaming.md',
           groupId: 'architecture',
           groupTitle: 'Architecture',
           order: 20,
@@ -477,7 +477,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Continuation Architecture',
           sourcePath: 'docs/architecture/continuation.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/continuation.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/continuation.md',
           groupId: 'architecture',
           groupTitle: 'Architecture',
           order: 30,
@@ -488,7 +488,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Context Compaction',
           sourcePath: 'docs/architecture/context-compaction.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/context-compaction.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/context-compaction.md',
           groupId: 'architecture',
           groupTitle: 'Architecture',
           order: 40,
@@ -499,7 +499,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Internationalization (i18n)',
           sourcePath: 'docs/architecture/i18n.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/i18n.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/i18n.md',
           groupId: 'architecture',
           groupTitle: 'Architecture',
           order: 50,
@@ -516,7 +516,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'CLI Reference',
           sourcePath: 'docs/reference/cli.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/cli.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/cli.md',
           groupId: 'reference',
           groupTitle: 'Reference',
           order: 10,
@@ -527,7 +527,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'API Reference',
           sourcePath: 'docs/reference/api.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/api.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/api.md',
           groupId: 'reference',
           groupTitle: 'Reference',
           order: 20,
@@ -538,7 +538,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Testing Strategy',
           sourcePath: 'docs/reference/testing.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/testing.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/testing.md',
           groupId: 'reference',
           groupTitle: 'Reference',
           order: 30,
@@ -549,7 +549,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Tooling',
           sourcePath: 'docs/reference/tooling.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/tooling.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/tooling.md',
           groupId: 'reference',
           groupTitle: 'Reference',
           order: 40,
@@ -560,7 +560,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Agent Playbooks',
           sourcePath: 'docs/reference/agent-playbooks.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/agent-playbooks.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/agent-playbooks.md',
           groupId: 'reference',
           groupTitle: 'Reference',
           order: 50,
@@ -571,7 +571,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Releasing',
           sourcePath: 'docs/reference/releasing.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/releasing.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/releasing.md',
           groupId: 'reference',
           groupTitle: 'Reference',
           order: 60,
@@ -588,7 +588,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Deployment',
           sourcePath: 'docs/operations/deployment.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/operations/deployment.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/operations/deployment.md',
           groupId: 'operations',
           groupTitle: 'Operations',
           order: 10,
@@ -599,7 +599,7 @@ export const DOCS_NAV = {
           sidebarLabel: 'Security Policy',
           sourcePath: '.github/SECURITY.md',
           sourceUrl:
-            'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/SECURITY.md',
+            'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/.github/SECURITY.md',
           groupId: 'operations',
           groupTitle: 'Operations',
           order: 20,
@@ -617,7 +617,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Início rápido',
       sourcePath: 'docs/pt-br/README.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/README.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/README.md',
       groupId: 'getting-started',
       groupTitle: 'Começando',
       order: 10,
@@ -628,7 +628,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Contribuindo com o MangoStudio',
       sourcePath: 'docs/pt-br/CONTRIBUTING.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/CONTRIBUTING.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/CONTRIBUTING.md',
       groupId: 'guides',
       groupTitle: 'Guias',
       order: 10,
@@ -639,7 +639,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Início Rápido Para Contribuidores',
       sourcePath: 'docs/pt-br/guides/contributor-quickstart.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/guides/contributor-quickstart.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/guides/contributor-quickstart.md',
       groupId: 'guides',
       groupTitle: 'Guias',
       order: 20,
@@ -650,7 +650,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Arquitetura De Settings',
       sourcePath: 'docs/pt-br/features/settings.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/settings.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/settings.md',
       groupId: 'features',
       groupTitle: 'Recursos',
       order: 10,
@@ -661,7 +661,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Sistema De Tools',
       sourcePath: 'docs/pt-br/features/tools.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/tools.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/tools.md',
       groupId: 'features',
       groupTitle: 'Recursos',
       order: 20,
@@ -672,7 +672,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Attachments',
       sourcePath: 'docs/pt-br/features/attachments.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/attachments.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/attachments.md',
       groupId: 'features',
       groupTitle: 'Recursos',
       order: 30,
@@ -683,7 +683,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Geração De Imagem',
       sourcePath: 'docs/pt-br/features/image-generation.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/image-generation.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/features/image-generation.md',
       groupId: 'features',
       groupTitle: 'Recursos',
       order: 40,
@@ -694,7 +694,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Guia De Desenvolvimento De Provedores',
       sourcePath: 'docs/pt-br/providers/development.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/development.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/providers/development.md',
       groupId: 'providers',
       groupTitle: 'Provedores',
       order: 10,
@@ -705,7 +705,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Provedor DeepSeek',
       sourcePath: 'docs/pt-br/providers/deepseek.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/deepseek.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/providers/deepseek.md',
       groupId: 'providers',
       groupTitle: 'Provedores',
       order: 20,
@@ -716,7 +716,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Visão Geral Da Arquitetura',
       sourcePath: 'docs/pt-br/architecture/overview.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/overview.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/overview.md',
       groupId: 'architecture',
       groupTitle: 'Arquitetura',
       order: 10,
@@ -727,7 +727,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Arquitetura De Streaming',
       sourcePath: 'docs/pt-br/architecture/streaming.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/streaming.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/streaming.md',
       groupId: 'architecture',
       groupTitle: 'Arquitetura',
       order: 20,
@@ -738,7 +738,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Arquitetura De Continuação',
       sourcePath: 'docs/pt-br/architecture/continuation.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/continuation.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/continuation.md',
       groupId: 'architecture',
       groupTitle: 'Arquitetura',
       order: 30,
@@ -749,7 +749,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Compactação De Contexto',
       sourcePath: 'docs/pt-br/architecture/context-compaction.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/context-compaction.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/context-compaction.md',
       groupId: 'architecture',
       groupTitle: 'Arquitetura',
       order: 40,
@@ -760,7 +760,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Internacionalização (i18n)',
       sourcePath: 'docs/pt-br/architecture/i18n.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/i18n.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/architecture/i18n.md',
       groupId: 'architecture',
       groupTitle: 'Arquitetura',
       order: 50,
@@ -771,7 +771,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Referência da CLI',
       sourcePath: 'docs/pt-br/reference/cli.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/cli.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/cli.md',
       groupId: 'reference',
       groupTitle: 'Referência',
       order: 10,
@@ -782,7 +782,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Referência Da API',
       sourcePath: 'docs/pt-br/reference/api.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/api.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/api.md',
       groupId: 'reference',
       groupTitle: 'Referência',
       order: 20,
@@ -793,7 +793,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Estratégia De Testes',
       sourcePath: 'docs/pt-br/reference/testing.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/testing.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/testing.md',
       groupId: 'reference',
       groupTitle: 'Referência',
       order: 30,
@@ -804,7 +804,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Ferramentas',
       sourcePath: 'docs/pt-br/reference/tooling.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/tooling.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/tooling.md',
       groupId: 'reference',
       groupTitle: 'Referência',
       order: 40,
@@ -815,7 +815,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Playbooks De Agentes',
       sourcePath: 'docs/pt-br/reference/agent-playbooks.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/agent-playbooks.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/agent-playbooks.md',
       groupId: 'reference',
       groupTitle: 'Referência',
       order: 50,
@@ -826,7 +826,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Releases',
       sourcePath: 'docs/pt-br/reference/releasing.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/releasing.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/releasing.md',
       groupId: 'reference',
       groupTitle: 'Referência',
       order: 60,
@@ -837,7 +837,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Deploy',
       sourcePath: 'docs/pt-br/operations/deployment.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/deployment.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/operations/deployment.md',
       groupId: 'operations',
       groupTitle: 'Operações',
       order: 10,
@@ -848,7 +848,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Política De Segurança',
       sourcePath: 'docs/pt-br/operations/security.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/security.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/operations/security.md',
       groupId: 'operations',
       groupTitle: 'Operações',
       order: 20,
@@ -861,7 +861,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Quickstart',
       sourcePath: 'README.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/README.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/README.md',
       groupId: 'getting-started',
       groupTitle: 'Getting Started',
       order: 10,
@@ -872,7 +872,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Contributing to MangoStudio',
       sourcePath: '.github/CONTRIBUTING.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/CONTRIBUTING.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/.github/CONTRIBUTING.md',
       groupId: 'guides',
       groupTitle: 'Guides',
       order: 10,
@@ -883,7 +883,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Contributor Quickstart',
       sourcePath: 'docs/guides/contributor-quickstart.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/guides/contributor-quickstart.md',
       groupId: 'guides',
       groupTitle: 'Guides',
       order: 20,
@@ -894,7 +894,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Settings Architecture',
       sourcePath: 'docs/features/settings.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/settings.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/settings.md',
       groupId: 'features',
       groupTitle: 'Features',
       order: 10,
@@ -905,7 +905,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Tools System',
       sourcePath: 'docs/features/tools.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/tools.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/tools.md',
       groupId: 'features',
       groupTitle: 'Features',
       order: 20,
@@ -916,7 +916,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Attachments',
       sourcePath: 'docs/features/attachments.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/attachments.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/attachments.md',
       groupId: 'features',
       groupTitle: 'Features',
       order: 30,
@@ -927,7 +927,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Image Generation',
       sourcePath: 'docs/features/image-generation.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/image-generation.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/features/image-generation.md',
       groupId: 'features',
       groupTitle: 'Features',
       order: 40,
@@ -938,7 +938,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Provider Development Guide',
       sourcePath: 'docs/providers/development.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/development.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/providers/development.md',
       groupId: 'providers',
       groupTitle: 'Providers',
       order: 10,
@@ -949,7 +949,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'DeepSeek Provider',
       sourcePath: 'docs/providers/deepseek.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/deepseek.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/providers/deepseek.md',
       groupId: 'providers',
       groupTitle: 'Providers',
       order: 20,
@@ -960,7 +960,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Architecture Overview',
       sourcePath: 'docs/architecture/overview.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/overview.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/overview.md',
       groupId: 'architecture',
       groupTitle: 'Architecture',
       order: 10,
@@ -971,7 +971,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Streaming Architecture',
       sourcePath: 'docs/architecture/streaming.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/streaming.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/streaming.md',
       groupId: 'architecture',
       groupTitle: 'Architecture',
       order: 20,
@@ -982,7 +982,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Continuation Architecture',
       sourcePath: 'docs/architecture/continuation.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/continuation.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/continuation.md',
       groupId: 'architecture',
       groupTitle: 'Architecture',
       order: 30,
@@ -993,7 +993,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Context Compaction',
       sourcePath: 'docs/architecture/context-compaction.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/context-compaction.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/context-compaction.md',
       groupId: 'architecture',
       groupTitle: 'Architecture',
       order: 40,
@@ -1004,7 +1004,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Internationalization (i18n)',
       sourcePath: 'docs/architecture/i18n.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/i18n.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/architecture/i18n.md',
       groupId: 'architecture',
       groupTitle: 'Architecture',
       order: 50,
@@ -1015,7 +1015,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'CLI Reference',
       sourcePath: 'docs/reference/cli.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/cli.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/cli.md',
       groupId: 'reference',
       groupTitle: 'Reference',
       order: 10,
@@ -1026,7 +1026,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'API Reference',
       sourcePath: 'docs/reference/api.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/api.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/api.md',
       groupId: 'reference',
       groupTitle: 'Reference',
       order: 20,
@@ -1037,7 +1037,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Testing Strategy',
       sourcePath: 'docs/reference/testing.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/testing.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/testing.md',
       groupId: 'reference',
       groupTitle: 'Reference',
       order: 30,
@@ -1048,7 +1048,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Tooling',
       sourcePath: 'docs/reference/tooling.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/tooling.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/tooling.md',
       groupId: 'reference',
       groupTitle: 'Reference',
       order: 40,
@@ -1059,7 +1059,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Agent Playbooks',
       sourcePath: 'docs/reference/agent-playbooks.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/agent-playbooks.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/agent-playbooks.md',
       groupId: 'reference',
       groupTitle: 'Reference',
       order: 50,
@@ -1070,7 +1070,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Releasing',
       sourcePath: 'docs/reference/releasing.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/releasing.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/reference/releasing.md',
       groupId: 'reference',
       groupTitle: 'Reference',
       order: 60,
@@ -1081,7 +1081,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Deployment',
       sourcePath: 'docs/operations/deployment.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/operations/deployment.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/operations/deployment.md',
       groupId: 'operations',
       groupTitle: 'Operations',
       order: 10,
@@ -1092,7 +1092,7 @@ export const DOCS_BY_SLUG = {
       sidebarLabel: 'Security Policy',
       sourcePath: '.github/SECURITY.md',
       sourceUrl:
-        'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/SECURITY.md',
+        'https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/.github/SECURITY.md',
       groupId: 'operations',
       groupTitle: 'Operations',
       order: 20,

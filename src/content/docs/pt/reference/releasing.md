@@ -7,8 +7,8 @@ groupId: "reference"
 groupTitle: "Referência"
 order: 60
 sourcePath: "docs/pt-br/reference/releasing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/releasing.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/c8a260ecd3cf98c5fb630b756a93afe762cb2af8/docs/pt-br/reference/releasing.md"
+sourceCommit: "c8a260ecd3cf98c5fb630b756a93afe762cb2af8"
 ---
 
 # Releases
@@ -26,13 +26,14 @@ changelog é gerado a partir de Conventional Commits com
 Configure os secrets abaixo e faça push de uma tag semver assinada (`v0.2.0`) —
 esse é o procedimento completo de release. O workflow valida lockstep de versão,
 gera todos os artefatos, publica cada canal de forma independente e faz commit de
-`CHANGELOG.md` de volta em `main`.
+`CHANGELOG.md` de volta em `main` via push direto ou PR criada pela API REST.
 
 | Secret                      | Usado por                                                | Escopo                                                                                                                                      |
 | --------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NPM_TOKEN`                 | `npm-publish`, `npm-canary`                              | Direitos de publicação em `mangostudio` e `@mangostudio/cli-*`                                                                              |
 | `DIST_REPOS_TOKEN`          | `homebrew`, `scoop`                                      | PAT fine-grained com contents read/write em `juliopolycarpo/homebrew-tap` e `juliopolycarpo/scoop-bucket`                                   |
 | `CARGO_REGISTRY_TOKEN`      | `cargo-publish`, `crates-canary`                         | Fallback temporário no crates.io até Trusted Publishing estar registrado e verificado para o crate `mangostudio`                            |
+| `CHANGELOG_PR_TOKEN`        | `update-changelog`                                       | PAT fine-grained com pull requests read/write neste repositório; usado só quando a proteção de branch rejeita o push direto do changelog    |
 | *(built-in `GITHUB_TOKEN`)* | `github-release`, `docker`, o canal canary, attestations | Sem setup extra — o workflow concede `packages: write` para GHCR; `cargo-publish`/`crates-canary` concedem `id-token: write` para OIDC auth |
 
 ### Checklist de setup único
@@ -43,28 +44,33 @@ Complete uma vez por fork ou org antes do primeiro push de tag:
 2. Crie o bucket Scoop compartilhado [`juliopolycarpo/scoop-bucket`](https://github.com/juliopolycarpo/scoop-bucket) com diretório `bucket/`.
 3. Reserve o nome do crate `mangostudio` no [crates.io](https://crates.io) e gere um token de API para o primeiro publish.
 4. Configure Trusted Publishing no crates.io para o crate `mangostudio`: **Settings -> Trusted Publishing -> Add -> GitHub**, repository owner `juliopolycarpo`, repository name `mangostudio`, workflow filename `release.yml`, sem environment a menos que o job de release passe a usar um GitHub environment.
-5. Adicione os repo secrets (`NPM_TOKEN`, `DIST_REPOS_TOKEN` e o fallback temporário `CARGO_REGISTRY_TOKEN`) neste repositório.
+5. Adicione os repo secrets (`NPM_TOKEN`, `DIST_REPOS_TOKEN`, `CHANGELOG_PR_TOKEN` e o fallback temporário `CARGO_REGISTRY_TOKEN`) neste repositório.
 6. Depois que uma release provar que `cargo-publish` gerou o token de Trusted Publishing, remova o secret `CARGO_REGISTRY_TOKEN`. Até lá, o job usa o secret como fallback se o crates.io ainda não aceitar o publisher OIDC.
 7. Após o primeiro push no GHCR, defina a visibilidade do pacote `ghcr.io/juliopolycarpo/mangostudio` como **public** nas configurações de pacotes do GitHub.
-8. Garanta que a proteção de branch permita ao bot de release fazer push de `CHANGELOG.md` em `main` (`contents: write` no workflow).
+8. Não é preciso afrouxar a proteção de branch para o changelog: o job `update-changelog` faz push direto de `CHANGELOG.md` em `main` quando possível (`contents: write`) e, se a proteção rejeitar o push, cria uma PR com `CHANGELOG_PR_TOKEN` pela API REST do GitHub. Revise e faça merge dessa PR depois que os checks passarem.
 
 ## Nomenclatura de assets de release
 
-Todo canal downstream (Homebrew, Scoop, launcher Cargo, instaladores shell)
-codifica estes nomes públicos de assets. Não os renomeie sem atualizar todos os
-templates e instaladores na mesma release.
+Todo canal downstream (Homebrew, Scoop, launcher Cargo, os scripts de
+instalação do mangostudio.dev) codifica estes nomes públicos de assets. Não os
+renomeie sem atualizar todos os templates e instaladores na mesma release.
 
-| Asset                                        | Notas                                       |
-| -------------------------------------------- | ------------------------------------------- |
-| `mangostudio-<version>-<platform>.tar.gz`    | Plataformas Linux e macOS                   |
-| `mangostudio-<version>-<platform>.zip`       | Plataformas Windows                         |
-| `mangostudio-<version>-frontend-dist.tar.gz` | Bundle do frontend apenas                   |
-| `install.sh` / `install.ps1`                 | Instaladores copiados de `scripts/install/` |
-| `SHA256SUMS`                                 | Checksums de todos os assets acima          |
+| Asset                                        | Notas                              |
+| -------------------------------------------- | ---------------------------------- |
+| `mangostudio-<version>-<platform>.tar.gz`    | Plataformas Linux e macOS          |
+| `mangostudio-<version>-<platform>.zip`       | Plataformas Windows                |
+| `mangostudio-<version>-frontend-dist.tar.gz` | Bundle do frontend apenas          |
+| `SHA256SUMS`                                 | Checksums de todos os assets acima |
 
 Cada arquivo de plataforma tem **raiz plana**: `mangostudio` (ou
 `mangostudio.exe`), `public/` e `README.md` — sem diretório de plataforma
 aninhado.
+
+Os scripts de instalação **não** são assets de release. Os instaladores
+canônicos ficam hospedados em [mangostudio.dev](https://mangostudio.dev)
+(`install.sh` / `install.ps1`) e baixam os arquivos de plataforma acima,
+verificando-os contra `SHA256SUMS`. O repositório mantém
+`scripts/install/install.sh` apenas como fixture de teste do dry-run.
 
 ## Fonte da versão
 
