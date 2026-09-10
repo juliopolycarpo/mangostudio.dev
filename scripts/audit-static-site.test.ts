@@ -517,6 +517,10 @@ run('validateCacheHeaders accepts the required static asset cache rules', () => 
 
 /install.ps1
   Cache-Control: public, max-age=300, must-revalidate
+
+/protocol/schema/1/*
+  Cache-Control: public, max-age=3600, must-revalidate
+  Access-Control-Allow-Origin: *
 `),
     []
   );
@@ -556,6 +560,9 @@ run('validateCacheHeaders rejects immutable on short-lived stable assets', () =>
 
 /install.ps1
   Cache-Control: public, max-age=300, must-revalidate, immutable
+
+/protocol/schema/1/*
+  Cache-Control: public, max-age=3600, must-revalidate
 `);
 
   deepStrictEqual(errors, [
@@ -585,6 +592,9 @@ run('validateCacheHeaders accepts long-lived cache rules for hashed image URLs',
 
 /install.ps1
   Cache-Control: public, max-age=300, must-revalidate
+
+/protocol/schema/1/*
+  Cache-Control: public, max-age=3600, must-revalidate
 `),
     []
   );
