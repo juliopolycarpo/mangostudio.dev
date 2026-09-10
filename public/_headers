@@ -12,3 +12,8 @@
 
 /install.ps1
   Cache-Control: public, max-age=300, must-revalidate
+
+/protocol/schema/1/*
+  Cache-Control: public, max-age=3600, must-revalidate
+  Access-Control-Allow-Origin: *
+  Content-Type: application/schema+json; charset=utf-8

@@ -62,6 +62,7 @@ export const REQUIRED_CACHE_HEADER_RULES: readonly CacheHeaderRule[] = [
   { path: '/site.webmanifest', cacheControl: 'public, max-age=3600, must-revalidate' },
   { path: '/install.sh', cacheControl: 'public, max-age=300, must-revalidate' },
   { path: '/install.ps1', cacheControl: 'public, max-age=300, must-revalidate' },
+  { path: '/protocol/schema/1/*', cacheControl: 'public, max-age=3600, must-revalidate' },
 ];
 const REQUIRED_CACHE_HEADER_PATHS = new Set(REQUIRED_CACHE_HEADER_RULES.map((rule) => rule.path));
 
