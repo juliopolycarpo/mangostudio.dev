@@ -94,14 +94,14 @@ async function docsPaths(page: Page, prefix: string): Promise<string[]> {
   return Array.from(new Set([`${prefix}/docs/quickstart`, ...hrefs]));
 }
 
-test.describe('docs code comment contrast', () => {
+test.describe('docs code token contrast', () => {
   for (const locale of LOCALES) {
     for (const theme of THEMES) {
       test(`${locale.name} ${theme}: code tokens reach ${MIN_TEXT_CONTRAST}:1 on the block`, async ({
         page,
       }) => {
         const paths = await docsPaths(page, locale.prefix);
-        let commentSpans = 0;
+        let commentSpans = 0; // sanity check that comment tokens exist; every token is asserted
         const failures: string[] = [];
 
         for (const path of paths) {
