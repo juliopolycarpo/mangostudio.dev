@@ -8,6 +8,8 @@ import { routes } from '../src/i18n/ui';
 import { isNotFoundUrl } from './localized-not-found';
 
 const CANONICAL_ORIGIN = 'https://mangostudio.dev';
+/** Search snippets cut off near this length; the docs sync derives descriptions within it. */
+const DOCS_DESCRIPTION_MAX_LENGTH = 160;
 /** Flat error pages Cloudflare's `404-page` handling serves per locale. */
 const NOT_FOUND_PAGES: readonly { file: string; lang: Lang; home: string }[] = [
   { file: '404.html', lang: 'pt', home: routes.home('pt') },
@@ -226,6 +228,7 @@ async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
     await smokeLinkCrawl(distDir),
     await smokeNoPrefetch(distDir),
     await smokeTrailingSlashHrefs(distDir),
+    await smokeDocsDescriptions(distDir),
   ];
 }
 
@@ -832,6 +835,87 @@ async function smokeTrailingSlashHrefs(distDir: string): Promise<SmokeSection> {
   }
 
   return { name: 'Trailing-slash internal hrefs', errors };
+}
+
+/** The `<meta name="description">` content of a page, or undefined when it has none. */
+export function extractMetaDescription(html: string): string | undefined {
+  return extractMetaTags(html)
+    .find((attrs) => attrs.get('name')?.toLowerCase() === 'description')
+    ?.get('content');
+}
+
+/**
+ * Check every docs page of one locale carries its own description: present, not the locale
+ * home description, unique among the locale's docs, and within the search-snippet budget.
+ *
+ * @example
+ * validateDocsDescriptions('pt', 'Home.', [{ file: 'docs/a/index.html', description: 'Home.' }]);
+ * // => ['dist/docs/a/index.html expected a description distinct from the pt home page | ...']
+ */
+export function validateDocsDescriptions(
+  lang: Lang,
+  homeDescription: string | undefined,
+  pages: readonly { file: string; description: string | undefined }[],
+  maxLength = DOCS_DESCRIPTION_MAX_LENGTH
+): string[] {
+  const errors: string[] = [];
+  const firstFileByDescription = new Map<string, string>();
+
+  for (const { file, description } of pages) {
+    const label = `dist/${file}`;
+
+    if (!description) {
+      errors.push(`${label} expected a meta description | received: ${description}`);
+      continue;
+    }
+
+    if (description === homeDescription) {
+      errors.push(
+        `${label} expected a description distinct from the ${lang} home page | received: ${JSON.stringify(description)}`
+      );
+    }
+
+    if (description.length > maxLength) {
+      errors.push(
+        `${label} expected a description of at most ${maxLength} chars | received ${description.length}`
+      );
+    }
+
+    const first = firstFileByDescription.get(description);
+
+    if (first) {
+      errors.push(
+        `${label} expected a description unique within ${lang} | received the same as dist/${first}: ${JSON.stringify(description)}`
+      );
+    }
+
+    firstFileByDescription.set(description, first ?? file);
+  }
+
+  return errors;
+}
+
+async function smokeDocsDescriptions(distDir: string): Promise<SmokeSection> {
+  const errors: string[] = [];
+
+  for (const lang of ['pt', 'en'] as const) {
+    const homeFile = routeToDistFile(routes.home(lang));
+    const homeDescription = extractMetaDescription(
+      await readTextFile(join(distDir, homeFile), errors)
+    );
+    const pages: { file: string; description: string | undefined }[] = [];
+
+    for (const slug of deriveDocSlugs(DOCS_BY_LANG[lang])) {
+      const file = routeToDistFile(routes.doc(lang, slug));
+      const html = await readTextFile(join(distDir, file), errors);
+
+      pages.push({ file, description: html ? extractMetaDescription(html) : undefined });
+    }
+
+    errors.push(...validateDocsDescriptions(lang, homeDescription, pages));
+  }
+
+  return { name: 'Docs descriptions', errors };
 }
 
 async function findDistFiles(distDir: string, extension: string): Promise<string[]> {
