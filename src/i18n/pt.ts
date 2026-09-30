@@ -240,5 +240,12 @@ export const pt = {
     '▸ providers gemini · openai · anthropic  ✓',
     '▸ ready ── http://localhost:3001',
   ],
+  notFound: {
+    title: 'Página não encontrada — MangoStudio',
+    heading: 'Página não encontrada',
+    body: 'A página que você procura não existe ou foi movida.',
+    home: 'Voltar ao início',
+    docs: 'Ler os docs',
+  },
   langToggle: { pt: 'PT', en: 'EN' },
 } satisfies SiteContent;

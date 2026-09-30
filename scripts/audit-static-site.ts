@@ -42,6 +42,7 @@ const DIST_EXPECTED_FILES = [
   'docs/quickstart/index.html',
   'en/docs/quickstart/index.html',
   '404.html',
+  'en/404.html',
   'site.webmanifest',
   'sitemap-index.xml',
   '_headers',

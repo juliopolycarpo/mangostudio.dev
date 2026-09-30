@@ -1,6 +1,7 @@
 // @ts-check
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
+import { flatLocalizedNotFound, isNotFoundUrl } from './scripts/localized-not-found.ts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -29,5 +30,7 @@ export default defineConfig({
     '/en/docs': '/en/docs/quickstart',
   },
   // Fully static output — no adapter. Cloudflare serves ./dist as Workers static assets.
-  integrations: [sitemap()],
+  // The error pages are noindex, so keep them out of the sitemap; `en/404.html` is emitted flat
+  // so Cloudflare's nearest-404 lookup finds it for /en/* misses.
+  integrations: [sitemap({ filter: (page) => !isNotFoundUrl(page) }), flatLocalizedNotFound('en')],
 });
