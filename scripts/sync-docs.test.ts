@@ -56,6 +56,63 @@ const UPSTREAM_QUICKSTART = {
   ].join('\n'),
 };
 
+const UPSTREAM_PS1 =
+  'https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.ps1';
+
+/** Current upstream shape: its own PowerShell row and block, plus a paragraph naming the mirrors. */
+const CURRENT_UPSTREAM_QUICKSTART = {
+  en: [
+    '# MangoStudio',
+    '',
+    '| Channel | Command |',
+    '| --- | --- |',
+    `| PowerShell (Windows) | \`irm ${UPSTREAM_PS1} \\| iex\` |`,
+    '| Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio` |',
+    `| Shell installer | \`curl -fsSL ${UPSTREAM_SH} \\| bash\` |`,
+    '',
+    '```bash',
+    `curl -fsSL ${UPSTREAM_SH} | bash`,
+    '```',
+    '',
+    'On Windows, run the PowerShell installer:',
+    '',
+    '```powershell',
+    `irm ${UPSTREAM_PS1} | iex`,
+    '```',
+    '',
+    'or use Scoop (see table above).',
+    '',
+    'Both install scripts ship as release assets;',
+    'the copies at `https://mangostudio.dev/install.sh` and `install.ps1` mirror them.',
+    '',
+  ].join('\n'),
+  pt: [
+    '# MangoStudio',
+    '',
+    '| Canal | Comando |',
+    '| --- | --- |',
+    `| PowerShell (Windows) | \`irm ${UPSTREAM_PS1} \\| iex\` |`,
+    '| Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio` |',
+    `| Instalador shell | \`curl -fsSL ${UPSTREAM_SH} \\| bash\` |`,
+    '',
+    '```bash',
+    `curl -fsSL ${UPSTREAM_SH} | bash`,
+    '```',
+    '',
+    'No Windows, execute o instalador PowerShell:',
+    '',
+    '```powershell',
+    `irm ${UPSTREAM_PS1} | iex`,
+    '```',
+    '',
+    'ou use Scoop (veja a tabela acima).',
+    '',
+    'Os dois scripts são assets de release; as cópias em `https://mangostudio.dev/install.sh` e',
+    '`install.ps1` são espelhos.',
+    '',
+  ].join('\n'),
+};
+
 await run('sanitizeMarkdown removes externally loaded images while preserving badge links', () => {
   strictEqual(
     sanitizeMarkdown(`<div align="center">
@@ -459,6 +516,107 @@ await run('assertHostedInstallers rejects a leftover upstream Windows paragraph'
     `expected error naming the leftover upstream text | received: ${JSON.stringify(message)}`
   );
 });
+
+for (const lang of ['en', 'pt'] as const) {
+  await run(`applyHostedInstallers hosts current upstream (${lang}) without duplicating`, () => {
+    const output = applyHostedInstallers(CURRENT_UPSTREAM_QUICKSTART[lang], lang);
+    const count = (needle: string): number => output.split(needle).length - 1;
+
+    strictEqual(
+      count('| PowerShell (Windows)'),
+      1,
+      `expected 1 PowerShell table row | received: ${count('| PowerShell (Windows)')}\n${output}`
+    );
+    strictEqual(
+      count('```powershell'),
+      1,
+      `expected 1 powershell block | received: ${count('```powershell')}\n${output}`
+    );
+    ok(
+      !output.includes('releases/latest/download/install'),
+      `expected no release-asset installer URL | received: ${output}`
+    );
+    ok(
+      output.includes('irm https://mangostudio.dev/install.ps1 | iex') &&
+        output.includes('curl -fsSL https://mangostudio.dev/install.sh | bash'),
+      `expected hosted commands | received: ${output}`
+    );
+    ok(
+      output.includes('`https://mangostudio.dev/install.sh` e') ||
+        output.includes('`https://mangostudio.dev/install.sh` and `install.ps1` mirror'),
+      `expected mirror paragraph kept verbatim | received: ${output}`
+    );
+    strictEqual(
+      applyHostedInstallers(output, lang),
+      output,
+      'expected a second pass to be a no-op'
+    );
+    assertHostedInstallers(output, 'README.md');
+  });
+}
+
+await run('assertHostedInstallers accepts prose naming install.ps1 beside the hosted URL', () => {
+  const output = applyHostedInstallers(CURRENT_UPSTREAM_QUICKSTART.en, 'en');
+
+  assertHostedInstallers(
+    `${output}\nRun \`install.ps1 -Canary\` for the canary build.\n`,
+    'README.md'
+  );
+});
+
+await run('assertHostedInstallers rejects an installer fetched from another host', () => {
+  const hosted = applyHostedInstallers(CURRENT_UPSTREAM_QUICKSTART.en, 'en');
+  const unhosted = 'https://raw.example.com/mango/install.sh';
+  let message = '';
+
+  try {
+    assertHostedInstallers(`${hosted}\ncurl -fsSL ${unhosted} | bash\n`, 'README.md');
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+
+  ok(
+    message.includes(unhosted) && message.includes('README.md'),
+    `expected error naming ${unhosted} and README.md | received: ${JSON.stringify(message)}`
+  );
+});
+
+await run(
+  'syncDocs accepts current upstream quickstarts and leaves other docs untouched',
+  async () => {
+    const sourceDir = await createSourceFixture();
+    const repoRoot = await mkdtemp(join(tmpdir(), 'mango-site-'));
+    const releasing = `# CLI Reference\n\nCanonical asset: \`${UPSTREAM_SH}\`\n`;
+
+    try {
+      await writeFileWithDir(join(sourceDir, 'README.md'), CURRENT_UPSTREAM_QUICKSTART.en);
+      await writeFileWithDir(
+        join(sourceDir, 'docs/pt-br/README.md'),
+        CURRENT_UPSTREAM_QUICKSTART.pt
+      );
+      await writeFileWithDir(join(sourceDir, 'docs/reference/cli.md'), releasing);
+      await syncDocs({ sourceDir, repoRoot, sourceCommit: 'abc123' });
+
+      const quickstart = await readFile(
+        join(repoRoot, 'src/content/docs/en/quickstart.md'),
+        'utf8'
+      );
+      const cli = await readFile(join(repoRoot, 'src/content/docs/en/reference/cli.md'), 'utf8');
+
+      ok(
+        quickstart.includes('irm https://mangostudio.dev/install.ps1 | iex'),
+        `expected hosted PowerShell command in quickstart | received: ${quickstart}`
+      );
+      ok(
+        cli.includes(UPSTREAM_SH),
+        `expected non-quickstart docs to keep the upstream release-asset URL | received: ${cli}`
+      );
+    } finally {
+      await rm(sourceDir, { force: true, recursive: true });
+      await rm(repoRoot, { force: true, recursive: true });
+    }
+  }
+);
 
 await run('syncDocs reproduces hosted installers from upstream release-asset text', async () => {
   const sourceDir = await createSourceFixture();

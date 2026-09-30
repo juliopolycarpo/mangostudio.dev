@@ -33,15 +33,21 @@ const WINDOWS_PARAGRAPH: Record<Lang, { upstream: RegExp; hosted: string }> = {
 
 const POWERSHELL_TABLE_ROW = `| PowerShell (Windows) | \`${POWERSHELL_INSTALL_CMD.replaceAll('|', '\\|')}\` |`;
 const POWERSHELL_TABLE_ROW_PRESENT = /^\| PowerShell/m;
+/** Any URL that fetches an installer script, wherever it is hosted. */
+const INSTALLER_URL = /https?:\/\/[^\s`'")|\\]+\/install\.(?:sh|ps1)\b/g;
+/** Old upstream prose that sends Windows users to download `install.ps1` from the releases page. */
+const RELEASE_DOWNLOAD_PROSE = /`install\.ps1`[^`]{0,120}?\]\([^)]*\/releases\/latest\)/;
 const HOMEBREW_TABLE_ROW = /^\| Homebrew \(macOS\/Linux\)/m;
 
 /**
  * Point installer commands at the hosted endpoints owned by this site.
  *
  * Upstream documents `releases/latest/download/install.{sh,ps1}`, which the current release does
- * not publish; `public/install.{sh,ps1}` are canonical. Rewrites those URLs, adds the PowerShell
- * row to the install table, and swaps the upstream Windows paragraph for the hosted command.
- * Text that does not match the upstream wording is left untouched.
+ * not publish; `public/install.{sh,ps1}` are canonical. Rewrites those URLs, then adds whatever
+ * the upstream shape lacks: the PowerShell table row (only when no PowerShell row exists) and, for
+ * the older upstream wording that sent Windows users to the releases page, the hosted PowerShell
+ * block. Current upstream already carries both, so they are never duplicated, and already-hosted
+ * text passes through unchanged.
  *
  * @example
  * applyHostedInstallers('curl -fsSL https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh | bash', 'en');
@@ -65,26 +71,31 @@ export function applyHostedInstallers(markdown: string, lang: Lang): string {
 }
 
 /**
- * Fail loudly when a quickstart lacks the hosted installers or still carries upstream
- * release-asset installer text, so an upstream wording change cannot silently drop or mix the
- * site-owned PowerShell instructions.
+ * Fail loudly when a quickstart lacks the hosted installers or still tells readers to fetch an
+ * installer from anywhere else. Prose that merely names `install.ps1` next to the hosted URL is
+ * fine; an installer URL other than the hosted ones, or the old "download from the releases
+ * page" instruction, is not.
  *
  * @example
  * assertHostedInstallers(applyHostedInstallers(readme, 'en'), 'README.md');
  */
 export function assertHostedInstallers(markdown: string, sourcePath: string): void {
+  const hosted = [INSTALL_SH_URL, INSTALL_PS1_URL];
   const missing = [
     INSTALL_SH_URL,
     POWERSHELL_INSTALL_CMD,
     `\`\`\`powershell\n${POWERSHELL_INSTALL_CMD}\n\`\`\``,
   ].filter((expected) => !markdown.includes(expected));
-  const leftover = ['releases/latest/download/install', '`install.ps1`'].filter((upstream) =>
-    markdown.includes(upstream)
-  );
+  const leftover = [
+    ...(markdown.match(INSTALLER_URL) ?? []).filter((url) => !hosted.includes(url)),
+    ...(RELEASE_DOWNLOAD_PROSE.test(markdown)
+      ? ['`install.ps1` download from the releases page']
+      : []),
+  ];
 
   if (missing.length > 0 || leftover.length > 0) {
     throw new Error(
-      `Quickstart ${sourcePath} has unexpected installer content | missing: ${JSON.stringify(missing)} | leftover upstream text: ${JSON.stringify(leftover)} | expected: hosted install.sh and install.ps1 commands only; update scripts/sync-docs-installers.ts to match the upstream wording.`
+      `Quickstart ${sourcePath} has unexpected installer content | missing: ${JSON.stringify(missing)} | unhosted installer text: ${JSON.stringify(leftover)} | expected: only the hosted ${hosted.join(' and ')} installers; update scripts/sync-docs-installers.ts to match the upstream wording.`
     );
   }
 }
