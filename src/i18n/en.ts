@@ -128,9 +128,13 @@ export const en = {
   releases: {
     eyebrow: 'Changelog',
     title: 'Releases',
-    intro:
-      'Canary version and install command are synced from the MangoStudio release pipeline. Highlights are curated per release.',
-    latestBadge: 'canary version',
+    intro: {
+      canary:
+        'Canary version and install command are synced from the MangoStudio release pipeline. Highlights are curated per release.',
+      stable:
+        'Stable version and install command are synced from the MangoStudio release pipeline. Highlights are curated per release.',
+    },
+    latestBadge: { canary: 'canary version', stable: 'stable version' },
     groups: [
       {
         emoji: '🚀',
