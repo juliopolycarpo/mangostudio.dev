@@ -201,14 +201,6 @@ test.describe('layout stability while the bundle loads', () => {
 
   async function controlBoxes(page: Page): Promise<string[]> {
     await page.evaluate(() => document.fonts.ready);
-    // initCmdkHints narrows the fallback "Ctrl K / ⌘K" text to the platform's
-    // shortcut, which resizes the search buttons by design. Apply it up front so
-    // this test isolates the enhancement gate; that hint swap is not what it checks.
-    await page.evaluate(() => {
-      for (const hint of document.querySelectorAll<HTMLElement>('[data-cmdk-hint]')) {
-        hint.textContent = hint.dataset.hintOther ?? hint.textContent;
-      }
-    });
     return page.locator(CONTROLS).evaluateAll((els) =>
       els.map((el) => {
         const { x, y, width, height } = el.getBoundingClientRect();
