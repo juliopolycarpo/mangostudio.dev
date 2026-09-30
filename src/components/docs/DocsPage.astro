@@ -1,33 +1,28 @@
 ---
 import Icon from '@/components/Icon.astro';
-import type { DocsEntry } from '@/data/docs';
-import { docsNav, previousNextDocs } from '@/data/docs';
+import type { DocsEntry, DocsHeading } from '@/data/docs';
+import { docsNav, docsToc, previousNextDocs } from '@/data/docs';
 import { PALETTE_SHORTCUT } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
-
-interface Heading {
-  depth: number;
-  slug: string;
-  text: string;
-}
 
 interface Props {
   lang: Lang;
   content: SiteContent;
   entry: DocsEntry;
   Content: any;
-  headings: Heading[];
+  headings: DocsHeading[];
 }
 
 const { lang, content: c, entry, Content, headings } = Astro.props;
 const nav = docsNav(lang);
 const slug = entry.data.slug;
 const { previous, next } = previousNextDocs(lang, slug);
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const toc = docsToc(headings);
+const hasToc = toc.length > 0;
 ---
 
-<div class="docs">
+<div class:list={['docs', { 'has-toc': hasToc }]}>
   <aside class="docs-sidebar" aria-label={c.docs.navSummary}>
     <button
       type="button"
@@ -109,9 +104,9 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     </div>
   </article>
 
-  <aside class="docs-toc" aria-label={toc.length > 0 ? c.docs.tocTitle : undefined}>
-    {
-      toc.length > 0 && (
+  {
+    hasToc && (
+      <aside class="docs-toc" aria-label={c.docs.tocTitle}>
         <div class="docs-toc-inner">
           <div class="docs-toc-title">{c.docs.tocTitle}</div>
           <div class="docs-toc-list">
@@ -122,17 +117,23 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
             ))}
           </div>
         </div>
-      )
-    }
-  </aside>
+      </aside>
+    )
+  }
 </div>
 
 <style>
   .docs {
     display: grid;
-    grid-template-columns: 266px minmax(0, 1fr) 220px;
+    grid-template-columns: 266px minmax(0, 1fr);
     max-width: 1360px;
     margin: 0 auto;
+  }
+
+  /* Only pages with a table of contents reserve its column; the article takes the space
+     otherwise. */
+  .docs.has-toc {
+    grid-template-columns: 266px minmax(0, 1fr) 220px;
   }
 
   .docs-sidebar {
@@ -579,7 +580,8 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
   }
 
   @media (max-width: 1120px) {
-    .docs {
+    .docs,
+    .docs.has-toc {
       grid-template-columns: 266px minmax(0, 1fr);
     }
     .docs-toc {
@@ -588,7 +590,8 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
   }
 
   @media (max-width: 820px) {
-    .docs {
+    .docs,
+    .docs.has-toc {
       grid-template-columns: 1fr;
     }
     .docs-sidebar {
