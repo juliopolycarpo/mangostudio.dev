@@ -1,3 +1,5 @@
+import { revealEnhanced } from './enhance';
+
 const STORAGE_KEY = 'mango.theme';
 
 type Theme = 'dark' | 'light';
@@ -23,4 +25,5 @@ export function initTheme(): void {
   for (const btn of document.querySelectorAll('[data-theme-toggle]')) {
     btn.addEventListener('click', () => toggleTheme());
   }
+  revealEnhanced('theme');
 }

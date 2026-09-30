@@ -1,3 +1,5 @@
+import { revealEnhanced } from './enhance';
+
 let toastTimer: number | undefined;
 
 type ToastKind = 'success' | 'error';
@@ -45,4 +47,5 @@ export function initCopy(): void {
     const text = btn.dataset.copy ?? '';
     if (text) void copyText(text);
   });
+  revealEnhanced('copy');
 }

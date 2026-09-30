@@ -78,7 +78,14 @@ const nav = [
 
   <div class="spacer"></div>
 
-  <button type="button" class="search-btn" data-cmdk-open aria-haspopup="dialog">
+  <button
+    type="button"
+    class="search-btn"
+    data-cmdk-open
+    data-enhance="cmdk"
+    data-enhance-reserve
+    aria-haspopup="dialog"
+  >
     <Icon name="search" size={14} />
     <span class="search-label">{c.header.search}</span>
     <kbd

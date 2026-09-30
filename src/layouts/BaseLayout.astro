@@ -86,7 +86,9 @@ const ogImage = new URL(siteAssets.icon512.src, Astro.site).toString();
     <meta name="twitter:card" content="summary" />
     <meta name="theme-color" content="#0b0b0d" />
     <meta name="generator" content={Astro.generator} />
-    {/* No-FOUC theme + JS-enhancement flag; must run before first paint. */}
+    {/* No-FOUC theme + inline JS flag; must run before first paint. The flag is set before
+        the module bundle loads, so never gate hidden content on it: use data-enhance
+        (src/scripts/enhance.ts) or an initializer-set attribute instead. */}
     <script is:inline>
       (function () {
         try {
