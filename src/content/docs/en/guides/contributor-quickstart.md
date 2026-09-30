@@ -45,9 +45,9 @@ Default local URLs:
 ## 3. Know Where To Start
 
 - Read [`../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) for repository rules and routing.
-- Use [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) when you need a feature-by-feature file map.
-- Use [`../reference/testing.md`](/en/docs/reference/testing) before adding or changing behavior.
-- Use [`../architecture/overview.md`](/en/docs/architecture/overview) for the workspace and module layout.
+- Use [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) when you need a feature-by-feature file map.
+- Use [`../reference/testing.md`](/en/docs/reference/testing/) before adding or changing behavior.
+- Use [`../architecture/overview.md`](/en/docs/architecture/overview/) for the workspace and module layout.
 
 ## 4. Git Hooks
 
@@ -96,6 +96,6 @@ Pull requests are classified by `.github/labeler.yml`, and the `auto-assign.yml`
 
 ## 8. Related Docs
 
-- [`../../.github/CONTRIBUTING.md`](/en/docs/guides/contributing) for contribution policy and commit rules
-- [`../reference/api.md`](/en/docs/reference/api) for endpoint mapping
-- [`../operations/deployment.md`](/en/docs/operations/deployment) for standalone builds
+- [`../../.github/CONTRIBUTING.md`](/en/docs/guides/contributing/) for contribution policy and commit rules
+- [`../reference/api.md`](/en/docs/reference/api/) for endpoint mapping
+- [`../operations/deployment.md`](/en/docs/operations/deployment/) for standalone builds

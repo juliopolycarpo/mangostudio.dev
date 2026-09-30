@@ -29,11 +29,30 @@ export function localizePath(path: string, lang: Lang): string {
   return clean === '/' ? '/en/' : `/en${clean}`;
 }
 
-/** Convenience route builders so components never hand-assemble locale paths. */
+/**
+ * Give a page path its trailing slash, keeping any `?query` or `#fragment` after it.
+ * Pages are emitted as `<route>/index.html` and Cloudflare answers the slashless form with a
+ * redirect, so every internal href must already be the canonical slash form.
+ *
+ * @example withTrailingSlash('/docs/quickstart#install') // '/docs/quickstart/#install'
+ */
+export function withTrailingSlash(path: string): string {
+  const markerIndex = path.search(/[?#]/);
+  const pathPart = markerIndex === -1 ? path : path.slice(0, markerIndex);
+  const suffix = markerIndex === -1 ? '' : path.slice(markerIndex);
+  return `${pathPart.endsWith('/') ? pathPart : `${pathPart}/`}${suffix}`;
+}
+
+/**
+ * Convenience route builders so components never hand-assemble locale paths.
+ * Every builder returns the canonical trailing-slash URL.
+ *
+ * @example routes.doc('en', 'reference/cli') // '/en/docs/reference/cli/'
+ */
 export const routes = {
   home: (lang: Lang) => localizePath('/', lang),
-  releases: (lang: Lang) => localizePath('/releases', lang),
-  doc: (lang: Lang, id: string) => localizePath(`/docs/${id}`, lang),
+  releases: (lang: Lang) => localizePath(withTrailingSlash('/releases'), lang),
+  doc: (lang: Lang, id: string) => localizePath(withTrailingSlash(`/docs/${id}`), lang),
 };
 
 /** Drop the "/en" locale prefix, yielding the default-locale path ("/en/docs" → "/docs"). */

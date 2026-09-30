@@ -18,7 +18,7 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 
 AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, and Anthropic models.
 
-> 🇧🇷 [Leia em Português](/docs/quickstart)
+> 🇧🇷 [Leia em Português](/docs/quickstart/)
 
 ## Install
 
@@ -65,12 +65,12 @@ mangostudio doctor         # environment diagnostics
 ```
 
 Run `mangostudio` with no arguments for the full command list. See
-[`docs/reference/cli.md`](/en/docs/reference/cli) for details.
+[`docs/reference/cli.md`](/en/docs/reference/cli/) for details.
 
 On first run, `mangostudio serve` can generate a strong `BETTER_AUTH_SECRET` and store it in `~/.mango/.env` or `~/.mango/config.toml`.
 Set provider keys such as `GEMINI_API_KEY` when you are ready to use hosted models. Optional runtime settings include `API_HOST`, `API_PORT`, and `DATABASE_PATH`.
 See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) for the full environment.
-For container deployment details, see [`docs/operations/deployment.md`](/en/docs/operations/deployment#docker).
+For container deployment details, see [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Prerequisites
 
@@ -368,14 +368,14 @@ The `Messages` type is inferred directly from the `pt-BR.ts` dictionary (`as con
 ## Documentation
 
 - [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — docs hub, audiences, and reading order
-- [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart) — fastest contributor onboarding path
-- [`docs/architecture/continuation.md`](/en/docs/architecture/continuation) — continuation architecture deep-dive
-- [`docs/providers/development.md`](/en/docs/providers/development) — provider integration guide
-- [`docs/reference/cli.md`](/en/docs/reference/cli) — CLI commands and install channels
-- [`docs/reference/releasing.md`](/en/docs/reference/releasing) — release runbook and distribution channels
-- [`docs/reference/testing.md`](/en/docs/reference/testing) — testing strategy and harness rules
-- [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) — feature-by-feature file maps
-- [`.github/CONTRIBUTING.md`](/en/docs/guides/contributing) — contribution guidelines
+- [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — fastest contributor onboarding path
+- [`docs/architecture/continuation.md`](/en/docs/architecture/continuation/) — continuation architecture deep-dive
+- [`docs/providers/development.md`](/en/docs/providers/development/) — provider integration guide
+- [`docs/reference/cli.md`](/en/docs/reference/cli/) — CLI commands and install channels
+- [`docs/reference/releasing.md`](/en/docs/reference/releasing/) — release runbook and distribution channels
+- [`docs/reference/testing.md`](/en/docs/reference/testing/) — testing strategy and harness rules
+- [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) — feature-by-feature file maps
+- [`.github/CONTRIBUTING.md`](/en/docs/guides/contributing/) — contribution guidelines
 
 ## Standalone Build Notes
 

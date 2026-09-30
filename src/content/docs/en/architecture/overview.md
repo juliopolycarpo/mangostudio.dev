@@ -171,7 +171,7 @@ Provider Implementation (e.g., gemini/interactions-stream.ts)
 Provider Wire Format (Gemini / OpenAI / Anthropic / DeepSeek)
 ```
 
-See [`continuation.md`](/en/docs/architecture/continuation) for the full continuation architecture and [`../providers/development.md`](/en/docs/providers/development) for the provider integration guide.
+See [`continuation.md`](/en/docs/architecture/continuation/) for the full continuation architecture and [`../providers/development.md`](/en/docs/providers/development/) for the provider integration guide.
 
 ## Frontend Architecture
 

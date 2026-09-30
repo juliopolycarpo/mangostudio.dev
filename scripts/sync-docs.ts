@@ -4,6 +4,7 @@ import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
 import type { Lang } from '../src/i18n/types';
+import { routes } from '../src/i18n/ui';
 import { applyHostedInstallers, assertHostedInstallers } from './sync-docs-installers';
 
 const execFileAsync = promisify(execFile);
@@ -398,8 +399,7 @@ function rewriteHref(
   const targetDoc = pathPart.endsWith('.md') ? context.sourcePathMap.get(targetPath) : undefined;
 
   if (targetDoc) {
-    const prefix = targetDoc.lang === 'en' ? '/en' : '';
-    return `${prefix}/docs/${targetDoc.slug}${suffix}`;
+    return `${routes.doc(targetDoc.lang, targetDoc.slug)}${suffix}`;
   }
 
   return `${sourceBlobUrl(context.sourceCommit, targetPath)}${suffix}`;

@@ -67,20 +67,60 @@ export function deriveDocSlugs(groups: readonly DocRouteGroup[]): string[] {
   return [...slugs].sort();
 }
 
-export function redirectHtmlReferencesTarget(
-  html: string,
-  target: string,
-  canonicalOrigin = CANONICAL_ORIGIN
-): boolean {
-  const normalizedTarget = normalizeRoutePath(target);
-  const hrefs = extractAnchorHrefs(html);
-  const metaRefreshTargets = extractMetaRefreshTargets(html);
+/** Temporary (302) until the redirects are verified in production, then 301. */
+export const DOCS_REDIRECT_STATUS = 302;
 
-  return (
-    hrefs.includes(normalizedTarget) &&
-    metaRefreshTargets.includes(normalizedTarget) &&
-    html.includes(`href="${canonicalOrigin}${normalizedTarget}"`)
+/** The `_redirects` rules sending bare `/docs` (with and without slash) to each locale's default page. */
+export function expectedDocsRedirects(): string[] {
+  return (['pt', 'en'] as const).flatMap((lang) => {
+    const docsRoot = routes.doc(lang, '').replace(/\/$/, '');
+    const target = routes.doc(lang, DOCS_DEFAULT_SLUG);
+
+    return [docsRoot, `${docsRoot}/`].map((from) => `${from} ${target} ${DOCS_REDIRECT_STATUS}`);
+  });
+}
+
+/**
+ * Check `_redirects` declares every docs redirect exactly, each to a slash-terminated target.
+ *
+ * @example validateDocsRedirects('/docs /docs/quickstart/ 302') // errors for the missing rules
+ */
+export function validateDocsRedirects(text: string): string[] {
+  const rules = new Set(
+    text
+      .split('\n')
+      .map((line) => line.trim().replace(/\s+/g, ' '))
+      .filter((line) => line !== '' && !line.startsWith('#'))
   );
+
+  return expectedDocsRedirects()
+    .filter((rule) => !rules.has(rule))
+    .map((rule) => `dist/_redirects expected rule "${rule}" | received: ${[...rules].join(' ; ')}`);
+}
+
+/**
+ * Internal page hrefs (anchors and `<link>`s) that lack the canonical trailing slash.
+ * Cloudflare answers those with a redirect, so every in-site link must already use the slash
+ * form. File links (`/install.sh`, `/_astro/app.css`) and fragment-only hrefs are exempt.
+ *
+ * @example findSlashlessInternalHrefs('<a href="/docs/quickstart">x</a>') // ['/docs/quickstart']
+ */
+export function findSlashlessInternalHrefs(
+  html: string,
+  canonicalOrigin = CANONICAL_ORIGIN
+): string[] {
+  const base = new URL('/', canonicalOrigin);
+
+  return extractCrawlHrefs(html).filter((href) => {
+    const url = parseSameOriginUrl(href, base, canonicalOrigin);
+
+    return (
+      url !== null &&
+      url.pathname !== '' &&
+      !url.pathname.endsWith('/') &&
+      !/\.[A-Za-z0-9]+$/.test(basename(url.pathname))
+    );
+  });
 }
 
 export function extractRouteIntegrityHrefs(html: string): string[] {
@@ -208,6 +248,7 @@ async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
     await smokeInternalLinkGraph(distDir),
     await smokeLinkCrawl(distDir),
     await smokeNoPrefetch(distDir),
+    await smokeTrailingSlashHrefs(distDir),
   ];
 }
 
@@ -232,25 +273,12 @@ async function smokeRequiredRoutes(distDir: string): Promise<SmokeSection> {
 
 async function smokeRedirects(distDir: string): Promise<SmokeSection> {
   const errors: string[] = [];
-  const redirects = [
-    { file: 'docs/index.html', target: routes.doc('pt', DOCS_DEFAULT_SLUG) },
-    { file: 'en/docs/index.html', target: routes.doc('en', DOCS_DEFAULT_SLUG) },
-  ];
+  const text = await readTextFile(join(distDir, '_redirects'), errors);
 
-  for (const redirect of redirects) {
-    const filePath = join(distDir, redirect.file);
-    const html = await readTextFile(filePath, errors);
-
-    if (!html) {
-      continue;
-    }
-
-    if (!redirectHtmlReferencesTarget(html, redirect.target)) {
-      errors.push(`dist/${redirect.file} must redirect to ${redirect.target}.`);
-    }
-  }
-
-  return { name: 'Docs redirect output', errors };
+  return {
+    name: 'Docs redirect rules',
+    errors: text ? validateDocsRedirects(text) : errors,
+  };
 }
 
 async function smokeReadyDocs(distDir: string): Promise<SmokeSection> {
@@ -857,6 +885,23 @@ async function smokeLinkCrawl(distDir: string): Promise<SmokeSection> {
   };
 }
 
+async function smokeTrailingSlashHrefs(distDir: string): Promise<SmokeSection> {
+  const errors: string[] = [];
+
+  for (const file of await findDistFiles(distDir, '.html')) {
+    const html = await readTextFile(join(distDir, file), errors);
+    const slashless = findSlashlessInternalHrefs(html);
+
+    if (slashless.length > 0) {
+      errors.push(
+        `dist/${file} expected internal hrefs to end in "/" | received ${slashless.length}: ${slashless.slice(0, 3).join(', ')}`
+      );
+    }
+  }
+
+  return { name: 'Trailing-slash internal hrefs', errors };
+}
+
 async function findDistFiles(distDir: string, extension: string): Promise<string[]> {
   const files: string[] = [];
   await collectDistFiles(distDir, distDir, extension, files);
@@ -917,27 +962,6 @@ function routeToDistFile(route: string): string {
 function normalizeRoutePath(pathname: string): string {
   const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return normalized === '/' ? normalized : normalized.replace(/\/+$/g, '');
-}
-
-function extractMetaRefreshTargets(html: string): string[] {
-  const targets = new Set<string>();
-  const metaPattern = /<meta\b[^>]*>/gi;
-  let match = metaPattern.exec(html);
-
-  while (match !== null) {
-    const attrs = parseAttributes(match[0] ?? '');
-    const httpEquiv = attrs.get('http-equiv')?.toLowerCase();
-    const content = attrs.get('content') ?? '';
-    const target = /(?:^|;)\s*url=([^;]+)/i.exec(content)?.[1]?.trim();
-
-    if (httpEquiv === 'refresh' && target) {
-      targets.add(normalizeRoutePath(decodeHtmlAttribute(target)));
-    }
-
-    match = metaPattern.exec(html);
-  }
-
-  return [...targets].sort();
 }
 
 function extractXmlLocText(xml: string): string {

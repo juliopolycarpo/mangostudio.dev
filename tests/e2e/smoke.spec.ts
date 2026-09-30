@@ -98,7 +98,7 @@ test.describe('docs pages', () => {
     await page.goto('/docs/reference/cli');
 
     await expect(page.getByRole('heading', { name: 'Referência da CLI' })).toBeVisible();
-    await expect(page.locator('.docs-sidebar a[href="/docs/reference/cli"]')).toHaveAttribute(
+    await expect(page.locator('.docs-sidebar a[href="/docs/reference/cli/"]')).toHaveAttribute(
       'aria-current',
       'page'
     );
@@ -114,7 +114,7 @@ test.describe('docs pages', () => {
 
     await expect(page.getByRole('heading', { name: 'Security Policy' })).toBeVisible();
     await expect(
-      page.locator('.docs-sidebar a[href="/en/docs/operations/security"]')
+      page.locator('.docs-sidebar a[href="/en/docs/operations/security/"]')
     ).toHaveAttribute('aria-current', 'page');
   });
 });

@@ -27,7 +27,7 @@ for (const locale of LOCALES) {
       const href = await cta.getAttribute('href');
 
       expect(href, `expected CTA href to point at guides/contributing | received: ${href}`).toMatch(
-        /\/docs\/guides\/contributing$/
+        /\/docs\/guides\/contributing\/$/
       );
 
       const response = await page.request.get(href ?? '');

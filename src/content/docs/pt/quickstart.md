@@ -18,7 +18,7 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 
 Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI e Anthropic.
 
-> 🇺🇸 [Read in English](/en/docs/quickstart)
+> 🇺🇸 [Read in English](/en/docs/quickstart/)
 
 ## Instalar
 
@@ -65,14 +65,14 @@ mangostudio doctor         # diagnóstico de ambiente
 ```
 
 Execute `mangostudio` sem argumentos para a lista completa de comandos. Veja
-[`docs/reference/cli.md`](/en/docs/reference/cli) para detalhes.
+[`docs/reference/cli.md`](/en/docs/reference/cli/) para detalhes.
 
 Na primeira execução, `mangostudio serve` pode gerar um `BETTER_AUTH_SECRET` forte
 e armazená-lo em `~/.mango/.env` ou `~/.mango/config.toml`. Configure chaves de
 provedor como `GEMINI_API_KEY` quando estiver pronto para usar modelos hospedados. Configurações
 opcionais de runtime incluem `API_HOST`, `API_PORT` e `DATABASE_PATH`.
 Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) para o ambiente completo.
-Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operations/deployment#docker).
+Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Pré-requisitos (desenvolvimento)
 
@@ -369,15 +369,15 @@ O tipo `Messages` é inferido diretamente do dicionário `pt-BR.ts` (`as const`)
 
 ## Documentação
 
-- [`./README.md`](/docs/quickstart) — hub da documentação em Português
-- [`./guides/contributor-quickstart.md`](/docs/guides/contributor-quickstart) — onboarding rápido para contribuidores
-- [`./architecture/continuation.md`](/docs/architecture/continuation) — arquitetura de continuação
-- [`./providers/development.md`](/docs/providers/development) — guia de integração de provedores
-- [`./reference/cli.md`](/docs/reference/cli) — referência da CLI e canais de instalação
-- [`./reference/releasing.md`](/docs/reference/releasing) — runbook de release e canais de distribuição
-- [`./reference/testing.md`](/docs/reference/testing) — estratégia e guia de testes
-- [`./reference/agent-playbooks.md`](/docs/reference/agent-playbooks) — mapas de arquivos por feature
-- [`./CONTRIBUTING.md`](/docs/guides/contributing) — diretrizes de contribuição em Português
+- [`./README.md`](/docs/quickstart/) — hub da documentação em Português
+- [`./guides/contributor-quickstart.md`](/docs/guides/contributor-quickstart/) — onboarding rápido para contribuidores
+- [`./architecture/continuation.md`](/docs/architecture/continuation/) — arquitetura de continuação
+- [`./providers/development.md`](/docs/providers/development/) — guia de integração de provedores
+- [`./reference/cli.md`](/docs/reference/cli/) — referência da CLI e canais de instalação
+- [`./reference/releasing.md`](/docs/reference/releasing/) — runbook de release e canais de distribuição
+- [`./reference/testing.md`](/docs/reference/testing/) — estratégia e guia de testes
+- [`./reference/agent-playbooks.md`](/docs/reference/agent-playbooks/) — mapas de arquivos por feature
+- [`./CONTRIBUTING.md`](/docs/guides/contributing/) — diretrizes de contribuição em Português
 
 ## Estrutura Espelhada
 

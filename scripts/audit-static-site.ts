@@ -46,6 +46,7 @@ const DIST_EXPECTED_FILES = [
   'site.webmanifest',
   'sitemap-index.xml',
   '_headers',
+  '_redirects',
 ];
 
 export interface CacheHeaderRule {

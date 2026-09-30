@@ -45,9 +45,9 @@ URLs locais padrão:
 ## 3. Saber Por Onde Começar
 
 - Leia [`../../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) para regras e roteamento do repositório.
-- Use [`../reference/agent-playbooks.md`](/docs/reference/agent-playbooks) quando precisar de um mapa de arquivos por feature.
-- Use [`../reference/testing.md`](/docs/reference/testing) antes de adicionar ou alterar comportamento.
-- Use [`../architecture/overview.md`](/docs/architecture/overview) para o layout dos workspaces e módulos.
+- Use [`../reference/agent-playbooks.md`](/docs/reference/agent-playbooks/) quando precisar de um mapa de arquivos por feature.
+- Use [`../reference/testing.md`](/docs/reference/testing/) antes de adicionar ou alterar comportamento.
+- Use [`../architecture/overview.md`](/docs/architecture/overview/) para o layout dos workspaces e módulos.
 
 ## 4. Git Hooks
 
@@ -92,6 +92,6 @@ bun run fix --staged      # correção automática apenas nos workspaces afetado
 
 ## 7. Documentos Relacionados
 
-- [`../../../.github/CONTRIBUTING.md`](/en/docs/guides/contributing) para política de contribuição e regras de commit
-- [`../reference/api.md`](/docs/reference/api) para o mapa de endpoints
-- [`../operations/deployment.md`](/docs/operations/deployment) para builds standalone
+- [`../../../.github/CONTRIBUTING.md`](/en/docs/guides/contributing/) para política de contribuição e regras de commit
+- [`../reference/api.md`](/docs/reference/api/) para o mapa de endpoints
+- [`../operations/deployment.md`](/docs/operations/deployment/) para builds standalone

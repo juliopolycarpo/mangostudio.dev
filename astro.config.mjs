@@ -50,11 +50,7 @@ export default defineConfig({
     // Let small styles inline while larger shared styles emit as cacheable assets.
     inlineStylesheets: 'auto',
   },
-  // Bare /docs lands on the quickstart entry point in each locale.
-  redirects: {
-    '/docs': '/docs/quickstart',
-    '/en/docs': '/en/docs/quickstart',
-  },
+  // Bare /docs redirects live in public/_redirects (an HTTP redirect, not a meta-refresh page).
   markdown: {
     shikiConfig: {
       transformers: [commentContrastTransformer()],

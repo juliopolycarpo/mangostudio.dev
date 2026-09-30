@@ -171,7 +171,7 @@ Hook React que gerencia o ciclo de vida do stream:
 
 ## Eventos De Continuação
 
-Veja [`continuation.md`](/docs/architecture/continuation) para a arquitetura completa de continuação. Eventos principais de streaming:
+Veja [`continuation.md`](/docs/architecture/continuation/) para a arquitetura completa de continuação. Eventos principais de streaming:
 
 - **`fallback_notice`** — Emitido quando a continuação degrada, como mudança de provedor/modelo/prompt ou cursor expirado. O frontend exibe uma toast notification.
 - **`continuation_transition`** — Persistido em message parts. Carrega `recovered: false` durante o turno e é alterado para `recovered: true` em caso de sucesso.

@@ -18,13 +18,13 @@ para rodar e gerenciar um servidor local. Os mesmos comandos funcionam no binár
 instalado (`mangostudio`) e a partir do código-fonte
 (`bun run apps/api/src/index.ts <command>`).
 
-> 🇺🇸 [English version](/en/docs/reference/cli)
+> 🇺🇸 [English version](/en/docs/reference/cli/)
 
 ## Canais de instalação
 
 Escolha qualquer canal de distribuição — cada um entrega o mesmo binário
 pré-compilado e sidecar do frontend. Veja a
-[matriz de instalação do README](/en/docs/quickstart#install) ou:
+[matriz de instalação do README](/en/docs/quickstart/#install) ou:
 
 | Canal              | Ponto de entrada                                                                                                                                                                                |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,7 +33,7 @@ pré-compilado e sidecar do frontend. Veja a
 | Shell / PowerShell | `install.sh` / `install.ps1` do GitHub Releases                                                                                                                                                 |
 | Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                     |
 | Cargo              | `cargo install mangostudio` — veja [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) |
-| Docker             | `ghcr.io/juliopolycarpo/mangostudio` — veja [`deployment.md`](/docs/operations/deployment#docker)                                                                                               |
+| Docker             | `ghcr.io/juliopolycarpo/mangostudio` — veja [`deployment.md`](/docs/operations/deployment/#docker)                                                                                              |
 | Manual             | Baixe arquivos de plataforma do GitHub Releases e verifique `SHA256SUMS`                                                                                                                        |
 
 ## Comandos
@@ -63,4 +63,4 @@ mangostudio stop
 
 Para detalhes de modo background, instância única, arquivos de runtime, códigos
 de saída e configuração, consulte a
-[versão completa em inglês](/en/docs/reference/cli).
+[versão completa em inglês](/en/docs/reference/cli/).

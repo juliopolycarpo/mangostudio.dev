@@ -13,7 +13,7 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 
 # Ferramentas
 
-> 🇺🇸 [English version](/en/docs/reference/tooling)
+> 🇺🇸 [English version](/en/docs/reference/tooling/)
 
 ## Turborepo
 

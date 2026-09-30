@@ -83,7 +83,7 @@ O frontend usa Eden Treaty, que lida com isso automaticamente.
 
 ### Resposta De Streaming
 
-SSE com `Content-Type: text/event-stream`. Veja [../architecture/streaming.md](/docs/architecture/streaming) para o catálogo de eventos.
+SSE com `Content-Type: text/event-stream`. Veja [../architecture/streaming.md](/docs/architecture/streaming/) para o catálogo de eventos.
 
 ## Endpoints De Settings
 
