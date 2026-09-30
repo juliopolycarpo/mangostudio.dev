@@ -3,6 +3,8 @@ export const WWW_REDIRECT_PROBE_URL = 'https://www.mangostudio.dev/docs/quicksta
 export const EXPECTED_WWW_REDIRECT_LOCATION = 'https://mangostudio.dev/docs/quickstart?smoke=1';
 export const DOCS_REDIRECT_PROBE_URL = 'https://mangostudio.dev/docs';
 export const EXPECTED_DOCS_REDIRECT_LOCATION = '/docs/quickstart/';
+export const EN_DOCS_REDIRECT_PROBE_URL = 'https://mangostudio.dev/en/docs';
+export const EXPECTED_EN_DOCS_REDIRECT_LOCATION = '/en/docs/quickstart/';
 
 export interface SmokeCheckResult {
   name: string;
@@ -37,19 +39,21 @@ export function validateWwwRedirectResponse(
 }
 
 /**
- * Checks that bare /docs permanently redirects to the quickstart in one hop.
+ * Checks that a bare docs root permanently redirects to its locale's quickstart in one hop.
  *
  * @example validateDocsRedirectResponse(301, '/docs/quickstart/') // { ok: true, ... }
  */
 export function validateDocsRedirectResponse(
   status: number,
-  location: string | null
+  location: string | null,
+  expectedLocation: string = EXPECTED_DOCS_REDIRECT_LOCATION,
+  probeUrl: string = DOCS_REDIRECT_PROBE_URL
 ): SmokeCheckResult {
   return validatePermanentRedirect(
-    '/docs redirects permanently to the quickstart',
+    `${new URL(probeUrl).pathname} redirects permanently to the quickstart`,
     { status, location },
-    EXPECTED_DOCS_REDIRECT_LOCATION,
-    DOCS_REDIRECT_PROBE_URL
+    expectedLocation,
+    probeUrl
   );
 }
 
@@ -102,11 +106,18 @@ async function runProductionSmoke(): Promise<SmokeCheckResult[]> {
   const apex = await fetchHead(APEX_URL);
   const www = await fetchHead(WWW_REDIRECT_PROBE_URL);
   const docs = await fetchHead(DOCS_REDIRECT_PROBE_URL);
+  const enDocs = await fetchHead(EN_DOCS_REDIRECT_PROBE_URL);
 
   return [
     validateApexResponse(apex.status),
     validateWwwRedirectResponse(www.status, www.location),
     validateDocsRedirectResponse(docs.status, docs.location),
+    validateDocsRedirectResponse(
+      enDocs.status,
+      enDocs.location,
+      EXPECTED_EN_DOCS_REDIRECT_LOCATION,
+      EN_DOCS_REDIRECT_PROBE_URL
+    ),
   ];
 }
 
