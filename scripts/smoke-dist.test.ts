@@ -129,18 +129,18 @@ run('findSitemapNotFoundUrls flags root and localized error pages only', () => {
 
 run('expectedDocsRedirects sends each docs root, with and without slash, to a slash target', () => {
   deepStrictEqual(expectedDocsRedirects(), [
-    '/docs /docs/quickstart/ 302',
-    '/docs/ /docs/quickstart/ 302',
-    '/en/docs /en/docs/quickstart/ 302',
-    '/en/docs/ /en/docs/quickstart/ 302',
+    '/docs /docs/quickstart/ 301',
+    '/docs/ /docs/quickstart/ 301',
+    '/en/docs /en/docs/quickstart/ 301',
+    '/en/docs/ /en/docs/quickstart/ 301',
   ]);
 });
 
 run('validateDocsRedirects reports each missing or slashless rule', () => {
   const text = [
     '# comment',
-    '/docs   /docs/quickstart/ 302',
-    '/en/docs /en/docs/quickstart 302',
+    '/docs   /docs/quickstart/ 301',
+    '/en/docs /en/docs/quickstart 301',
   ].join('\n');
   const errors = validateDocsRedirects(text);
 
@@ -149,7 +149,7 @@ run('validateDocsRedirects reports each missing or slashless rule', () => {
     3,
     `expected 3 missing rules | received ${errors.length}: ${errors.join(' | ')}`
   );
-  ok(errors[0]?.includes('"/docs/ /docs/quickstart/ 302"'), `received: ${errors[0]}`);
+  ok(errors[0]?.includes('"/docs/ /docs/quickstart/ 301"'), `received: ${errors[0]}`);
 });
 
 run('public/_redirects declares every docs redirect', () => {

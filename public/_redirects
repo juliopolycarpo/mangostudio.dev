@@ -1,7 +1,7 @@
 # Bare /docs lands on the quickstart in each locale. Cloudflare evaluates these rules before
 # asset serving and trailing-slash handling; targets end in "/" so they cannot loop.
-# Temporary (302) until verified in production, then switch to 301.
-/docs /docs/quickstart/ 302
-/docs/ /docs/quickstart/ 302
-/en/docs /en/docs/quickstart/ 302
-/en/docs/ /en/docs/quickstart/ 302
+# Permanent (301): verified in production with 302 first.
+/docs /docs/quickstart/ 301
+/docs/ /docs/quickstart/ 301
+/en/docs /en/docs/quickstart/ 301
+/en/docs/ /en/docs/quickstart/ 301
