@@ -419,6 +419,18 @@ pre {
   box-shadow: 0 0 8px var(--lime);
 }
 
+/* ─── Docs workflow badges ─── */
+/* The quickstart's CI / Release badges are plain text links in synced content, so this
+   scopes the larger hit area to workflow links only and leaves other inline links alone. */
+.docs-markdown a[href*="/actions/workflows/"] {
+  display: inline-block;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  margin: 0 6px 4px 0;
+  line-height: 24px;
+}
+
 /* ─── Copy button ─── */
 .copy-btn {
   flex-shrink: 0;

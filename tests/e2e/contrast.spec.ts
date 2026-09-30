@@ -2,11 +2,13 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 const MIN_TEXT_CONTRAST = 4.5;
+const MIN_TARGET_PX = 24;
 const LOCALES = [
   { name: 'pt', prefix: '' },
   { name: 'en', prefix: '/en' },
 ] as const;
 const THEMES = ['dark', 'light'] as const;
+const BADGE_WIDTHS = [320, 390, 768, 1024] as const;
 
 type Rgb = readonly [number, number, number];
 
@@ -110,4 +112,49 @@ test.describe('docs code comment contrast', () => {
       });
     }
   }
+});
+
+test.describe('quickstart badge links', () => {
+  for (const locale of LOCALES) {
+    for (const width of BADGE_WIDTHS) {
+      test(`${locale.name} @${width}px: CI and Release badges are at least ${MIN_TARGET_PX}px targets`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 800 });
+        await page.goto(`${locale.prefix}/docs/quickstart`);
+        const badges = page.locator('.docs-markdown a[href*="/actions/workflows/"]');
+        const count = await badges.count();
+        expect(count, `expected 2 badge links | received: ${count}`).toBe(2);
+
+        const boxes = [];
+        for (let index = 0; index < count; index += 1) {
+          const box = await badges.nth(index).boundingBox();
+          if (!box) throw new Error(`expected badge ${index} to have a box | received: null`);
+          boxes.push(box);
+          expect(
+            Math.min(box.width, box.height),
+            `badge ${index} expected size >= ${MIN_TARGET_PX}px | received: ${box.width.toFixed(1)}x${box.height.toFixed(1)}`
+          ).toBeGreaterThanOrEqual(MIN_TARGET_PX);
+        }
+
+        const [first, second] = boxes as [(typeof boxes)[number], (typeof boxes)[number]];
+        const gap = second.x - (first.x + first.width);
+        expect(
+          gap,
+          `expected CI and Release badges not to overlap (gap >= 0px) | received: ${gap.toFixed(1)}px`
+        ).toBeGreaterThanOrEqual(0);
+      });
+    }
+  }
+
+  test('other inline docs links keep their natural inline size', async ({ page }) => {
+    await page.goto('/docs/quickstart');
+    const link = page.locator('.docs-markdown p a:not([href*="/actions/workflows/"])').first();
+    const box = await link.boundingBox();
+    if (!box) throw new Error('expected a non-badge inline link | received: none');
+    const display = await link.evaluate((el) => getComputedStyle(el).display);
+    expect(display, `expected non-badge inline link display: inline | received: ${display}`).toBe(
+      'inline'
+    );
+  });
 });
