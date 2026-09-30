@@ -224,8 +224,10 @@ a {
   }
 }
 
-/* Terminal boot-line reveal: hidden only when JS can animate them in. */
-html.js [data-term-line]:not(.is-visible) {
+/* Terminal boot-line reveal: hidden only once the terminal initializer has run
+   (it sets data-terminal="ready"). Never gate on html.js: that flag is set inline
+   even when the script bundle fails to load. */
+[data-terminal="ready"] [data-term-line]:not(.is-visible) {
   opacity: 0;
   transform: translateY(6px);
 }

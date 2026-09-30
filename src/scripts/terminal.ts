@@ -1,3 +1,10 @@
+/**
+ * Types the demo command and reveals the boot lines one by one.
+ *
+ * The lines stay readable until this runs; CSS hides them only under
+ * `[data-terminal="ready"]`, which is set here. Never gate on the inline `html.js`
+ * flag, because it is set even when this bundle fails to load.
+ */
 export function initTerminal(): void {
   const root = document.getElementById('terminal-demo');
   if (!root) return;
@@ -5,6 +12,7 @@ export function initTerminal(): void {
   if (!(typedEl instanceof HTMLElement)) return;
 
   const lines = Array.from(root.querySelectorAll('[data-term-line]'));
+  root.dataset.terminal = 'ready';
   const cmd = typedEl.dataset.cmd ?? 'mangostudio serve';
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
