@@ -29,3 +29,21 @@ export function previousNextDocs(
     next: items[index + 1],
   };
 }
+
+export interface DocsHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+/**
+ * Pick the headings that belong in a page's "on this page" list: h2 and h3 only. An empty
+ * result means the page has no table of contents, so the layout must not reserve a column.
+ *
+ * @example
+ * docsToc([{ depth: 1, slug: 'a', text: 'A' }, { depth: 2, slug: 'b', text: 'B' }]);
+ * // [{ depth: 2, slug: 'b', text: 'B' }]
+ */
+export function docsToc(headings: readonly DocsHeading[]): DocsHeading[] {
+  return headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+}
