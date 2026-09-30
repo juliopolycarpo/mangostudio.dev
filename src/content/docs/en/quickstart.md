@@ -386,4 +386,4 @@ The `bun run build --binary` command compiles the API into platform-specific bin
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/LICENSE).

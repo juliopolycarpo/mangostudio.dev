@@ -401,4 +401,4 @@ O comando `bun run build --binary` compila a API em binários específicos por p
 
 ## Licença
 
-Este projeto está licenciado sob a [Licença MIT](../../LICENSE).
+Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/LICENSE).
