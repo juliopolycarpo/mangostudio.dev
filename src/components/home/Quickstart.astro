@@ -1,5 +1,6 @@
 ---
 import CopyButton from '@/components/CopyButton.astro';
+import { fillCopyLabel } from '@/i18n/copy-label';
 import type { SiteContent } from '@/i18n/types';
 
 interface Props {
@@ -26,7 +27,7 @@ const { content: c } = Astro.props;
           <p class="qs-desc">{step.desc}</p>
           <div class="qs-cmd">
             <code class="qs-code mono">{step.cmd}</code>
-            <CopyButton text={step.cmd} label={c.copyButtonLabel} size="sm" />
+            <CopyButton text={step.cmd} label={fillCopyLabel(c.copyCommandLabel, step.title)} size="sm" />
           </div>
         </div>
       ))

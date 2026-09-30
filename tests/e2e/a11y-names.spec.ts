@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+import { INSTALL_TABS } from '../../src/data/site';
+import { fillCopyLabel } from '../../src/i18n/copy-label';
 import { en } from '../../src/i18n/en';
 import { pt } from '../../src/i18n/pt';
 import type { SiteContent } from '../../src/i18n/types';
@@ -100,7 +102,6 @@ for (const locale of LOCALES) {
         const c = locale.content;
         await expect(page.getByRole('button', { name: c.header.theme })).toHaveCount(1);
         await expect(page.getByRole('group', { name: c.langToggle.label }).first()).toBeVisible();
-        await expect(page.getByRole('button', { name: c.copyButtonLabel }).first()).toBeVisible();
 
         await page.getByRole('button', { name: new RegExp(`^${c.header.searchLabel}`) }).click();
         await expect(page.getByRole('dialog', { name: c.cmdk.label })).toBeVisible();
@@ -147,6 +148,39 @@ for (const locale of LOCALES) {
       ).toBe(c.header.star);
     });
   }
+
+  test(`${locale.name} copy buttons each name what they copy`, async ({ page }) => {
+    const c = locale.content;
+    await page.goto(locale.path);
+    await page.getByRole('tab', { name: 'bun' }).click();
+    const bun = INSTALL_TABS.find((tab) => tab.id === 'bun');
+    const expected = [
+      fillCopyLabel(c.copyCommandLabel, bun?.label ?? 'bun'),
+      ...c.quickstart.steps.map((step) => fillCopyLabel(c.copyCommandLabel, step.title)),
+    ];
+    for (const name of expected) {
+      await expect(
+        page.getByRole('button', { name, exact: true }),
+        `expected one copy button named "${name}" | received: ${await page
+          .locator('.copy-btn')
+          .evaluateAll((els) => JSON.stringify(els.map((el) => el.getAttribute('aria-label'))))}`
+      ).toHaveCount(1);
+    }
+    const names = await page
+      .locator('.copy-btn')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    expect(
+      new Set(names).size,
+      `expected ${names.length} distinct copy button names | received: ${JSON.stringify(names)}`
+    ).toBe(names.length);
+  });
+
+  test(`${locale.name} release copy button names the release install`, async ({ page }) => {
+    const c = locale.content;
+    await page.goto(`${locale.path}releases/`);
+    const name = fillCopyLabel(c.copyCommandLabel, c.releases.installTarget);
+    await expect(page.getByRole('button', { name, exact: true })).toHaveCount(1);
+  });
 
   test(`${locale.name} primary navigation uses the localized landmark name`, async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });

@@ -1,3 +1,4 @@
+import { fillCopyLabel } from '../i18n/copy-label';
 import { revealEnhanced } from './enhance';
 
 const CHANNEL_STORAGE_KEY = 'mango.installCh';
@@ -48,6 +49,13 @@ export function initInstallTabs(): void {
     tab.tabIndex = active ? 0 : -1;
   }
 
+  // The copy button's name says which install method it copies, in the page's language.
+  function renameCopyButton(button: HTMLElement, tab: HTMLButtonElement): void {
+    const template = panel?.dataset.copyLabel;
+    if (!template || !tab.dataset.label) return;
+    button.setAttribute('aria-label', fillCopyLabel(template, tab.dataset.label));
+  }
+
   function select(id: string): void {
     const tab = tabs.find((t) => t.dataset.channel === id);
     if (
@@ -73,7 +81,10 @@ export function initInstallTabs(): void {
       const prompt = tab.dataset.prompt ?? '$ ';
       promptEl.textContent = prompt;
       cmdEl.textContent = cmd;
-      if (copyBtn) copyBtn.dataset.copy = cmd;
+      if (copyBtn) {
+        copyBtn.dataset.copy = cmd;
+        renameCopyButton(copyBtn, tab);
+      }
       panel?.setAttribute('data-state', 'ready');
       try {
         localStorage.setItem(CHANNEL_STORAGE_KEY, tab.dataset.channel ?? id);

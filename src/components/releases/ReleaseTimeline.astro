@@ -2,6 +2,7 @@
 import CopyButton from '@/components/CopyButton.astro';
 import { releaseChannel } from '@/data/release-channel';
 import { RELEASE } from '@/data/releases.generated';
+import { fillCopyLabel } from '@/i18n/copy-label';
 import type { ReleaseType, SiteContent } from '@/i18n/types';
 
 interface Props {
@@ -42,7 +43,7 @@ const badge: Record<ReleaseType, { fg: string; bg: string }> = {
     </div>
     <div class="rel-install">
       <code class="mono rel-install-code"><span class="prompt">$ </span>{RELEASE.installCmd}</code>
-      <CopyButton text={RELEASE.installCmd} label={c.copyButtonLabel} size="sm" />
+      <CopyButton text={RELEASE.installCmd} label={fillCopyLabel(c.copyCommandLabel, r.installTarget)} size="sm" />
     </div>
   </div>
 

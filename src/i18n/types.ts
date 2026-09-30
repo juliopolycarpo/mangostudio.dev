@@ -100,6 +100,7 @@ export interface SiteContent {
     title: string;
     intro: Record<ReleaseChannel, string>;
     latestBadge: Record<ReleaseChannel, string>;
+    installTarget: string;
     groups: ReleaseGroup[];
   };
   docs: {
@@ -120,7 +121,8 @@ export interface SiteContent {
     footer: string;
     items: CmdkItem[];
   };
-  copyButtonLabel: string;
+  /** Copy button name template; `{target}` becomes what the button copies. */
+  copyCommandLabel: string;
   copyToast: string;
   copyToastError: string;
   terminalLines: string[];

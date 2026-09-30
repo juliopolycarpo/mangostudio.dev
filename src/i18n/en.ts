@@ -142,6 +142,7 @@ export const en = {
       stable:
         'Stable version and install command are synced from the MangoStudio release pipeline. Highlights are curated per release.',
     },
+    installTarget: 'latest release install',
     latestBadge: { canary: 'canary version', stable: 'stable version' },
     groups: [
       {
@@ -238,7 +239,7 @@ export const en = {
       },
     ],
   },
-  copyButtonLabel: 'Copy',
+  copyCommandLabel: 'Copy command: {target}',
   copyToast: 'Copied to clipboard',
   copyToastError: "Couldn't copy — select and copy manually.",
   terminalLines: [
