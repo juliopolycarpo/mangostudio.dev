@@ -67,8 +67,8 @@ export function deriveDocSlugs(groups: readonly DocRouteGroup[]): string[] {
   return [...slugs].sort();
 }
 
-/** Temporary (302) until the redirects are verified in production, then 301. */
-export const DOCS_REDIRECT_STATUS = 302;
+/** Permanent: the rules were verified in production with 302 before switching. */
+export const DOCS_REDIRECT_STATUS = 301;
 
 /** The `_redirects` rules sending bare `/docs` (with and without slash) to each locale's default page. */
 export function expectedDocsRedirects(): string[] {
@@ -83,7 +83,7 @@ export function expectedDocsRedirects(): string[] {
 /**
  * Check `_redirects` declares every docs redirect exactly, each to a slash-terminated target.
  *
- * @example validateDocsRedirects('/docs /docs/quickstart/ 302') // errors for the missing rules
+ * @example validateDocsRedirects('/docs /docs/quickstart/ 301') // errors for the missing rules
  */
 export function validateDocsRedirects(text: string): string[] {
   const rules = new Set(

@@ -1,8 +1,13 @@
 import { strictEqual } from 'node:assert/strict';
 
 import {
+  DOCS_REDIRECT_PROBE_URL,
+  EN_DOCS_REDIRECT_PROBE_URL,
+  EXPECTED_DOCS_REDIRECT_LOCATION,
+  EXPECTED_EN_DOCS_REDIRECT_LOCATION,
   EXPECTED_WWW_REDIRECT_LOCATION,
   validateApexResponse,
+  validateDocsRedirectResponse,
   validateWwwRedirectResponse,
   WWW_REDIRECT_PROBE_URL,
 } from './smoke-production-url';
@@ -16,6 +21,39 @@ run('validateApexResponse fails when apex returns a non-200 status', () => {
   const result = validateApexResponse(404);
   strictEqual(result.ok, false);
   strictEqual(result.error, 'https://mangostudio.dev/ returned status 404, expected 200');
+});
+
+run('validateDocsRedirectResponse passes for a 301 to the slash quickstart', () => {
+  const result = validateDocsRedirectResponse(301, EXPECTED_DOCS_REDIRECT_LOCATION);
+  strictEqual(result.ok, true, `expected ok | received: ${result.error}`);
+});
+
+run('validateDocsRedirectResponse checks the English docs root against its own target', () => {
+  const result = validateDocsRedirectResponse(
+    301,
+    EXPECTED_DOCS_REDIRECT_LOCATION,
+    EXPECTED_EN_DOCS_REDIRECT_LOCATION,
+    EN_DOCS_REDIRECT_PROBE_URL
+  );
+  strictEqual(
+    result.error,
+    `${EN_DOCS_REDIRECT_PROBE_URL} returned status 301 with Location /docs/quickstart/, ` +
+      `expected ${EXPECTED_EN_DOCS_REDIRECT_LOCATION}`
+  );
+});
+
+run('validateDocsRedirectResponse fails for a temporary 302', () => {
+  const result = validateDocsRedirectResponse(302, EXPECTED_DOCS_REDIRECT_LOCATION);
+  strictEqual(result.error, `${DOCS_REDIRECT_PROBE_URL} returned status 302, expected 301 or 308`);
+});
+
+run('validateDocsRedirectResponse fails for a slashless target', () => {
+  const result = validateDocsRedirectResponse(301, '/docs/quickstart');
+  strictEqual(
+    result.error,
+    `${DOCS_REDIRECT_PROBE_URL} returned status 301 with Location /docs/quickstart, ` +
+      `expected ${EXPECTED_DOCS_REDIRECT_LOCATION}`
+  );
 });
 
 run('validateWwwRedirectResponse passes for 301 with preserved path and query', () => {
