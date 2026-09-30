@@ -1,6 +1,7 @@
 ---
 title: "Streaming Architecture"
 sidebarLabel: "Streaming Architecture"
+description: "Chat responses are delivered via Server-Sent Events (SSE) over a single HTTP connection. The frontend consumes the stream using the Fetch API's ReadableStream…"
 lang: "en"
 slug: "architecture/streaming"
 groupId: "architecture"

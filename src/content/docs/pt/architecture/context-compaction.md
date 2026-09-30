@@ -1,6 +1,7 @@
 ---
 title: "Compactação De Contexto"
 sidebarLabel: "Compactação De Contexto"
+description: "Quando uma conversa se aproxima do limite da janela de contexto do modelo, o MangoStudio avisa o usuário e oferece opções de compactação. Este documento…"
 lang: "pt"
 slug: "architecture/context-compaction"
 groupId: "architecture"

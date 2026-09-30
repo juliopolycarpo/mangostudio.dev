@@ -1,6 +1,7 @@
 ---
 title: "Contribuindo com o MangoStudio"
 sidebarLabel: "Contribuindo com o MangoStudio"
+description: "Obrigado pelo seu interesse em contribuir com o MangoStudio!"
 lang: "pt"
 slug: "guides/contributing"
 groupId: "guides"

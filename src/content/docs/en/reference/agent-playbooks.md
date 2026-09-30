@@ -1,6 +1,7 @@
 ---
 title: "Agent Playbooks"
 sidebarLabel: "Agent Playbooks"
+description: "Open only the section that matches the current task. This file is intentionally more detailed than AGENTS.md and should be used on demand, not by default."
 lang: "en"
 slug: "reference/agent-playbooks"
 groupId: "reference"

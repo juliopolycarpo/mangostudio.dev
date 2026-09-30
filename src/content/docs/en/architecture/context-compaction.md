@@ -1,6 +1,7 @@
 ---
 title: "Context Compaction"
 sidebarLabel: "Context Compaction"
+description: "When a conversation approaches the model's context window limit, MangoStudio warns the user and offers compaction options. This document explains the snapshot…"
 lang: "en"
 slug: "architecture/context-compaction"
 groupId: "architecture"

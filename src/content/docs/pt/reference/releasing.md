@@ -1,6 +1,7 @@
 ---
 title: "Releases"
 sidebarLabel: "Releases"
+description: "O MangoStudio é distribuído como binários standalone (GitHub Releases), imagem Docker no GHCR, CLI npm (mangostudio), tap Homebrew, bucket Scoop (Windows) e…"
 lang: "pt"
 slug: "reference/releasing"
 groupId: "reference"

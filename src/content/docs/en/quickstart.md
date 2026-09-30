@@ -1,6 +1,7 @@
 ---
 title: "MangoStudio"
 sidebarLabel: "Quickstart"
+description: "AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, and Anthropic models."
 lang: "en"
 slug: "quickstart"
 groupId: "getting-started"

@@ -1,6 +1,7 @@
 ---
 title: "Sistema De Tools"
 sidebarLabel: "Sistema De Tools"
+description: "O MangoStudio suporta tool calling agnóstico a provedor durante turnos de chat. Modelos podem chamar tools, o sistema as executa e os resultados são…"
 lang: "pt"
 slug: "features/tools"
 groupId: "features"

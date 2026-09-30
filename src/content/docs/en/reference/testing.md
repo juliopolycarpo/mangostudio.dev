@@ -1,6 +1,7 @@
 ---
 title: "Testing Strategy"
 sidebarLabel: "Testing Strategy"
+description: "This monorepo uses a workspace-first testing architecture under apps/*/tests. Production code stays in src/, and tests are grouped by intent as unit or…"
 lang: "en"
 slug: "reference/testing"
 groupId: "reference"

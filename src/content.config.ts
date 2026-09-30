@@ -11,6 +11,7 @@ const docs = defineCollection({
   schema: z.object({
     title: z.string(),
     sidebarLabel: z.string(),
+    description: z.string(),
     lang: z.enum(['pt', 'en']),
     slug: z.string(),
     groupId: z.string(),

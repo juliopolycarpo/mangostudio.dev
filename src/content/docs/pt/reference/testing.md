@@ -1,6 +1,7 @@
 ---
 title: "Estratégia De Testes"
 sidebarLabel: "Estratégia De Testes"
+description: "Este monorepo usa uma arquitetura de testes orientada a workspaces em apps/*/tests. O código de produção permanece em src/, e os testes são agrupados por…"
 lang: "pt"
 slug: "reference/testing"
 groupId: "reference"

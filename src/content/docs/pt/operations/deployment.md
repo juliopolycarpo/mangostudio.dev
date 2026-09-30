@@ -1,6 +1,7 @@
 ---
 title: "Deploy"
 sidebarLabel: "Deploy"
+description: "O MangoStudio pode ser implantado como binários standalone específicos por plataforma com assets do frontend embutidos."
 lang: "pt"
 slug: "operations/deployment"
 groupId: "operations"

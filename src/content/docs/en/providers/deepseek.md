@@ -1,6 +1,7 @@
 ---
 title: "DeepSeek Provider"
 sidebarLabel: "DeepSeek Provider"
+description: "DeepSeek is modeled as a first-class provider (not just an OpenAI-compatible connector) to surface DeepSeek-specific capabilities: reasoning tokens, prefix…"
 lang: "en"
 slug: "providers/deepseek"
 groupId: "providers"

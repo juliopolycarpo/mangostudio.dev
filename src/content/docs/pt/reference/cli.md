@@ -1,6 +1,7 @@
 ---
 title: "Referência da CLI"
 sidebarLabel: "Referência da CLI"
+description: "O MangoStudio é distribuído como um binário único que também funciona como CLI para rodar e gerenciar um servidor local. Os mesmos comandos funcionam no…"
 lang: "pt"
 slug: "reference/cli"
 groupId: "reference"

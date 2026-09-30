@@ -1,6 +1,7 @@
 ---
 title: "CLI Reference"
 sidebarLabel: "CLI Reference"
+description: "MangoStudio ships as a single binary that doubles as a CLI for running and managing one local server. The same commands work from the installed binary…"
 lang: "en"
 slug: "reference/cli"
 groupId: "reference"

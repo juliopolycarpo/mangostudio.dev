@@ -1,6 +1,7 @@
 ---
 title: "Releasing"
 sidebarLabel: "Releasing"
+description: "MangoStudio ships as standalone binaries (GitHub Releases), as a Docker image on GHCR, as an npm CLI (mangostudio), via a Homebrew tap, via a Scoop bucket…"
 lang: "en"
 slug: "reference/releasing"
 groupId: "reference"

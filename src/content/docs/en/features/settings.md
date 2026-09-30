@@ -1,6 +1,7 @@
 ---
 title: "Settings Architecture"
 sidebarLabel: "Settings Architecture"
+description: "MangoStudio has three independent settings layers, each with its own persistence, API, and frontend module."
 lang: "en"
 slug: "features/settings"
 groupId: "features"

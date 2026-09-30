@@ -1,6 +1,7 @@
 ---
 title: "Provedor DeepSeek"
 sidebarLabel: "Provedor DeepSeek"
+description: "O DeepSeek é modelado como um provedor de primeira classe, e não apenas como um connector OpenAI-compatible, para expor capacidades específicas do DeepSeek…"
 lang: "pt"
 slug: "providers/deepseek"
 groupId: "providers"

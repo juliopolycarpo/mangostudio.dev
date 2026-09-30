@@ -1,6 +1,7 @@
 ---
 title: "Guia De Desenvolvimento De Provedores"
 sidebarLabel: "Guia De Desenvolvimento De Provedores"
+description: "Todo provedor precisa implementar a interface AIProvider em apps/api/src/services/providers/types.ts."
 lang: "pt"
 slug: "providers/development"
 groupId: "providers"

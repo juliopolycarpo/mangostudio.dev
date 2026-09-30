@@ -1,6 +1,7 @@
 ---
 title: "Attachments"
 sidebarLabel: "Attachments"
+description: "MangoStudio supports uploading files as chat attachments and delivering them to AI providers during generation."
 lang: "en"
 slug: "features/attachments"
 groupId: "features"

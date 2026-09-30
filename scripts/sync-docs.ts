@@ -37,6 +37,7 @@ interface GeneratedDocItem {
   slug: string;
   title: string;
   sidebarLabel: string;
+  description: string;
   sourcePath: string;
   sourceUrl: string;
   groupId: DocGroupId;
@@ -61,6 +62,9 @@ export interface SyncDocsResult {
   sourceCommit: string;
   docs: Record<Lang, GeneratedDocGroup[]>;
 }
+
+/** Longest `<meta name="description">` the docs derive, ellipsis included. */
+export const DESCRIPTION_MAX_LENGTH = 160;
 
 const GROUP_TITLES: Record<Lang, Record<DocGroupId, string>> = {
   pt: {
@@ -168,12 +172,14 @@ export async function syncDocs(options: SyncDocsOptions = {}): Promise<SyncDocsR
       });
       const title = extractTitle(linked);
       const sidebarLabel = definition.sidebarLabel?.[lang] ?? title;
+      const description = extractDescription(linked, title);
       const sourceUrl = sourceBlobUrl(sourceCommit, sourcePath);
       const groupTitle = GROUP_TITLES[lang][definition.groupId];
       const item: GeneratedDocItem = {
         slug: definition.slug,
         title,
         sidebarLabel,
+        description,
         sourcePath,
         sourceUrl,
         groupId: definition.groupId,
@@ -195,6 +201,7 @@ export async function syncDocs(options: SyncDocsOptions = {}): Promise<SyncDocsR
   }
 
   sortDocsNav(docs);
+  assertUniqueDescriptions(docs);
   const manifest = renderManifest({ sourceCommit, docs });
   generatedFiles.set(join(repoRoot, GENERATED_MANIFEST_PATH), manifest);
 
@@ -306,6 +313,7 @@ export interface GeneratedDocNavItem {
   slug: string;
   title: string;
   sidebarLabel: string;
+  description: string;
   sourcePath: string;
   sourceUrl: string;
   groupId: DocGroupId;
@@ -458,6 +466,107 @@ function extractTitle(markdown: string): string {
     .trim();
 }
 
+/** Line starts that end a prose paragraph: headings, quotes, tables, lists, HTML, indented code. */
+const NON_PROSE_LINE = /^(?:#{1,6}\s|>|\||[-*+]\s|\d+[.)]\s|<|\s{4}|-{3,}\s*$|\[\^)/;
+
+/**
+ * Derive a page description from a doc's Markdown: the first prose paragraph as plain text,
+ * trimmed to `DESCRIPTION_MAX_LENGTH` on a word boundary with an ellipsis. Skips the title,
+ * headings, fenced code, tables, lists, quotes, HTML, and paragraphs made only of links or
+ * badges. Falls back to `fallback` (the doc title) when the doc has no prose paragraph.
+ *
+ * @example
+ * extractDescription('# CLI\n\nRun **mangostudio** from a [shell](/x).', 'CLI');
+ * // => 'Run mangostudio from a shell.'
+ */
+export function extractDescription(markdown: string, fallback: string): string {
+  const withoutCode = markdown
+    .replace(/^(`{3,}|~{3,}).*\n[\s\S]*?^\1[^\n]*$/gm, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+
+  for (const block of withoutCode.split(/\n[ \t]*\n/)) {
+    const paragraph = proseLines(block).join(' ');
+    const text = stripInlineMarkdown(paragraph);
+
+    if (text && !isLinkOnly(paragraph)) {
+      // A trailing colon introduced a code block or list that the description drops.
+      return truncateOnWord(text.replace(/:$/, '.'), DESCRIPTION_MAX_LENGTH);
+    }
+  }
+
+  return truncateOnWord(stripInlineMarkdown(fallback), DESCRIPTION_MAX_LENGTH);
+}
+
+function proseLines(block: string): string[] {
+  const lines: string[] = [];
+
+  for (const line of block.split('\n')) {
+    if (NON_PROSE_LINE.test(line)) {
+      break;
+    }
+
+    lines.push(line.trim());
+  }
+
+  return lines.filter(Boolean);
+}
+
+/** True when the paragraph is nothing but links and images, such as a badge row. */
+function isLinkOnly(text: string): boolean {
+  return (
+    text
+      .replace(/!?\[[^\]]*\]\([^)]*\)/g, '')
+      .replace(/<[^>]+>/g, '')
+      .trim() === ''
+  );
+}
+
+function stripInlineMarkdown(text: string): string {
+  return text
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/<(https?:[^>]+)>/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/(`+)(.+?)\1/g, '$2')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/\*(\S(?:.*?\S)?)\*/g, '$1')
+    .replace(/(?<![\w])_(\S(?:.*?\S)?)_(?![\w])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function truncateOnWord(text: string, max: number): string {
+  if (text.length <= max) {
+    return text;
+  }
+
+  const head = text.slice(0, max - 1);
+  const cut = head.lastIndexOf(' ');
+  const words = (cut > 0 ? head.slice(0, cut) : head).replace(/[\s,;:.\-–—(]+$/, '');
+
+  return `${words}…`;
+}
+
+/** Every doc must carry its own description: two docs sharing one within a locale is a sync error. */
+export function assertUniqueDescriptions(docs: Record<Lang, GeneratedDocGroup[]>): void {
+  for (const lang of ['pt', 'en'] as const) {
+    const seen = new Map<string, string>();
+
+    for (const item of docs[lang].flatMap((group) => group.items)) {
+      const first = seen.get(item.description);
+
+      if (first) {
+        throw new Error(
+          `Docs descriptions must be unique per locale | invalid: ${JSON.stringify(item.description)} shared by ${lang}/${first} and ${lang}/${item.slug} | expected: a distinct description per doc`
+        );
+      }
+
+      seen.set(item.description, item.slug);
+    }
+  }
+}
+
 function renderContentFile(
   markdown: string,
   data: GeneratedDocItem & { lang: Lang; sourceCommit: string }
@@ -465,6 +574,7 @@ function renderContentFile(
   return `---
 title: ${JSON.stringify(data.title)}
 sidebarLabel: ${JSON.stringify(data.sidebarLabel)}
+description: ${JSON.stringify(data.description)}
 lang: ${JSON.stringify(data.lang)}
 slug: ${JSON.stringify(data.slug)}
 groupId: ${JSON.stringify(data.groupId)}

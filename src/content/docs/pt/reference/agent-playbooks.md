@@ -1,6 +1,7 @@
 ---
 title: "Playbooks De Agentes"
 sidebarLabel: "Playbooks De Agentes"
+description: "Abra apenas a seção que corresponda à tarefa atual. Este arquivo é intencionalmente mais detalhado que AGENTS.md e deve ser usado sob demanda, não por padrão."
 lang: "pt"
 slug: "reference/agent-playbooks"
 groupId: "reference"
