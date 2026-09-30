@@ -31,7 +31,7 @@ const WINDOWS_PARAGRAPH: Record<Lang, { upstream: RegExp; hosted: string }> = {
   },
 };
 
-const POWERSHELL_TABLE_ROW = `| PowerShell (Windows) | \`${POWERSHELL_INSTALL_CMD.replace('|', '\\|')}\` |`;
+const POWERSHELL_TABLE_ROW = `| PowerShell (Windows) | \`${POWERSHELL_INSTALL_CMD.replaceAll('|', '\\|')}\` |`;
 const POWERSHELL_TABLE_ROW_PRESENT = /^\| PowerShell/m;
 const HOMEBREW_TABLE_ROW = /^\| Homebrew \(macOS\/Linux\)/m;
 
