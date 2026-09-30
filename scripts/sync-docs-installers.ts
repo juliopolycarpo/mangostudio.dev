@@ -65,17 +65,26 @@ export function applyHostedInstallers(markdown: string, lang: Lang): string {
 }
 
 /**
- * Fail loudly when a quickstart lacks the hosted installers, so an upstream wording change cannot
- * silently drop the site-owned PowerShell instructions.
+ * Fail loudly when a quickstart lacks the hosted installers or still carries upstream
+ * release-asset installer text, so an upstream wording change cannot silently drop or mix the
+ * site-owned PowerShell instructions.
+ *
+ * @example
+ * assertHostedInstallers(applyHostedInstallers(readme, 'en'), 'README.md');
  */
 export function assertHostedInstallers(markdown: string, sourcePath: string): void {
-  const missing = [POWERSHELL_INSTALL_CMD, INSTALL_SH_URL].filter(
-    (expected) => !markdown.includes(expected)
+  const missing = [
+    INSTALL_SH_URL,
+    POWERSHELL_INSTALL_CMD,
+    `\`\`\`powershell\n${POWERSHELL_INSTALL_CMD}\n\`\`\``,
+  ].filter((expected) => !markdown.includes(expected));
+  const leftover = ['releases/latest/download/install', '`install.ps1`'].filter((upstream) =>
+    markdown.includes(upstream)
   );
 
-  if (missing.length > 0) {
+  if (missing.length > 0 || leftover.length > 0) {
     throw new Error(
-      `Quickstart ${sourcePath} is missing hosted installer content: ${JSON.stringify(missing)}. Expected the hosted install.sh and install.ps1 commands; update scripts/sync-docs-installers.ts to match the upstream wording.`
+      `Quickstart ${sourcePath} has unexpected installer content | missing: ${JSON.stringify(missing)} | leftover upstream text: ${JSON.stringify(leftover)} | expected: hosted install.sh and install.ps1 commands only; update scripts/sync-docs-installers.ts to match the upstream wording.`
     );
   }
 }

@@ -304,6 +304,29 @@ await run('assertHostedInstallers names the missing commands and source path', (
   );
 });
 
+await run('assertHostedInstallers rejects a leftover upstream Windows paragraph', () => {
+  const drifted = UPSTREAM_QUICKSTART.en.replace(
+    'On Windows, download and run `install.ps1` from the',
+    'On Windows, grab `install.ps1` from the'
+  );
+  let message = '';
+
+  try {
+    assertHostedInstallers(applyHostedInstallers(drifted, 'en'), 'README.md');
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+
+  ok(
+    message.includes('README.md') && message.includes('```powershell'),
+    `expected error naming README.md and the missing powershell block | received: ${JSON.stringify(message)}`
+  );
+  ok(
+    message.includes('`install.ps1`'),
+    `expected error naming the leftover upstream text | received: ${JSON.stringify(message)}`
+  );
+});
+
 await run('syncDocs reproduces hosted installers from upstream release-asset text', async () => {
   const sourceDir = await createSourceFixture();
   const repoRoot = await mkdtemp(join(tmpdir(), 'mango-site-'));
