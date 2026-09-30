@@ -1,6 +1,5 @@
 ---
-import { getImage } from 'astro:assets';
-import { siteAssets } from '@/data/assets';
+import { getLogoImages } from '@/components/logo-images';
 import { CONTRIBUTING_URL, GITHUB_URL, ISSUES_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
@@ -14,7 +13,7 @@ interface Props {
 
 const { lang, pathname, content: c } = Astro.props;
 
-const footerLogo = await getImage({ src: siteAssets.icon192, width: 26, height: 26 });
+const { brand: footerLogo } = await getLogoImages();
 
 const product = [
   { label: c.footer.product.features, href: `${routes.home(lang)}#features` },
@@ -40,7 +39,15 @@ const community = [
   <div class="footer-grid container">
     <div>
       <div class="footer-brand">
-        <img src={footerLogo.src} alt="" width="26" height="26" loading="lazy" decoding="async" />
+        <img
+          src={footerLogo.src}
+          srcset={footerLogo.srcset}
+          alt=""
+          width="26"
+          height="26"
+          loading="lazy"
+          decoding="async"
+        />
         <span class="footer-brand-name">MangoStudio</span>
       </div>
       <p class="footer-tagline">{c.footer.tagline}</p>

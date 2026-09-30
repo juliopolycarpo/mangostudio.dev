@@ -1,6 +1,5 @@
 ---
-import { getImage } from 'astro:assets';
-import { siteAssets } from '@/data/assets';
+import { getLogoImages } from '@/components/logo-images';
 import type { SiteContent } from '@/i18n/types';
 
 interface Props {
@@ -9,8 +8,7 @@ interface Props {
 
 const { content: c } = Astro.props;
 const lineColors = ['var(--text-2)', 'var(--text-3)', 'var(--text-3)', 'var(--success-text)'];
-const chatAvatar = await getImage({ src: siteAssets.icon192, width: 20, height: 20 });
-const demoIcon = await getImage({ src: siteAssets.icon192, width: 40, height: 40 });
+const { avatar: demoIcon } = await getLogoImages();
 ---
 
 <section class="demo-section container">
@@ -49,7 +47,7 @@ const demoIcon = await getImage({ src: siteAssets.icon192, width: 40, height: 40
       </div>
       <div class="browser-body">
         <div class="chat-head">
-          <img src={chatAvatar.src} alt="" width="20" height="20" loading="lazy" decoding="async" />
+          <img src={demoIcon.src} alt="" width="20" height="20" loading="lazy" decoding="async" />
           <span class="chat-name">MangoStudio</span>
           <span class="bspace"></span>
           <span class="chat-online mono">{c.demo.online}</span>
