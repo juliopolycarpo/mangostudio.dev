@@ -158,7 +158,9 @@ export async function syncDocs(options: SyncDocsOptions = {}): Promise<SyncDocsR
       const sourcePath = definition.sources[lang];
       const sourceFile = join(sourceDir, sourcePath);
       const original = await readFile(sourceFile, 'utf8');
-      const cleaned = applyHostedInstallers(sanitizeMarkdown(original), lang);
+      const sanitized = sanitizeMarkdown(original);
+      const cleaned =
+        definition.slug === 'quickstart' ? applyHostedInstallers(sanitized, lang) : sanitized;
 
       if (definition.slug === 'quickstart') {
         assertHostedInstallers(cleaned, sourcePath);
