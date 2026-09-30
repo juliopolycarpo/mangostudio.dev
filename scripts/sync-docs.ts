@@ -4,6 +4,7 @@ import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
 import type { Lang } from '../src/i18n/types';
+import { applyHostedInstallers, assertHostedInstallers } from './sync-docs-installers';
 
 const execFileAsync = promisify(execFile);
 
@@ -152,7 +153,12 @@ export async function syncDocs(options: SyncDocsOptions = {}): Promise<SyncDocsR
       const sourcePath = definition.sources[lang];
       const sourceFile = join(sourceDir, sourcePath);
       const original = await readFile(sourceFile, 'utf8');
-      const cleaned = sanitizeMarkdown(original);
+      const cleaned = applyHostedInstallers(sanitizeMarkdown(original), lang);
+
+      if (definition.slug === 'quickstart') {
+        assertHostedInstallers(cleaned, sourcePath);
+      }
+
       const linked = rewriteMarkdownLinks(cleaned, {
         lang,
         sourcePath,
@@ -371,18 +377,25 @@ function rewriteHref(
     sourcePathMap: Map<string, { lang: Lang; slug: string }>;
   }
 ): string {
-  if (href.startsWith('#') || /^(?:https?:\/\/|mailto:|tel:)/i.test(href)) {
+  if (!isRelativeHref(href)) {
     return href;
   }
 
   const [pathPart = '', suffix = ''] = splitHrefSuffix(href);
 
-  if (!pathPart.endsWith('.md')) {
+  if (!pathPart) {
     return href;
   }
 
   const targetPath = normalizeSourcePath(posix.join(posix.dirname(context.sourcePath), pathPart));
-  const targetDoc = context.sourcePathMap.get(targetPath);
+
+  if (targetPath === '..' || targetPath.startsWith('../')) {
+    throw new Error(
+      `Relative link escapes the source repository | invalid: ${JSON.stringify(href)} in ${context.sourcePath} | expected: a path inside the repository`
+    );
+  }
+
+  const targetDoc = pathPart.endsWith('.md') ? context.sourcePathMap.get(targetPath) : undefined;
 
   if (targetDoc) {
     const prefix = targetDoc.lang === 'en' ? '/en' : '';
@@ -390,6 +403,11 @@ function rewriteHref(
   }
 
   return `${sourceBlobUrl(context.sourceCommit, targetPath)}${suffix}`;
+}
+
+/** True for links relative to the source file: not an anchor, site-root path, or URL with a scheme. */
+function isRelativeHref(href: string): boolean {
+  return !(href.startsWith('#') || href.startsWith('/') || /^[a-z][a-z0-9+.-]*:/i.test(href));
 }
 
 function splitHrefSuffix(href: string): [string, string] {

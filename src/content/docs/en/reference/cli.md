@@ -113,7 +113,7 @@ Host, port, and other settings follow the standard resolution order
 (`process.env` → `.env` next to `config.toml` → `config.toml` → defaults). A positional
 host/port on `serve` is applied as `API_HOST` / `API_PORT` before the server
 reads its config. See
-[`apps/api/src/lib/config.ts`](../../apps/api/src/lib/config.ts) and
+[`apps/api/src/lib/config.ts`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/apps/api/src/lib/config.ts) and
 [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) for the full environment.
 
 If no auth secret is configured, interactive `mangostudio serve` generates a
