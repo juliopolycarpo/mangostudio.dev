@@ -195,7 +195,7 @@ export const en = {
     noResults: 'Nothing found for',
     open: '↵ open',
     close: 'esc close',
-    footer: 'MangoStudio ⌘K',
+    footer: 'MangoStudio',
     items: [
       {
         glyph: '⌂',

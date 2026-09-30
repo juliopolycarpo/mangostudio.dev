@@ -16,6 +16,14 @@ export const INSTALL_PS1_URL = 'https://mangostudio.dev/install.ps1';
 export const POWERSHELL_INSTALL_CMD = `irm ${INSTALL_PS1_URL} | iex`;
 export const SHELL_INSTALL_CMD = `curl -fsSL ${INSTALL_SH_URL} | bash`;
 
+/** Command-palette shortcut hint. `fallback` is rendered on the server so it is correct
+ *  without JavaScript; `src/scripts/cmdk-hint.ts` narrows it to the current platform. */
+export const PALETTE_SHORTCUT = {
+  fallback: 'Ctrl K / ⌘K',
+  mac: '⌘K',
+  other: 'Ctrl K',
+} as const;
+
 export type ChannelStatus = 'ready' | 'planned';
 export type InstallPlatformId = 'windows' | 'linux' | 'macos' | 'docker';
 

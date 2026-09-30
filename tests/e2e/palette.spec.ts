@@ -111,3 +111,47 @@ for (const locale of LOCALES) {
     });
   });
 }
+
+test.describe('shortcut hint', () => {
+  const HINTS = '[data-cmdk-hint]';
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+
+    for (const locale of LOCALES) {
+      test(`states both shortcuts (${locale.name})`, async ({ page }) => {
+        await page.goto(locale.path);
+        await expect(page.locator(HINTS).first(), 'expected static hint: Ctrl K / ⌘K').toHaveText(
+          'Ctrl K / ⌘K'
+        );
+      });
+    }
+  });
+
+  for (const [platform, expected] of [
+    ['MacIntel', '⌘K'],
+    ['Win32', 'Ctrl K'],
+    ['Linux x86_64', 'Ctrl K'],
+  ] as const) {
+    test(`matches the platform (${platform})`, async ({ page }) => {
+      await page.addInitScript((value) => {
+        Object.defineProperty(Navigator.prototype, 'platform', { get: () => value });
+        Object.defineProperty(Navigator.prototype, 'userAgentData', { get: () => undefined });
+      }, platform);
+      await page.goto('/');
+      await expect(
+        page.locator(HINTS).first(),
+        `expected hint on ${platform}: ${expected}`
+      ).toHaveText(expected);
+    });
+  }
+
+  test('docs sidebar hint follows the same rule', async ({ page }) => {
+    await page.goto('/docs/quickstart');
+    const count = await page.locator(HINTS).count();
+    expect(
+      count,
+      `expected hints on a docs page: >= 2 | received: ${count}`
+    ).toBeGreaterThanOrEqual(2);
+  });
+});

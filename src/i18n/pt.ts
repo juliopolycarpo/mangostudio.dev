@@ -203,7 +203,7 @@ export const pt = {
     noResults: 'Nada encontrado para',
     open: '↵ abrir',
     close: 'esc fechar',
-    footer: 'MangoStudio ⌘K',
+    footer: 'MangoStudio',
     items: [
       {
         glyph: '⌂',
