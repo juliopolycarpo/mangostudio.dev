@@ -1,6 +1,5 @@
 ---
-import { getImage } from 'astro:assets';
-import { siteAssets } from '@/data/assets';
+import { getLogoImages } from '@/components/logo-images';
 import { GITHUB_URL } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
@@ -17,7 +16,7 @@ interface Props {
 
 const { lang, pathname, content: c, page } = Astro.props;
 
-const brandLogo = await getImage({ src: siteAssets.icon192, width: 28, height: 28 });
+const { brand: brandLogo } = await getLogoImages();
 
 const nav = [
   {
@@ -56,6 +55,7 @@ const nav = [
   >
     <img
       src={brandLogo.src}
+      srcset={brandLogo.srcset}
       alt=""
       width="28"
       height="28"
