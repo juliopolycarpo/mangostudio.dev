@@ -51,7 +51,7 @@ tar -xzf "mangostudio-${VERSION}-${PLATFORM}.tar.gz" -C /opt/mangostudio
 
 Arquivos Windows usam `.zip` (`windows-x64`, `windows-arm64`). Nomes e layout
 estão documentados em
-[`docs/reference/releasing.md`](/en/docs/reference/releasing#release-asset-naming).
+[`docs/reference/releasing.md`](/en/docs/reference/releasing/#release-asset-naming).
 
 ## Build De Produção
 

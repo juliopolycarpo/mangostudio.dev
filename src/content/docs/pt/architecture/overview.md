@@ -160,7 +160,7 @@ Implementação do provedor (ex.: gemini/interactions-stream.ts)
 Formato de wire do provedor (Gemini / OpenAI / Anthropic / DeepSeek)
 ```
 
-Veja [`continuation.md`](/docs/architecture/continuation) para a arquitetura completa de continuação e [`../providers/development.md`](/docs/providers/development) para o guia de integração de provedores.
+Veja [`continuation.md`](/docs/architecture/continuation/) para a arquitetura completa de continuação e [`../providers/development.md`](/docs/providers/development/) para o guia de integração de provedores.
 
 ## Arquitetura Do Frontend
 

@@ -178,8 +178,8 @@ await run('rewriteMarkdownLinks routes synced docs locally and repo files to Git
       }
     ),
     [
-      '[CLI](/en/docs/reference/cli#commands)',
-      '[Português](/docs/quickstart)',
+      '[CLI](/en/docs/reference/cli/#commands)',
+      '[Português](/docs/quickstart/)',
       '[Package](https://github.com/juliopolycarpo/mangostudio/blob/abc123/packages/cli/README.md)',
     ].join('\n')
   );
@@ -226,7 +226,7 @@ await run('syncDocs writes localized content and a deterministic manifest', asyn
     ok(manifest.includes('DOCS_NAV'));
     ok(manifest.includes('"sourcePath": "docs/reference/cli.md"'));
     ok(englishCli.includes('sourceCommit: "abc123"'));
-    ok(englishCli.includes('[Quickstart](/en/docs/quickstart)'));
+    ok(englishCli.includes('[Quickstart](/en/docs/quickstart/)'));
 
     await syncDocs({ sourceDir, repoRoot, sourceCommit: 'abc123', check: true });
 

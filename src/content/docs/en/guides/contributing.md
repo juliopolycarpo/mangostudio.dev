@@ -51,9 +51,9 @@ bun run dev --frontend
 ## Documentation Map
 
 - [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — entry point to the documentation tree
-- [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart) — shortest contributor onboarding path
-- [`docs/reference/testing.md`](/en/docs/reference/testing) — testing taxonomy, runners, and support rules
-- [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) — feature-by-feature file map for targeted work
+- [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — shortest contributor onboarding path
+- [`docs/reference/testing.md`](/en/docs/reference/testing/) — testing taxonomy, runners, and support rules
+- [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) — feature-by-feature file map for targeted work
 
 ## Code Standards
 
@@ -147,7 +147,7 @@ This is a one-time local setup. The template is at `.gitmessage` in the repo roo
 it by hand. The PR QA workflow posts bot comments on every PR — a commit
 summary, a **Changelog Preview** showing the entries the PR would add, and a QA
 metrics report. Preview the changelog locally with `bun run changelog --preview`. See
-[`docs/reference/releasing.md`](/en/docs/reference/releasing) for the release flow.
+[`docs/reference/releasing.md`](/en/docs/reference/releasing/) for the release flow.
 
 ## Pull Request Process
 

@@ -20,7 +20,7 @@ managing one local server. The same commands work from the installed binary
 ## Install channels
 
 Pick any distribution channel — each ships the same prebuilt binary and frontend
-sidecar. See the [README install matrix](/en/docs/quickstart#install) for
+sidecar. See the [README install matrix](/en/docs/quickstart/#install) for
 copy-paste commands, or:
 
 | Channel            | Entry point                                                                                                                                                                                    |
@@ -30,7 +30,7 @@ copy-paste commands, or:
 | Shell / PowerShell | `install.sh` / `install.ps1` from GitHub Releases                                                                                                                                              |
 | Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                    |
 | Cargo              | `cargo install mangostudio` — see [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) |
-| Docker             | `ghcr.io/juliopolycarpo/mangostudio` — see [`docs/operations/deployment.md`](/en/docs/operations/deployment#docker)                                                                            |
+| Docker             | `ghcr.io/juliopolycarpo/mangostudio` — see [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker)                                                                           |
 | Manual             | Download platform archives from GitHub Releases and verify `SHA256SUMS`                                                                                                                        |
 
 ## Commands

@@ -19,7 +19,7 @@ Docker no GHCR, CLI npm (`mangostudio`), tap Homebrew, bucket Scoop
 changelog é gerado a partir de Conventional Commits com
 [git-cliff](https://git-cliff.org); nada é editado manualmente.
 
-> 🇺🇸 [English version](/en/docs/reference/releasing)
+> 🇺🇸 [English version](/en/docs/reference/releasing/)
 
 ## Contrato one-shot
 
@@ -138,5 +138,5 @@ O workflow executa 14 jobs: `build`, `verify-build`, `github-release`, `docker`,
 `verify-image`, `npm-publish`, `homebrew`, `scoop`, `cargo-publish`,
 `verify-release`, `verify-cargo`, `verify-homebrew`, `update-changelog` e
 `release-summary`. Veja a
-[versão em inglês](/en/docs/reference/releasing#cutting-a-release) para a tabela
+[versão em inglês](/en/docs/reference/releasing/#cutting-a-release) para a tabela
 completa de jobs e detalhes por canal (npm, Docker, Homebrew, Scoop, crates.io).

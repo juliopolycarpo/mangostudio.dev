@@ -15,7 +15,7 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 
 Obrigado pelo seu interesse em contribuir com o MangoStudio!
 
-> 🇺🇸 [Read in English](/en/docs/guides/contributing)
+> 🇺🇸 [Read in English](/en/docs/guides/contributing/)
 
 ## Pré-requisitos
 
@@ -53,9 +53,9 @@ bun run dev --frontend
 ## Mapa da Documentação
 
 - [`../README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — ponto de entrada da árvore de documentação
-- [`../guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart) — caminho mais curto para começar a contribuir
-- [`../reference/testing.md`](/en/docs/reference/testing) — taxonomia de testes, runners e regras de suporte
-- [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks) — mapa de arquivos por feature para trabalho direcionado
+- [`../guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — caminho mais curto para começar a contribuir
+- [`../reference/testing.md`](/en/docs/reference/testing/) — taxonomia de testes, runners e regras de suporte
+- [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) — mapa de arquivos por feature para trabalho direcionado
 
 ## Padrões de Código
 

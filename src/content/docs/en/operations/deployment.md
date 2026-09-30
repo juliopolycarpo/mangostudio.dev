@@ -101,7 +101,7 @@ tar -xzf "mangostudio-${VERSION}-${PLATFORM}.tar.gz" -C /opt/mangostudio
 
 Windows archives use `.zip` instead of `.tar.gz` (`windows-x64`, `windows-arm64`).
 Asset names and archive layout are documented in
-[`docs/reference/releasing.md`](/en/docs/reference/releasing#release-asset-naming).
+[`docs/reference/releasing.md`](/en/docs/reference/releasing/#release-asset-naming).
 
 ## Production Build
 
