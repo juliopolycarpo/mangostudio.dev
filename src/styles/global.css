@@ -450,6 +450,7 @@ pre {
 .theme-toggle {
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
 }
 
 .theme-toggle .icon-light {
@@ -467,6 +468,7 @@ pre {
 /* ─── Language toggle (segmented control) ─── */
 .lang-toggle {
   display: flex;
+  flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: 9px;
   overflow: hidden;
