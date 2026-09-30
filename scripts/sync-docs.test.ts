@@ -115,6 +115,16 @@ await run('extractDescription skips badge rows, quotes, and leading code', () =>
   );
 });
 
+await run('extractDescription drops HTML comments and inline tags but keeps autolinks', () => {
+  strictEqual(
+    extractDescription(
+      '# T\n\n<!--\nhidden\n\nnote -->\n\nSee <https://example.com> and <b>bold</b> <<b>script</b>>text.\n',
+      'T'
+    ),
+    'See https://example.com and bold text.'
+  );
+});
+
 await run('extractDescription finds prose that follows a heading when the intro is missing', () => {
   strictEqual(
     extractDescription('# Policy\n\n## Reporting\n\nReport issues privately.\n', 'Policy'),

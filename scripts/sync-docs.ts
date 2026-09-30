@@ -480,11 +480,10 @@ const NON_PROSE_LINE = /^(?:#{1,6}\s|>|\||[-*+]\s|\d+[.)]\s|<|\s{4}|-{3,}\s*$|\[
  * // => 'Run mangostudio from a shell.'
  */
 export function extractDescription(markdown: string, fallback: string): string {
-  const withoutCode = markdown
-    .replace(/^(`{3,}|~{3,}).*\n[\s\S]*?^\1[^\n]*$/gm, '')
-    .replace(/<!--[\s\S]*?-->/g, '');
+  const withoutCode = markdown.replace(/^(`{3,}|~{3,}).*\n[\s\S]*?^\1[^\n]*$/gm, '');
+  const prose = removeHtmlComments(withoutCode);
 
-  for (const block of withoutCode.split(/\n[ \t]*\n/)) {
+  for (const block of prose.split(/\n[ \t]*\n/)) {
     const paragraph = proseLines(block).join(' ');
     const text = stripInlineMarkdown(paragraph);
 
@@ -513,20 +512,37 @@ function proseLines(block: string): string[] {
 
 /** True when the paragraph is nothing but links and images, such as a badge row. */
 function isLinkOnly(text: string): boolean {
-  return (
-    text
-      .replace(/!?\[[^\]]*\]\([^)]*\)/g, '')
-      .replace(/<[^>]+>/g, '')
-      .trim() === ''
-  );
+  return text.replace(/!?\[[^\]]*\]\([^)]*\)/g, '').trim() === '';
+}
+
+function removeHtmlComments(text: string): string {
+  let result = text;
+
+  for (let start = result.indexOf('<!--'); start !== -1; start = result.indexOf('<!--')) {
+    const end = result.indexOf('-->', start + 4);
+
+    result = end === -1 ? result.slice(0, start) : result.slice(0, start) + result.slice(end + 3);
+  }
+
+  return result;
+}
+
+/** Drop inline HTML tags, repeating until none remain so nested fragments cannot reassemble one. */
+function stripHtmlTags(text: string): string {
+  let result = text;
+
+  for (let previous = ''; previous !== result; ) {
+    previous = result;
+    result = result.replace(/<\/?[A-Za-z][^<>]*>/g, '');
+  }
+
+  return result;
 }
 
 function stripInlineMarkdown(text: string): string {
-  return text
+  return stripHtmlTags(text.replace(/<(https?:[^>]+)>/g, '$1'))
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/<(https?:[^>]+)>/g, '$1')
-    .replace(/<[^>]+>/g, '')
     .replace(/(`+)(.+?)\1/g, '$2')
     .replace(/(\*\*|__)(.+?)\1/g, '$2')
     .replace(/~~(.+?)~~/g, '$1')
