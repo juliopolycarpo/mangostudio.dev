@@ -354,7 +354,9 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
   .docs-markdown :global(pre code) {
     font-size: 13.5px;
     line-height: 1.7;
-    color: var(--text);
+    /* Blocks keep the always-dark Shiki background, so untinted tokens must inherit the
+       block's own foreground instead of the theme text color (dark on dark in light mode). */
+    color: inherit;
     background: transparent;
     border: 0;
     padding: 0;
