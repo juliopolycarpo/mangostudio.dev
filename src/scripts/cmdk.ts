@@ -1,3 +1,4 @@
+import { revealEnhanced } from './enhance';
 import { toggleTheme } from './theme';
 
 export function initCmdk(): void {
@@ -92,6 +93,7 @@ export function initCmdk(): void {
   for (const trigger of document.querySelectorAll('[data-cmdk-open]')) {
     trigger.addEventListener('click', () => open());
   }
+  revealEnhanced('cmdk');
 
   window.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {

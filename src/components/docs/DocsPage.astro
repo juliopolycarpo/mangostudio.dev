@@ -29,7 +29,13 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
 
 <div class="docs">
   <aside class="docs-sidebar">
-    <button type="button" class="docs-search" data-cmdk-open aria-haspopup="dialog">
+    <button
+      type="button"
+      class="docs-search"
+      data-cmdk-open
+      data-enhance="cmdk"
+      aria-haspopup="dialog"
+    >
       <Icon name="search" size={13} />
       <span class="docs-search-label">{c.docs.searchSidebar}</span>
       <kbd

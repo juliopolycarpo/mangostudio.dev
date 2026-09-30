@@ -1,3 +1,5 @@
+import { revealEnhanced } from './enhance';
+
 const CHANNEL_STORAGE_KEY = 'mango.installCh';
 const PLATFORM_STORAGE_KEY = 'mango.installPlatform';
 const DEFAULT_PLATFORM = 'linux';
@@ -214,4 +216,5 @@ export function initInstallTabs(): void {
   }
 
   selectPlatform(initialPlatform, initialChannel);
+  revealEnhanced('install');
 }

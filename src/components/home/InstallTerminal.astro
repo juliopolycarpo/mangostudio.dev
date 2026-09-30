@@ -21,6 +21,15 @@ const initial = INSTALL_TABS.find((tab) => tab.id === initialPlatform.defaultCha
 if (!initial) {
   throw new Error(`Missing default install channel: ${initialPlatform.defaultChannel}`);
 }
+
+// Every ready command is rendered as plain text for visitors without JavaScript
+// (or with a blocked bundle). The interactive tabs replace this list once
+// initInstallTabs runs.
+const platformLabels = new Map(INSTALL_PLATFORMS.map((platform) => [platform.id, platform.label]));
+const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map((tab) => ({
+  ...tab,
+  platformLabels: tab.platforms.map((id) => platformLabels.get(id) ?? id).join(', '),
+}));
 ---
 
 <div class="install">
@@ -34,6 +43,7 @@ if (!initial) {
   <div
     class="install-tabs"
     id="install-platform-tabs"
+    data-enhance="install"
     role="tablist"
     aria-label={c.install.platformTabsLabel}
   >
@@ -59,7 +69,13 @@ if (!initial) {
     }
   </div>
 
-  <div class="install-tabs" id="install-tabs" role="tablist" aria-label={c.install.methodTabsLabel}>
+  <div
+    class="install-tabs"
+    id="install-tabs"
+    data-enhance="install"
+    role="tablist"
+    aria-label={c.install.methodTabsLabel}
+  >
     {
       INSTALL_TABS.map((tab) => {
         const isPlanned = tab.status === 'planned';
@@ -91,9 +107,26 @@ if (!initial) {
     }
   </div>
 
+  <ul class="install-static" data-enhance-fallback="install">
+    {
+      staticCommands.map((tab) => (
+        <li>
+          <span class="install-static-meta">
+            {tab.label} · {tab.platformLabels}
+          </span>
+          <code class="install-static-code">
+            <span class="prompt">{tab.prompt}</span>
+            {tab.cmd}
+          </code>
+        </li>
+      ))
+    }
+  </ul>
+
   <div
     class="install-cmd"
     id="install-panel"
+    data-enhance="install"
     role="tabpanel"
     aria-labelledby={`install-tab-${initial.id}`}
     data-platform={initialPlatform.id}
@@ -206,6 +239,32 @@ if (!initial) {
     overflow-x: auto;
     white-space: nowrap;
     min-width: 0;
+  }
+
+  .install-static {
+    list-style: none;
+    margin: 0;
+    padding: 8px 16px 14px;
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .install-static-meta {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-bottom: 2px;
+  }
+
+  .install-static-code {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .install-hint {
