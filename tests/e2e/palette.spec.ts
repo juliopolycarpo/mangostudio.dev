@@ -156,6 +156,30 @@ test.describe('shortcut hint', () => {
     });
   }
 
+  // Chromium exposes userAgentData.platform, which the initializer prefers over the legacy
+  // navigator.platform. The legacy value contradicts it here to prove UA-CH wins.
+  for (const [uaPlatform, legacyPlatform, expected] of [
+    ['macOS', 'Win32', '⌘K'],
+    ['Windows', 'MacIntel', 'Ctrl K'],
+  ] as const) {
+    test(`prefers userAgentData over navigator.platform (${uaPlatform})`, async ({ page }) => {
+      await page.addInitScript(
+        ([ua, legacy]) => {
+          Object.defineProperty(Navigator.prototype, 'platform', { get: () => legacy });
+          Object.defineProperty(Navigator.prototype, 'userAgentData', {
+            get: () => ({ platform: ua }),
+          });
+        },
+        [uaPlatform, legacyPlatform]
+      );
+      await page.goto('/');
+      await expect(
+        page.locator(HINTS).first(),
+        `expected hint for userAgentData.platform=${uaPlatform}: ${expected}`
+      ).toHaveText(expected);
+    });
+  }
+
   test('docs sidebar hint follows the same rule', async ({ page }) => {
     await page.goto('/docs/quickstart');
     const count = await page.locator(HINTS).count();
