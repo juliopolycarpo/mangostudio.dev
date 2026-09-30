@@ -98,6 +98,31 @@ export function validateDocsRedirects(text: string): string[] {
     .map((rule) => `dist/_redirects expected rule "${rule}" | received: ${[...rules].join(' ; ')}`);
 }
 
+/**
+ * Internal page hrefs (anchors and `<link>`s) that lack the canonical trailing slash.
+ * Cloudflare answers those with a redirect, so every in-site link must already use the slash
+ * form. File links (`/install.sh`, `/_astro/app.css`) and fragment-only hrefs are exempt.
+ *
+ * @example findSlashlessInternalHrefs('<a href="/docs/quickstart">x</a>') // ['/docs/quickstart']
+ */
+export function findSlashlessInternalHrefs(
+  html: string,
+  canonicalOrigin = CANONICAL_ORIGIN
+): string[] {
+  const base = new URL('/', canonicalOrigin);
+
+  return extractCrawlHrefs(html).filter((href) => {
+    const url = parseSameOriginUrl(href, base, canonicalOrigin);
+
+    return (
+      url !== null &&
+      url.pathname !== '' &&
+      !url.pathname.endsWith('/') &&
+      !/\.[A-Za-z0-9]+$/.test(basename(url.pathname))
+    );
+  });
+}
+
 export function extractRouteIntegrityHrefs(html: string): string[] {
   const hrefs = new Set<string>();
 
@@ -223,6 +248,7 @@ async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
     await smokeInternalLinkGraph(distDir),
     await smokeLinkCrawl(distDir),
     await smokeNoPrefetch(distDir),
+    await smokeTrailingSlashHrefs(distDir),
   ];
 }
 
@@ -857,6 +883,23 @@ async function smokeLinkCrawl(distDir: string): Promise<SmokeSection> {
     name: `Full link and fragment crawl (${snapshot.html.size} pages)`,
     errors: findBrokenLinks(snapshot).map(formatBrokenLink),
   };
+}
+
+async function smokeTrailingSlashHrefs(distDir: string): Promise<SmokeSection> {
+  const errors: string[] = [];
+
+  for (const file of await findDistFiles(distDir, '.html')) {
+    const html = await readTextFile(join(distDir, file), errors);
+    const slashless = findSlashlessInternalHrefs(html);
+
+    if (slashless.length > 0) {
+      errors.push(
+        `dist/${file} expected internal hrefs to end in "/" | received ${slashless.length}: ${slashless.slice(0, 3).join(', ')}`
+      );
+    }
+  }
+
+  return { name: 'Trailing-slash internal hrefs', errors };
 }
 
 async function findDistFiles(distDir: string, extension: string): Promise<string[]> {

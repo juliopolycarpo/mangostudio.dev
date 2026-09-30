@@ -13,6 +13,7 @@ import {
   findNonCanonicalOrigins,
   findPrefetchAttributeElements,
   findSitemapNotFoundUrls,
+  findSlashlessInternalHrefs,
   formatBrokenLink,
   isAstroPrefetchRuntime,
   parseRedirects,
@@ -155,6 +156,25 @@ run('public/_redirects declares every docs redirect', () => {
   const text = readFileSync(new URL('../public/_redirects', import.meta.url), 'utf8');
 
   deepStrictEqual(validateDocsRedirects(text), []);
+});
+
+run('findSlashlessInternalHrefs flags internal page links without a trailing slash', () => {
+  const html = [
+    '<a href="/docs/quickstart">a</a>',
+    '<a href="/en/releases?x=1#top">b</a>',
+    '<a href="https://mangostudio.dev/docs/cli">c</a>',
+    '<a href="/docs/quickstart/">ok</a>',
+    '<a href="/docs/quickstart/#install">ok</a>',
+    '<a href="#install">ok</a>',
+    '<a href="/install.sh">file</a>',
+    '<a href="https://github.com/juliopolycarpo/mangostudio">external</a>',
+  ].join('');
+
+  deepStrictEqual(findSlashlessInternalHrefs(html), [
+    '/docs/quickstart',
+    '/en/releases?x=1#top',
+    'https://mangostudio.dev/docs/cli',
+  ]);
 });
 
 run('resolveInternalHrefToDistFile maps internal routes to emitted files', () => {
