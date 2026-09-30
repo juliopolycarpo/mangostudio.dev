@@ -82,6 +82,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
       </a>
     </div>
 
+    <span id="docs-copy-label" hidden>{c.docs.copyCode}</span>
     <div class="docs-markdown">
       <Content />
     </div>
@@ -405,6 +406,17 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     padding: 0.08em 0.32em;
   }
 
+  /* Shell blocks are wrapped by the docs-code-copy Shiki transformer; the wrapper owns the
+     block margin so the absolutely placed copy button lines up with the pre's border box. */
+  .docs-markdown :global(.code-block) {
+    position: relative;
+    margin: 16px 0 0;
+  }
+
+  .docs-markdown :global(.code-block > pre) {
+    margin: 0;
+  }
+
   .docs-markdown :global(pre) {
     margin: 16px 0 0;
     border: 1px solid var(--border);
@@ -423,6 +435,34 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     background: transparent;
     border: 0;
     padding: 0;
+  }
+
+  /* The block stays dark in both themes, so the button uses fixed light-on-dark colors.
+     Reserve right padding only when JS is expected, so the no-JS layout is untouched. */
+  .docs-markdown :global(.code-copy) {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid #444c56;
+    border-radius: 7px;
+    background: #2d333b;
+    color: #cdd9e5;
+    cursor: pointer;
+  }
+
+  .docs-markdown :global(.code-copy:hover) {
+    color: #fff;
+    border-color: color-mix(in srgb, var(--mango) 60%, #444c56);
+  }
+
+  :global(html.js) .docs-markdown :global(.code-block > pre) {
+    padding-right: 48px;
   }
 
   .docs-markdown :global(table) {

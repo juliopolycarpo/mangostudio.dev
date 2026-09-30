@@ -198,6 +198,7 @@ export const pt = {
     sourceLabel: 'Fonte no GitHub',
     previousLabel: '← Anterior',
     nextLabel: 'Próximo →',
+    copyCode: 'Copiar código',
   },
   cmdk: {
     label: 'Navegação entre páginas',

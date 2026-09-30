@@ -1,6 +1,7 @@
 // @ts-check
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
+import { docsCodeCopyTransformer } from './scripts/docs-code-copy.ts';
 import { flatLocalizedNotFound, isNotFoundUrl } from './scripts/localized-not-found.ts';
 
 // Shiki's github-dark comment gray (#6a737d) is 3.05:1 on the #24292e code background,
@@ -13,7 +14,7 @@ const ACCESSIBLE_COMMENT = '#959da5';
 
 /**
  * Shiki transformer that lifts comment tokens to an accessible color.
- * Usage: `shikiConfig: { transformers: [commentContrastTransformer()] }`
+ * Usage: `shikiConfig: { transformers: [commentContrastTransformer(), docsCodeCopyTransformer()] }`
  */
 function commentContrastTransformer() {
   return {
@@ -53,7 +54,7 @@ export default defineConfig({
   // Bare /docs redirects live in public/_redirects (an HTTP redirect, not a meta-refresh page).
   markdown: {
     shikiConfig: {
-      transformers: [commentContrastTransformer()],
+      transformers: [commentContrastTransformer(), docsCodeCopyTransformer()],
     },
   },
   // Fully static output — no adapter. Cloudflare serves ./dist as Workers static assets.
