@@ -377,18 +377,25 @@ function rewriteHref(
     sourcePathMap: Map<string, { lang: Lang; slug: string }>;
   }
 ): string {
-  if (href.startsWith('#') || /^(?:https?:\/\/|mailto:|tel:)/i.test(href)) {
+  if (!isRelativeHref(href)) {
     return href;
   }
 
   const [pathPart = '', suffix = ''] = splitHrefSuffix(href);
 
-  if (!pathPart.endsWith('.md')) {
+  if (!pathPart) {
     return href;
   }
 
   const targetPath = normalizeSourcePath(posix.join(posix.dirname(context.sourcePath), pathPart));
-  const targetDoc = context.sourcePathMap.get(targetPath);
+
+  if (targetPath === '..' || targetPath.startsWith('../')) {
+    throw new Error(
+      `Relative link escapes the source repository | invalid: ${JSON.stringify(href)} in ${context.sourcePath} | expected: a path inside the repository`
+    );
+  }
+
+  const targetDoc = pathPart.endsWith('.md') ? context.sourcePathMap.get(targetPath) : undefined;
 
   if (targetDoc) {
     const prefix = targetDoc.lang === 'en' ? '/en' : '';
@@ -396,6 +403,11 @@ function rewriteHref(
   }
 
   return `${sourceBlobUrl(context.sourceCommit, targetPath)}${suffix}`;
+}
+
+/** True for links relative to the source file: not an anchor, site-root path, or URL with a scheme. */
+function isRelativeHref(href: string): boolean {
+  return !(href.startsWith('#') || href.startsWith('/') || /^[a-z][a-z0-9+.-]*:/i.test(href));
 }
 
 function splitHrefSuffix(href: string): [string, string] {

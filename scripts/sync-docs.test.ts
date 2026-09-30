@@ -70,6 +70,91 @@ Remote
   );
 });
 
+const REPO_BLOB = 'https://github.com/juliopolycarpo/mangostudio/blob/abc123';
+
+function rewriteFrom(sourcePath: string, markdown: string): string {
+  return rewriteMarkdownLinks(markdown, {
+    lang: 'en',
+    sourcePath,
+    sourceCommit: 'abc123',
+    sourcePathMap: new Map(),
+  });
+}
+
+await run('rewriteMarkdownLinks resolves repository-relative files against the source path', () => {
+  const cases: Array<[string, string, string]> = [
+    ['README.md', '[MIT](LICENSE)', `[MIT](${REPO_BLOB}/LICENSE)`],
+    ['README.md', '[MIT](./LICENSE)', `[MIT](${REPO_BLOB}/LICENSE)`],
+    ['docs/pt-br/README.md', '[MIT](../../LICENSE)', `[MIT](${REPO_BLOB}/LICENSE)`],
+    [
+      'docs/reference/cli.md',
+      '[config](../../apps/api/src/lib/config.ts)',
+      `[config](${REPO_BLOB}/apps/api/src/lib/config.ts)`,
+    ],
+    ['docs/reference/cli.md', '[dir](../../apps/api/)', `[dir](${REPO_BLOB}/apps/api/)`],
+    [
+      '.github/CONTRIBUTING.md',
+      '<a href="../scripts/install/install.sh">installer</a>',
+      `<a href="${REPO_BLOB}/scripts/install/install.sh">installer</a>`,
+    ],
+  ];
+
+  for (const [sourcePath, input, expected] of cases) {
+    strictEqual(
+      rewriteFrom(sourcePath, input),
+      expected,
+      `expected ${input} from ${sourcePath} to resolve to ${expected}`
+    );
+  }
+});
+
+await run('rewriteMarkdownLinks keeps fragments and queries on resolved files', () => {
+  strictEqual(
+    rewriteFrom('docs/reference/cli.md', '[line](../../apps/api/src/lib/config.ts#L10-L20)'),
+    `[line](${REPO_BLOB}/apps/api/src/lib/config.ts#L10-L20)`
+  );
+  strictEqual(
+    rewriteFrom('README.md', '[raw](LICENSE?plain=1#L2)'),
+    `[raw](${REPO_BLOB}/LICENSE?plain=1#L2)`
+  );
+});
+
+await run('rewriteMarkdownLinks leaves anchors, site URLs, and external URLs untouched', () => {
+  const untouched = [
+    '[a](#install)',
+    '[b](/docs/quickstart)',
+    '[c](/en/docs/reference/cli#commands)',
+    '[d](/install.sh)',
+    '[e](https://mangostudio.dev/install.sh)',
+    '[f](mailto:hello@mangostudio.dev)',
+    '[g](//cdn.example.com/x)',
+    '<a href="/en/docs/quickstart">h</a>',
+  ];
+
+  for (const input of untouched) {
+    strictEqual(
+      rewriteFrom('docs/reference/cli.md', input),
+      input,
+      `expected ${input} to stay unchanged`
+    );
+  }
+});
+
+await run('rewriteMarkdownLinks rejects relative links that escape the repository', () => {
+  let message = '';
+
+  try {
+    rewriteFrom('docs/reference/cli.md', '[out](../../../secrets.txt)');
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+
+  ok(
+    message.includes('../../../secrets.txt') && message.includes('docs/reference/cli.md'),
+    `expected error naming the invalid link and its source | received: ${JSON.stringify(message)}`
+  );
+});
+
 await run('rewriteMarkdownLinks routes synced docs locally and repo files to GitHub blobs', () => {
   const sourcePathMap = new Map([
     ['README.md', { lang: 'en' as const, slug: 'quickstart' }],
