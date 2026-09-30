@@ -17,6 +17,7 @@ interface Layout {
   articleRight: number;
   articleWidth: number;
   hasAside: boolean;
+  hasTocClass: boolean;
   items: number;
 }
 
@@ -33,6 +34,7 @@ async function layout(page: Page): Promise<Layout> {
       articleRight: articleBox.right,
       articleWidth: articleBox.width,
       hasAside: document.querySelector('aside.docs-toc') !== null,
+      hasTocClass: docs.classList.contains('has-toc'),
       items: document.querySelectorAll('.docs-toc-item').length,
     };
   });
@@ -56,7 +58,7 @@ test.describe('docs table of contents column', () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto(locale.path);
       const hrefs = await page
-        .locator('.docs-link')
+        .locator('.docs-sidebar a.docs-link')
         .evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''));
       expect(hrefs.length, `expected docs links: >= 1 | received: ${hrefs.length}`).toBeGreaterThan(
         0
@@ -64,10 +66,14 @@ test.describe('docs table of contents column', () => {
 
       for (const href of hrefs) {
         await page.goto(href);
-        const { hasAside, items, columns } = await layout(page);
+        const { hasAside, hasTocClass, items, columns } = await layout(page);
         expect(
           hasAside,
           `${href}: expected aside.docs-toc only with entries | received: aside=${hasAside}, entries=${items}`
+        ).toBe(items > 0);
+        expect(
+          hasTocClass,
+          `${href}: expected .docs.has-toc only with entries | received: has-toc=${hasTocClass}, entries=${items}`
         ).toBe(items > 0);
         expect(
           columns,
