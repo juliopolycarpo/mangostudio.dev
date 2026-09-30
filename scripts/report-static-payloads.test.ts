@@ -38,47 +38,50 @@ await run('gzipByteLength treats empty payloads as zero bytes', () => {
   strictEqual(gzipByteLength('hello') > 0, true);
 });
 
-await run('formatStaticPayloadReport includes first-load, repeat, and remote summaries', () => {
-  const report: StaticPayloadReport = {
-    pages: [
-      {
-        label: 'home HTML',
-        path: 'index.html',
-        htmlRawBytes: 100,
-        htmlGzipBytes: 40,
-        linkedCssRawBytes: 30,
-        linkedCssGzipBytes: 12,
-        inlineCssRawBytes: 0,
-        inlineCssGzipBytes: 0,
-      },
-    ],
-    cssAssets: [{ path: '_astro/Home.css', rawBytes: 30, gzipBytes: 12 }],
-    jsAssets: [{ path: '_astro/Base.js', rawBytes: 20, gzipBytes: 10 }],
-    woff2Assets: [],
-    remoteRuntimeAssets: [],
-  };
+await run(
+  'formatStaticPayloadReport includes HTML + linked CSS, repeat, and remote summaries',
+  () => {
+    const report: StaticPayloadReport = {
+      pages: [
+        {
+          label: 'home HTML',
+          path: 'index.html',
+          htmlRawBytes: 100,
+          htmlGzipBytes: 40,
+          linkedCssRawBytes: 30,
+          linkedCssGzipBytes: 12,
+          inlineCssRawBytes: 0,
+          inlineCssGzipBytes: 0,
+        },
+      ],
+      cssAssets: [{ path: '_astro/Home.css', rawBytes: 30, gzipBytes: 12 }],
+      jsAssets: [{ path: '_astro/Base.js', rawBytes: 20, gzipBytes: 10 }],
+      woff2Assets: [],
+      remoteRuntimeAssets: [],
+    };
 
-  strictEqual(
-    formatStaticPayloadReport(report),
-    [
-      '## Static payload report',
-      '',
-      '| Page | HTML raw | HTML gzip | linked CSS raw | linked CSS gzip | inline CSS raw | inline CSS gzip | first-load raw | first-load gzip | repeat gzip |',
-      '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
-      '| home HTML | 100 | 40 | 30 | 12 | 0 | 0 | 130 | 52 | 40 |',
-      '',
-      '| Asset | Raw | Gzip |',
-      '| --- | ---: | ---: |',
-      '| _astro/Home.css | 30 | 12 |',
-      '| _astro/Base.js | 20 | 10 |',
-      '',
-      '| Remote runtime asset | Source | Context |',
-      '| --- | --- | --- |',
-      '| none | - | - |',
-      '',
-    ].join('\n')
-  );
-});
+    strictEqual(
+      formatStaticPayloadReport(report),
+      [
+        '## Static payload report',
+        '',
+        '| Page | HTML raw | HTML gzip | linked CSS raw | linked CSS gzip | inline CSS raw | inline CSS gzip | HTML + linked CSS raw | HTML + linked CSS gzip | repeat gzip |',
+        '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+        '| home HTML | 100 | 40 | 30 | 12 | 0 | 0 | 130 | 52 | 40 |',
+        '',
+        '| Asset | Raw | Gzip |',
+        '| --- | ---: | ---: |',
+        '| _astro/Home.css | 30 | 12 |',
+        '| _astro/Base.js | 20 | 10 |',
+        '',
+        '| Remote runtime asset | Source | Context |',
+        '| --- | --- | --- |',
+        '| none | - | - |',
+        '',
+      ].join('\n')
+    );
+  }
+);
 
 await run('collectStaticPayloadReport includes WOFF2 and remote runtime assets', async () => {
   const distDir = await mkdtemp(join(tmpdir(), 'mango-payloads-'));

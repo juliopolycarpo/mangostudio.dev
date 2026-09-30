@@ -111,7 +111,7 @@ export function formatStaticPayloadReport(report: StaticPayloadReport): string {
   return [
     '## Static payload report',
     '',
-    '| Page | HTML raw | HTML gzip | linked CSS raw | linked CSS gzip | inline CSS raw | inline CSS gzip | first-load raw | first-load gzip | repeat gzip |',
+    '| Page | HTML raw | HTML gzip | linked CSS raw | linked CSS gzip | inline CSS raw | inline CSS gzip | HTML + linked CSS raw | HTML + linked CSS gzip | repeat gzip |',
     '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...report.pages.map(formatPagePayload),
     '',
