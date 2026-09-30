@@ -1,6 +1,6 @@
 ---
 import type { Lang, SiteContent } from '@/i18n/types';
-import { alternatePath } from '@/i18n/ui';
+import { alternatePath, languages } from '@/i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -21,10 +21,12 @@ const options: { code: Lang; label: string }[] = [
       <a
         href={alternatePath(pathname, option.code)}
         hreflang={option.code}
+        lang={option.code}
         class:list={['lang-opt', { 'is-active': lang === option.code }]}
         aria-current={lang === option.code ? 'true' : undefined}
       >
         {option.label}
+        <span class="visually-hidden"> {languages[option.code]}</span>
       </a>
     ))
   }

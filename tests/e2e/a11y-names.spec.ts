@@ -5,6 +5,7 @@ import { fillCopyLabel } from '../../src/i18n/copy-label';
 import { en } from '../../src/i18n/en';
 import { pt } from '../../src/i18n/pt';
 import type { SiteContent } from '../../src/i18n/types';
+import { languages } from '../../src/i18n/ui';
 
 const LOCALES: { name: string; path: string; content: SiteContent }[] = [
   { name: 'pt', path: '/', content: pt },
@@ -181,6 +182,27 @@ for (const locale of LOCALES) {
     const name = fillCopyLabel(c.copyCommandLabel, c.releases.installTarget);
     await expect(page.getByRole('button', { name, exact: true })).toHaveCount(1);
   });
+
+  for (const code of ['pt', 'en'] as const) {
+    test(`${locale.name} ${code.toUpperCase()} language links keep the code and add the language name`, async ({
+      page,
+    }) => {
+      await page.goto(locale.path);
+      const name = `${code.toUpperCase()} ${languages[code]}`;
+      const links = page.getByRole('link', { name, exact: true });
+      // One in the header, one in the footer.
+      await expect(
+        links,
+        `expected 2 links named "${name}" | received: ${JSON.stringify(
+          await page.locator('.lang-opt').allTextContents()
+        )}`
+      ).toHaveCount(2);
+      for (const link of await links.all()) {
+        await expect(link).toHaveAttribute('hreflang', code);
+        await expect(link).toHaveAttribute('lang', code);
+      }
+    });
+  }
 
   test(`${locale.name} primary navigation uses the localized landmark name`, async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
