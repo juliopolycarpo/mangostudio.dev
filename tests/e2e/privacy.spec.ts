@@ -6,14 +6,14 @@ const LOCALES = [
   {
     path: '/',
     name: 'pt',
-    absolutePromise: /nunca saem|sem nuvem|100% local|offline-first/i,
+    absolutePromise: /nunca saem|sem nuvem|100% local|offline-first|rodando na sua máquina/i,
     stayLocal: /banco de dados e as chaves de API ficam na sua máquina/i,
     goesToProvider: /prompts e conteúdo vão apenas para o provedor que você escolher/i,
   },
   {
     path: '/en/',
     name: 'en',
-    absolutePromise: /never leaves|no cloud|100% local|offline-first/i,
+    absolutePromise: /never leaves|no cloud|100% local|offline-first|running on your machine/i,
     stayLocal: /database, and API keys stay on your machine/i,
     goesToProvider: /prompts and content go only to the provider you select/i,
   },
