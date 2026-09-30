@@ -7,9 +7,11 @@ import {
   extractPrefetchHrefs,
   extractRouteIntegrityHrefs,
   findNonCanonicalOrigins,
+  findSitemapNotFoundUrls,
   redirectHtmlReferencesTarget,
   resolveInternalHrefToDistFile,
   resolveInternalHrefToRoutePath,
+  validateNotFoundMetadata,
 } from './smoke-dist';
 
 run('deriveDocSlugs returns unique sorted doc slugs from grouped content', () => {
@@ -38,12 +40,70 @@ run('deriveRequiredDistFiles derives locale routes from docs groups', () => {
     'en/docs/quickstart/index.html',
     'en/docs/guides/contributing/index.html',
     '404.html',
+    'en/404.html',
     'robots.txt',
     'site.webmanifest',
     'sitemap-index.xml',
   ]) {
     ok(required.includes(expected), `${expected} should be required`);
   }
+});
+
+const PT_404 = { file: '404.html', lang: 'pt', home: '/' } as const;
+const EN_404 = { file: 'en/404.html', lang: 'en', home: '/en/' } as const;
+
+function notFoundHtml(lang: string, head = '<meta name="robots" content="noindex">'): string {
+  return (
+    `<!doctype html><html lang="${lang}"><head>${head}</head><body>` +
+    '<a href="/" hreflang="pt">PT</a><a href="/en/" hreflang="en">EN</a></body></html>'
+  );
+}
+
+run('validateNotFoundMetadata accepts a noindex page with home-pointing toggle', () => {
+  deepStrictEqual(validateNotFoundMetadata(notFoundHtml('pt'), PT_404), []);
+  deepStrictEqual(validateNotFoundMetadata(notFoundHtml('en'), EN_404), []);
+});
+
+run('validateNotFoundMetadata reports a wrong lang with expected and received', () => {
+  deepStrictEqual(validateNotFoundMetadata(notFoundHtml('pt'), EN_404), [
+    'dist/en/404.html must set <html lang="en"> | received: pt',
+  ]);
+});
+
+run('validateNotFoundMetadata reports missing noindex, canonical, and alternates', () => {
+  const errors = validateNotFoundMetadata(
+    notFoundHtml(
+      'en',
+      '<link rel="canonical" href="https://mangostudio.dev/en/404/">' +
+        '<link rel="alternate" hreflang="pt" href="https://mangostudio.dev/404/">'
+    ),
+    EN_404
+  );
+
+  strictEqual(errors.length, 3, errors.join('\n'));
+  ok(errors[0]?.includes('noindex'), errors[0]);
+  ok(errors[1]?.includes('rel="canonical"'), errors[1]);
+  ok(errors[2]?.includes('rel="alternate"'), errors[2]);
+});
+
+run('validateNotFoundMetadata rejects a language toggle that targets a missing 404 twin', () => {
+  const html = notFoundHtml('en').replace(
+    'href="/en/" hreflang="en"',
+    'href="/en/404/" hreflang="en"'
+  );
+
+  deepStrictEqual(validateNotFoundMetadata(html, EN_404), [
+    'dist/en/404.html language toggle must link to a locale home | received: /en/404/',
+  ]);
+});
+
+run('findSitemapNotFoundUrls flags root and localized error pages only', () => {
+  deepStrictEqual(
+    findSitemapNotFoundUrls(
+      'https://mangostudio.dev/\nhttps://mangostudio.dev/404/\nhttps://mangostudio.dev/en/404\nhttps://mangostudio.dev/docs/x404/'
+    ),
+    ['https://mangostudio.dev/404/', 'https://mangostudio.dev/en/404']
+  );
 });
 
 run('redirectHtmlReferencesTarget matches Astro redirect output form', () => {

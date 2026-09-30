@@ -7,6 +7,12 @@ import type { Lang } from '../src/i18n/types';
 import { routes } from '../src/i18n/ui';
 
 const CANONICAL_ORIGIN = 'https://mangostudio.dev';
+/** Flat error pages Cloudflare's `404-page` handling serves per locale. */
+const NOT_FOUND_PAGES: readonly { file: string; lang: Lang; home: string }[] = [
+  { file: '404.html', lang: 'pt', home: routes.home('pt') },
+  { file: 'en/404.html', lang: 'en', home: routes.home('en') },
+];
+
 const DOCS_BY_LANG = DOCS_NAV satisfies LocaleRouteContent;
 
 interface SmokeSection {
@@ -26,7 +32,7 @@ type LocaleRouteContent = Record<Lang, readonly DocRouteGroup[]>;
 
 export function deriveRequiredDistFiles(contentByLang: LocaleRouteContent): string[] {
   const files = new Set([
-    '404.html',
+    ...NOT_FOUND_PAGES.map((page) => page.file),
     'robots.txt',
     'sitemap-index.xml',
     routeToDistFile(routes.home('pt')),
@@ -159,6 +165,11 @@ export function findNonCanonicalOrigins(
   return extractUrlOrigins(text).filter((origin) => origin !== canonicalOrigin);
 }
 
+/** Sitemap `<loc>` URLs that point at an error page (`/404`, `/en/404/`). */
+export function findSitemapNotFoundUrls(locText: string): string[] {
+  return locText.split('\n').filter((url) => /\/404\/?$/.test(url.trim()));
+}
+
 async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
   const distDir = join(repoRoot, 'dist');
 
@@ -250,29 +261,95 @@ async function smokeReadyDocs(distDir: string): Promise<SmokeSection> {
   return { name: 'Ready docs content', errors };
 }
 
-async function smokeNotFoundLinks(distDir: string): Promise<SmokeSection> {
+export function validateNotFoundMetadata(
+  html: string,
+  expected: { file: string; lang: Lang; home: string }
+): string[] {
+  const label = `dist/${expected.file}`;
   const errors: string[] = [];
-  const html = await readTextFile(join(distDir, '404.html'), errors);
-  const section = html ? (extractElementWithClass(html, 'nf') ?? html) : '';
-  const hrefs = extractAnchorHrefs(section);
+  const htmlLang = /<html\b[^>]*\slang=["']([^"']*)["']/i.exec(html)?.[1];
 
-  if (!hrefs.some((href) => href === '/' || href === '/en/')) {
-    errors.push('dist/404.html must link to a localized home route.');
+  if (htmlLang !== expected.lang) {
+    errors.push(`${label} must set <html lang="${expected.lang}"> | received: ${htmlLang}`);
   }
 
-  if (!hrefs.some((href) => /^\/(?:en\/)?docs\//.test(href))) {
-    errors.push('dist/404.html must link to a localized docs route.');
+  const robots = extractMetaTags(html)
+    .find((attrs) => attrs.get('name')?.toLowerCase() === 'robots')
+    ?.get('content');
+
+  if (!robots || !/\bnoindex\b/i.test(robots)) {
+    errors.push(`${label} must set <meta name="robots" content="noindex"> | received: ${robots}`);
+  }
+
+  for (const rel of extractLinkTags(html)) {
+    const relValue = rel.get('rel')?.toLowerCase();
+
+    if (relValue === 'canonical' || relValue === 'alternate') {
+      errors.push(`${label} must not declare rel="${relValue}" | received: ${rel.get('href')}`);
+    }
+  }
+
+  const toggleHrefs = extractAnchorHrefsWithAttr(html, 'hreflang');
+
+  for (const href of toggleHrefs) {
+    if (href !== routes.home('pt') && href !== routes.home('en')) {
+      errors.push(`${label} language toggle must link to a locale home | received: ${href}`);
+    }
+  }
+
+  if (toggleHrefs.length === 0) {
+    errors.push(`${label} must render the language toggle | received: no hreflang anchors`);
+  }
+
+  return errors;
+}
+
+async function smokeNotFoundLinks(distDir: string): Promise<SmokeSection> {
+  const errors: string[] = [];
+
+  for (const page of NOT_FOUND_PAGES) {
+    const html = await readTextFile(join(distDir, page.file), errors);
+
+    if (!html) {
+      continue;
+    }
+
+    errors.push(...validateNotFoundMetadata(html, page));
+    errors.push(...(await validateNotFoundLinks(distDir, html, page)));
+  }
+
+  return { name: '404 pages', errors };
+}
+
+async function validateNotFoundLinks(
+  distDir: string,
+  html: string,
+  page: { file: string; lang: Lang; home: string }
+): Promise<string[]> {
+  const errors: string[] = [];
+  const section = extractElementWithClass(html, 'nf') ?? html;
+  const hrefs = extractAnchorHrefs(section);
+  const docsPrefix = page.lang === 'en' ? '/en/docs/' : '/docs/';
+
+  if (!hrefs.includes(page.home)) {
+    errors.push(`dist/${page.file} must link to ${page.home} | received: ${hrefs.join(', ')}`);
+  }
+
+  if (!hrefs.some((href) => href.startsWith(docsPrefix))) {
+    errors.push(
+      `dist/${page.file} must link to a route under ${docsPrefix} | received: ${hrefs.join(', ')}`
+    );
   }
 
   for (const href of hrefs) {
     const relativePath = resolveInternalHrefToDistFile(href);
 
     if (relativePath && !(await fileExists(join(distDir, relativePath)))) {
-      errors.push(`dist/404.html links to ${href}, but dist/${relativePath} is missing.`);
+      errors.push(`dist/${page.file} links to ${href}, but dist/${relativePath} is missing.`);
     }
   }
 
-  return { name: '404 links', errors };
+  return errors;
 }
 
 async function smokeCanonicalHosts(distDir: string): Promise<SmokeSection> {
@@ -294,6 +371,14 @@ async function smokeCanonicalHosts(distDir: string): Promise<SmokeSection> {
 
     for (const origin of findNonCanonicalOrigins(hostText)) {
       errors.push(`dist/${file} references non-canonical origin ${origin}.`);
+    }
+
+    if (file.endsWith('.xml')) {
+      errors.push(
+        ...findSitemapNotFoundUrls(hostText).map(
+          (url) => `dist/${file} must not list the error page | received: ${url}`
+        )
+      );
     }
   }
 
@@ -480,6 +565,23 @@ function extractUrlOrigins(text: string): string[] {
   }
 
   return [...origins].sort();
+}
+
+function extractTags(html: string, name: string): Map<string, string>[] {
+  const pattern = new RegExp(`<${name}\\b[^>]*>`, 'gi');
+  return [...html.matchAll(pattern)].map((match) => parseAttributes(match[0]));
+}
+
+function extractMetaTags(html: string): Map<string, string>[] {
+  return extractTags(html, 'meta');
+}
+
+function extractLinkTags(html: string): Map<string, string>[] {
+  return extractTags(html, 'link');
+}
+
+function extractAnchorHrefsWithAttr(html: string, attr: string): string[] {
+  return extractAnchorHrefs(html, (_tag, attrs) => attrs.has(attr));
 }
 
 function extractAnchorHrefs(
