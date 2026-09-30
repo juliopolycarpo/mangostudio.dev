@@ -96,6 +96,7 @@ export interface SiteContent {
   };
   docs: {
     searchSidebar: string;
+    navSummary: string;
     tocTitle: string;
     sourceLabel: string;
     previousLabel: string;

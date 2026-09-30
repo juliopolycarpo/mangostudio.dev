@@ -193,6 +193,7 @@ export const pt = {
   },
   docs: {
     searchSidebar: 'Buscar nos docs',
+    navSummary: 'Navegar nos docs',
     tocTitle: 'Nesta página',
     sourceLabel: 'Fonte no GitHub',
     previousLabel: '← Anterior',

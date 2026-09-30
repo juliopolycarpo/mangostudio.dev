@@ -24,7 +24,7 @@ const { lang, content: c, entry, Content, headings } = Astro.props;
 const nav = docsNav(lang);
 const slug = entry.data.slug;
 const { previous, next } = previousNextDocs(lang, slug);
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3).slice(0, 12);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 ---
 
 <div class="docs">
@@ -39,24 +39,30 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
       >
     </button>
 
-    {
-      nav.map((group) => (
-        <div class="docs-group">
-          <div class="docs-group-title">{group.title}</div>
-          <div class="docs-group-items">
-            {group.items.map((item) => (
-              <a
-                href={routes.doc(lang, item.slug)}
-                class:list={['docs-link', { 'is-active': item.slug === slug }]}
-                aria-current={item.slug === slug ? 'page' : undefined}
-              >
-                <span class="docs-link-label">{item.sidebarLabel}</span>
-              </a>
-            ))}
+    <details class="docs-nav">
+      <summary class="docs-nav-summary">
+        <span>{c.docs.navSummary}</span>
+        <span class="docs-nav-chevron" aria-hidden="true"></span>
+      </summary>
+      {
+        nav.map((group) => (
+          <div class="docs-group">
+            <div class="docs-group-title">{group.title}</div>
+            <div class="docs-group-items">
+              {group.items.map((item) => (
+                <a
+                  href={routes.doc(lang, item.slug)}
+                  class:list={['docs-link', { 'is-active': item.slug === slug }]}
+                  aria-current={item.slug === slug ? 'page' : undefined}
+                >
+                  <span class="docs-link-label">{item.sidebarLabel}</span>
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
-      ))
-    }
+        ))
+      }
+    </details>
   </aside>
 
   <article class="docs-article">
@@ -101,15 +107,8 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
         <div class="docs-toc-inner">
           <div class="docs-toc-title">{c.docs.tocTitle}</div>
           <div class="docs-toc-list">
-            {toc.map((heading, index) => (
-              <a
-                class:list={[
-                  'docs-toc-item',
-                  `depth-${heading.depth}`,
-                  { 'is-active': index === 0 },
-                ]}
-                href={`#${heading.slug}`}
-              >
+            {toc.map((heading) => (
+              <a class:list={['docs-toc-item', `depth-${heading.depth}`]} href={`#${heading.slug}`}>
                 {heading.text}
               </a>
             ))}
@@ -157,6 +156,58 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
   .docs-search-label {
     flex: 1;
     text-align: left;
+  }
+
+  /* Phones collapse the page list behind a native disclosure. Desktop keeps the list
+     open: where ::details-content is supported it is forced visible and the summary is
+     hidden, so the closed state cannot hide it. Older engines keep a working toggle. */
+  .docs-nav-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .docs-nav-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .docs-nav-chevron {
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--text-3);
+    border-bottom: 2px solid var(--text-3);
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.15s ease;
+  }
+
+  .docs-nav[open] .docs-nav-chevron {
+    transform: translateY(2px) rotate(-135deg);
+  }
+
+  .docs-nav[open] > .docs-nav-summary {
+    margin-bottom: 18px;
+  }
+
+  @supports selector(::details-content) {
+    @media (min-width: 821px) {
+      .docs-nav::details-content {
+        content-visibility: visible;
+      }
+      .docs-nav-summary {
+        display: none;
+      }
+    }
   }
 
   .docs-group {
@@ -435,6 +486,9 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     align-self: start;
     position: sticky;
     top: var(--header-h);
+    /* The full heading list can outgrow the viewport; scroll it inside the sticky column. */
+    max-height: calc(100vh - var(--header-h));
+    overflow-y: auto;
   }
 
   .docs-toc-title {
@@ -465,8 +519,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     padding-left: 12px;
   }
 
-  .docs-toc-item:hover,
-  .docs-toc-item.is-active {
+  .docs-toc-item:hover {
     color: var(--accent-text);
   }
 
@@ -488,6 +541,10 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
       max-height: none;
       border-right: none;
       border-bottom: 1px solid var(--border);
+      padding: 18px 18px 20px;
+    }
+    .docs-search {
+      margin-bottom: 12px;
     }
     .docs-article {
       padding: 32px 24px 64px;
