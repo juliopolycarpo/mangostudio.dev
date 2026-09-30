@@ -515,7 +515,9 @@ export interface BrokenLink {
 type ServedTarget = { kind: 'file'; file: string } | { kind: 'external' } | { kind: 'missing' };
 
 const REDIRECT_HOP_LIMIT = 10;
-const TAG_PATTERN = /<([A-Za-z][A-Za-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+/** One pass over markup: comments and script/style bodies are matched (and skipped) before tags. */
+const MARKUP_PATTERN =
+  /<!--[\s\S]*?-->|<(script|style)\b[\s\S]*?<\/\1\s*>|<([A-Za-z][A-Za-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
 
 /**
  * Parses Cloudflare `_redirects` text into rules, skipping blanks and `#` comments.
@@ -685,14 +687,17 @@ export function extractFragmentTargets(html: string): Set<string> {
 }
 
 function scanTags(html: string): [string, Map<string, string>][] {
-  const visible = html
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, '');
+  const tags: [string, Map<string, string>][] = [];
 
-  return [...visible.matchAll(TAG_PATTERN)].map((match) => [
-    (match[1] ?? '').toLowerCase(),
-    parseAttributes(`<${match[1]}${match[2]}>`),
-  ]);
+  for (const match of html.matchAll(MARKUP_PATTERN)) {
+    const [, , name, attrs] = match;
+
+    if (name !== undefined) {
+      tags.push([name.toLowerCase(), parseAttributes(`<${name}${attrs}>`)]);
+    }
+  }
+
+  return tags;
 }
 
 /**
