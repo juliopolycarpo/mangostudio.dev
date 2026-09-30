@@ -9,12 +9,20 @@ export const en = {
     description:
       'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — with your own keys. The app, database, and API keys stay on your machine; prompts and content go only to the provider you select. No telemetry, no Node.',
   },
-  nav: { home: 'Home', features: 'Features', releases: 'Releases', docs: 'Docs' },
+  skipLink: 'Skip to content',
+  nav: {
+    label: 'Primary',
+    home: 'Home',
+    features: 'Features',
+    releases: 'Releases',
+    docs: 'Docs',
+  },
   header: {
+    searchLabel: 'Search docs',
     search: 'Search…',
     cta: 'Get started',
     theme: 'Toggle theme',
-    github: 'View on GitHub',
+    github: 'Star on GitHub',
     star: 'Star',
   },
   hero: {
@@ -134,6 +142,7 @@ export const en = {
       stable:
         'Stable version and install command are synced from the MangoStudio release pipeline. Highlights are curated per release.',
     },
+    installTarget: 'latest release install',
     latestBadge: { canary: 'canary version', stable: 'stable version' },
     groups: [
       {
@@ -230,7 +239,7 @@ export const en = {
       },
     ],
   },
-  copyButtonLabel: 'Copy',
+  copyCommandLabel: 'Copy command: {target}',
   copyToast: 'Copied to clipboard',
   copyToastError: "Couldn't copy — select and copy manually.",
   terminalLines: [
@@ -246,5 +255,5 @@ export const en = {
     home: 'Back home',
     docs: 'Read the docs',
   },
-  langToggle: { pt: 'PT', en: 'EN' },
+  langToggle: { label: 'Language', pt: 'PT', en: 'EN' },
 } satisfies SiteContent;

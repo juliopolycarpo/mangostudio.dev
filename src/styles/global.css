@@ -180,6 +180,32 @@ a {
   border-radius: 6px;
 }
 
+/* Skip link: first focusable element, off-screen until it takes keyboard focus. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* `main` is only a programmatic focus target for the skip link, not a control. */
+main:focus {
+  outline: none;
+}
+
 /* ─── Animations ─── */
 @keyframes blink {
   0%,

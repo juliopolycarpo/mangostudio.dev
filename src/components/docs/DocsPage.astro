@@ -28,7 +28,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
 ---
 
 <div class="docs">
-  <aside class="docs-sidebar">
+  <aside class="docs-sidebar" aria-label={c.docs.navSummary}>
     <button
       type="button"
       class="docs-search"
@@ -109,7 +109,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     </div>
   </article>
 
-  <aside class="docs-toc">
+  <aside class="docs-toc" aria-label={toc.length > 0 ? c.docs.tocTitle : undefined}>
     {
       toc.length > 0 && (
         <div class="docs-toc-inner">

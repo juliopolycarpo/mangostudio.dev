@@ -62,7 +62,7 @@ const nav = [
     <span class="brand-name">Mango<span class="brand-dim">Studio</span></span>
   </a>
 
-  <nav class="nav" aria-label="Primary">
+  <nav class="nav" aria-label={c.nav.label}>
     {
       nav.map((item) => (
         <a
@@ -87,7 +87,8 @@ const nav = [
     aria-haspopup="dialog"
   >
     <Icon name="search" size={14} />
-    <span class="search-label">{c.header.search}</span>
+    <span class="search-label" aria-hidden="true">{c.header.search}</span>
+    <span class="visually-hidden">{c.header.searchLabel}</span>
     <kbd
       data-cmdk-hint
       data-hint-mac={PALETTE_SHORTCUT.mac}

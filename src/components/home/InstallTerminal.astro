@@ -1,6 +1,7 @@
 ---
 import CopyButton from '@/components/CopyButton.astro';
 import { DEFAULT_INSTALL_PLATFORM, INSTALL_PLATFORMS, INSTALL_TABS } from '@/data/site';
+import { fillCopyLabel } from '@/i18n/copy-label';
 import type { SiteContent } from '@/i18n/types';
 
 interface Props {
@@ -97,6 +98,7 @@ const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map(
               tabindex={isActive ? 0 : -1}
               hidden={!isAvailable}
               data-channel={tab.id}
+              data-label={tab.label}
               data-cmd={tab.cmd}
               data-platforms={tab.platforms.join(' ')}
               data-prompt={tab.prompt}
@@ -135,12 +137,17 @@ const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map(
       aria-labelledby={`install-tab-${initial.id}`}
       data-platform={initialPlatform.id}
       data-state={initial.status}
+      data-copy-label={c.copyCommandLabel}
     >
       <code class="install-code">
         <span class="prompt" id="hero-prompt">{initial.prompt}</span><span id="hero-cmd">{initial.cmd}</span>
       </code>
       <span class="install-hint" id="hero-hint">{c.install.plannedHint}</span>
-      <CopyButton text={initial.cmd} label={c.copyButtonLabel} id="hero-copy" />
+      <CopyButton
+        text={initial.cmd}
+        label={fillCopyLabel(c.copyCommandLabel, initial.label)}
+        id="hero-copy"
+      />
     </div>
   </div>
 </div>

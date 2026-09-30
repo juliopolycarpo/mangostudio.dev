@@ -52,8 +52,16 @@ export interface CmdkItem {
 export interface SiteContent {
   lang: Lang;
   meta: { title: string; description: string };
-  nav: { home: string; features: string; releases: string; docs: string };
-  header: { search: string; cta: string; theme: string; github: string; star: string };
+  skipLink: string;
+  nav: { label: string; home: string; features: string; releases: string; docs: string };
+  header: {
+    search: string;
+    searchLabel: string;
+    cta: string;
+    theme: string;
+    github: string;
+    star: string;
+  };
   hero: {
     badge: string;
     titlePre: string;
@@ -92,6 +100,7 @@ export interface SiteContent {
     title: string;
     intro: Record<ReleaseChannel, string>;
     latestBadge: Record<ReleaseChannel, string>;
+    installTarget: string;
     groups: ReleaseGroup[];
   };
   docs: {
@@ -112,10 +121,11 @@ export interface SiteContent {
     footer: string;
     items: CmdkItem[];
   };
-  copyButtonLabel: string;
+  /** Copy button name template; `{target}` becomes what the button copies. */
+  copyCommandLabel: string;
   copyToast: string;
   copyToastError: string;
   terminalLines: string[];
   notFound: { title: string; heading: string; body: string; home: string; docs: string };
-  langToggle: { pt: string; en: string };
+  langToggle: { label: string; pt: string; en: string };
 }

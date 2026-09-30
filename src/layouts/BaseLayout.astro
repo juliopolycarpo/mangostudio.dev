@@ -103,8 +103,9 @@ const ogImage = new URL(siteAssets.icon512.src, Astro.site).toString();
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#main">{c.skipLink}</a>
     <Header lang={lang} pathname={togglePathname} content={c} page={page} />
-    <main id="main">
+    <main id="main" tabindex="-1">
       <slot />
     </main>
     <Footer lang={lang} pathname={togglePathname} content={c} />

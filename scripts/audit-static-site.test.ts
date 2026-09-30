@@ -6,6 +6,7 @@ import {
   extractRemoteCssUrls,
   findBrokenVersionedAssetReferences,
   findTodoHtmlFiles,
+  findUntranslatedAriaLabels,
   findUnversionedAppImageReferences,
   isPlaceholderInstallScript,
   isPowerShellInstallerAdvertised,
@@ -654,6 +655,33 @@ run('findBrokenVersionedAssetReferences flags references to assets that were not
     [
       'dist/site.webmanifest references /_astro/icon-512.STALE001.png, but no such hashed asset was emitted; the versioned URL would 404 instead of serving the cached image.',
     ]
+  );
+});
+
+run('findUntranslatedAriaLabels flags a pt page that reuses an English label', () => {
+  deepStrictEqual(
+    findUntranslatedAriaLabels([
+      {
+        relativePath: 'dist/index.html',
+        text: '<nav aria-label="Primary"></nav><div aria-label="Idioma"></div>',
+      },
+      {
+        relativePath: 'dist/en/index.html',
+        text: '<nav aria-label="Primary"></nav><div aria-label="Language"></div>',
+      },
+    ]),
+    ['dist/index.html has untranslated aria-label "Primary"; it matches dist/en/index.html.']
+  );
+});
+
+run('findUntranslatedAriaLabels allows locale-neutral names and unpaired pages', () => {
+  deepStrictEqual(
+    findUntranslatedAriaLabels([
+      { relativePath: 'dist/index.html', text: '<a aria-label="MangoStudio"></a>' },
+      { relativePath: 'dist/en/index.html', text: '<a aria-label="MangoStudio"></a>' },
+      { relativePath: 'dist/404.html', text: '<a aria-label="Primary"></a>' },
+    ]),
+    []
   );
 });
 
