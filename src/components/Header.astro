@@ -23,25 +23,21 @@ const nav = [
     label: c.nav.home,
     href: routes.home(lang),
     active: page === 'home',
-    prefetch: page !== 'home',
   },
   {
     label: c.nav.features,
     href: `${routes.home(lang)}#features`,
     active: false,
-    prefetch: page !== 'home',
   },
   {
     label: c.nav.releases,
     href: routes.releases(lang),
     active: page === 'releases',
-    prefetch: page !== 'releases',
   },
   {
     label: c.nav.docs,
     href: routes.doc(lang, 'quickstart'),
     active: page === 'docs',
-    prefetch: page !== 'docs',
   },
 ];
 ---
@@ -51,7 +47,6 @@ const nav = [
     class="brand"
     href={routes.home(lang)}
     aria-label="MangoStudio"
-    data-astro-prefetch={page === 'home' ? undefined : 'hover'}
   >
     <img
       src={brandLogo.src}
@@ -72,7 +67,6 @@ const nav = [
           href={item.href}
           class:list={['nav-link', { 'is-active': item.active }]}
           aria-current={item.active ? 'page' : undefined}
-          data-astro-prefetch={item.prefetch ? 'hover' : undefined}
         >
           {item.label}
         </a>
@@ -100,7 +94,6 @@ const nav = [
   <a
     class="btn btn-primary header-cta"
     href={routes.doc(lang, 'quickstart')}
-    data-astro-prefetch={page === 'docs' ? undefined : 'hover'}
   >
     {c.header.cta}
   </a>
