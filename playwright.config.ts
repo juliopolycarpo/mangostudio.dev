@@ -1,6 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4321;
+// PLAYWRIGHT_PORT lets parallel worktrees each serve their own dist/ without
+// reusing another checkout's preview server.
+const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 4321);
+if (!Number.isInteger(PORT) || PORT <= 0) {
+  throw new Error(
+    `PLAYWRIGHT_PORT must be a positive integer | received: ${process.env.PLAYWRIGHT_PORT}`
+  );
+}
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 // Reuse a system-installed Chromium when PLAYWRIGHT_CHROMIUM_PATH is set, which keeps
