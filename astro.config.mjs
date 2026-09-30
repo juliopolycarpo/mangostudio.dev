@@ -41,9 +41,9 @@ export default defineConfig({
       redirectToDefaultLocale: false,
     },
   },
-  prefetch: {
-    prefetchAll: false,
-  },
+  // HTML is served with max-age=0, must-revalidate and no validator, so the browser re-downloads a
+  // prefetched page on click. Re-enable only once HTML can be reused (see _headers).
+  prefetch: false,
   build: {
     // Emit dist/<route>/index.html so Cloudflare's auto-trailing-slash handling works cleanly.
     format: 'directory',

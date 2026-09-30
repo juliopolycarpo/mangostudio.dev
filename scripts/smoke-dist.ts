@@ -151,8 +151,30 @@ export function resolveInternalHrefToDistFile(
   return routePath ? routeToDistFile(routePath) : null;
 }
 
-export function extractPrefetchHrefs(html: string): string[] {
-  return extractAnchorHrefs(html, (_tag, attrs) => hasActivePrefetch(attrs));
+/**
+ * Reports Astro prefetch attributes left in an HTML document. Prefetch is disabled site-wide
+ * because HTML is served with `max-age=0, must-revalidate` and no validator, so the browser
+ * downloads the page again on click and the prefetch only doubles the bytes.
+ *
+ * @example
+ * findPrefetchAttributeElements('<a href="/docs" data-astro-prefetch="hover">Docs</a>');
+ * // => ['<a href="/docs" data-astro-prefetch="hover">']
+ */
+export function findPrefetchAttributeElements(html: string): string[] {
+  const tags = html.match(/<[a-z][^<>]*>/gi) ?? [];
+
+  return tags.filter((tag) => /\sdata-astro-prefetch(?=[\s=>/])/i.test(tag));
+}
+
+/**
+ * Tells whether a bundled script is Astro's prefetch runtime. The runtime reads
+ * `data-astro-prefetch` through `dataset.astroPrefetch` and the `prefetchAll` option.
+ *
+ * @example
+ * isAstroPrefetchRuntime('r??=e?.prefetchAll??!1'); // => true
+ */
+export function isAstroPrefetchRuntime(script: string): boolean {
+  return /\bprefetchAll\b|\bastroPrefetch\b/.test(script);
 }
 
 export function containsCanonicalOrigin(text: string, canonicalOrigin = CANONICAL_ORIGIN): boolean {
@@ -184,7 +206,7 @@ async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
     await smokeNotFoundLinks(distDir),
     await smokeCanonicalHosts(distDir),
     await smokeInternalLinkGraph(distDir),
-    await smokeSelectivePrefetch(distDir),
+    await smokeNoPrefetch(distDir),
   ];
 }
 
@@ -438,46 +460,43 @@ async function smokeInternalLinkGraph(distDir: string): Promise<SmokeSection> {
   return { name: 'Internal link graph', errors };
 }
 
-async function smokeSelectivePrefetch(distDir: string): Promise<SmokeSection> {
+async function smokeNoPrefetch(distDir: string): Promise<SmokeSection> {
   const errors: string[] = [];
-  const htmlFiles = await findHtmlFiles(distDir);
 
-  for (const file of htmlFiles) {
+  for (const file of await findDistFiles(distDir, '.html')) {
     const html = await readTextFile(join(distDir, file), errors);
 
-    if (!html) {
-      continue;
-    }
-
-    const sidebar = extractElementWithClass(html, 'docs-sidebar');
-
-    if (sidebar) {
-      for (const href of extractPrefetchHrefs(sidebar)) {
-        errors.push(`dist/${file} must not prefetch docs sidebar link ${href}.`);
-      }
-    }
-
-    for (const href of extractPrefetchHrefs(html)) {
-      const routePath = resolveInternalHrefToRoutePath(href);
-
-      if (!routePath) {
-        errors.push(`dist/${file} must not prefetch external or non-page link ${href}.`);
-      }
+    for (const tag of findPrefetchAttributeElements(html)) {
+      errors.push(
+        `dist/${file} must not emit data-astro-prefetch (prefetch: false). Received: ${tag}`
+      );
     }
   }
 
-  return { name: 'Selective Astro prefetch', errors };
+  for (const file of await findDistFiles(distDir, '.js')) {
+    const script = await readTextFile(join(distDir, file), errors);
+
+    if (isAstroPrefetchRuntime(script)) {
+      errors.push(
+        `dist/${file} must not contain the Astro prefetch runtime (prefetch: false). ` +
+          'Expected no script referencing prefetchAll or astroPrefetch.'
+      );
+    }
+  }
+
+  return { name: 'No Astro prefetch', errors };
 }
 
-async function findHtmlFiles(distDir: string): Promise<string[]> {
+async function findDistFiles(distDir: string, extension: string): Promise<string[]> {
   const files: string[] = [];
-  await collectHtmlFiles(distDir, distDir, files);
+  await collectDistFiles(distDir, distDir, extension, files);
   return files.sort();
 }
 
-async function collectHtmlFiles(
+async function collectDistFiles(
   rootDir: string,
   currentDir: string,
+  extension: string,
   files: string[]
 ): Promise<void> {
   let entries: Dirent[];
@@ -492,8 +511,8 @@ async function collectHtmlFiles(
     const path = join(currentDir, entry.name);
 
     if (entry.isDirectory()) {
-      await collectHtmlFiles(rootDir, path, files);
-    } else if (entry.name.endsWith('.html')) {
+      await collectDistFiles(rootDir, path, extension, files);
+    } else if (entry.name.endsWith(extension)) {
       files.push(relative(rootDir, path));
     }
   }
@@ -613,12 +632,6 @@ function extractAnchorHrefs(
   }
 
   return [...hrefs].sort();
-}
-
-function hasActivePrefetch(attrs: Map<string, string>): boolean {
-  return (
-    attrs.has('data-astro-prefetch') && attrs.get('data-astro-prefetch')?.toLowerCase() !== 'false'
-  );
 }
 
 function extractElementWithClass(html: string, className: string): string | undefined {

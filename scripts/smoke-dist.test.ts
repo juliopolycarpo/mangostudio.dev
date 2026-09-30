@@ -4,10 +4,11 @@ import {
   containsCanonicalOrigin,
   deriveDocSlugs,
   deriveRequiredDistFiles,
-  extractPrefetchHrefs,
   extractRouteIntegrityHrefs,
   findNonCanonicalOrigins,
+  findPrefetchAttributeElements,
   findSitemapNotFoundUrls,
+  isAstroPrefetchRuntime,
   redirectHtmlReferencesTarget,
   resolveInternalHrefToDistFile,
   resolveInternalHrefToRoutePath,
@@ -156,7 +157,7 @@ run('resolveInternalHrefToRoutePath normalizes same-origin links', () => {
   );
 });
 
-run('extractPrefetchHrefs returns only active Astro prefetch anchors', () => {
+run('findPrefetchAttributeElements reports every element that carries data-astro-prefetch', () => {
   const html = `
     <a href="/docs/quickstart" data-astro-prefetch>Quickstart</a>
     <a data-astro-prefetch="hover" href="/releases">Releases</a>
@@ -164,7 +165,34 @@ run('extractPrefetchHrefs returns only active Astro prefetch anchors', () => {
     <a href="/docs/reference/cli">CLI</a>
   `;
 
-  deepStrictEqual(extractPrefetchHrefs(html), ['/docs/quickstart', '/releases']);
+  deepStrictEqual(findPrefetchAttributeElements(html), [
+    '<a href="/docs/quickstart" data-astro-prefetch>',
+    '<a data-astro-prefetch="hover" href="/releases">',
+    '<a href="https://github.com/juliopolycarpo/mangostudio" data-astro-prefetch="false">',
+  ]);
+});
+
+run('findPrefetchAttributeElements ignores prefetch-free markup and lookalike attributes', () => {
+  const html = `
+    <a href="/docs/quickstart" data-astro-prefetched="x">Quickstart</a>
+    <link rel="prefetch" href="/releases">
+    <p>data-astro-prefetch is documented here</p>
+  `;
+
+  deepStrictEqual(findPrefetchAttributeElements(html), []);
+});
+
+run('isAstroPrefetchRuntime flags the Astro prefetch bundle and passes app scripts', () => {
+  const prefetchRuntime = 'var i=!1;function o(e){i??=e?.prefetchAll??!1}';
+  const dataset = 'let n=t.dataset.astroPrefetch;return n===`false`';
+
+  strictEqual(isAstroPrefetchRuntime(prefetchRuntime), true, 'prefetchAll bundle not detected');
+  strictEqual(isAstroPrefetchRuntime(dataset), true, 'astroPrefetch dataset read not detected');
+  strictEqual(
+    isAstroPrefetchRuntime('document.addEventListener(`click`,()=>{})'),
+    false,
+    'expected app script without prefetch code to pass'
+  );
 });
 
 run('canonical host helpers accept production origin and reject preview origins', () => {

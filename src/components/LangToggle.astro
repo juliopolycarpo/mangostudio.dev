@@ -23,7 +23,6 @@ const options: { code: Lang; label: string }[] = [
         hreflang={option.code}
         class:list={['lang-opt', { 'is-active': lang === option.code }]}
         aria-current={lang === option.code ? 'true' : undefined}
-        data-astro-prefetch={lang !== option.code ? 'hover' : undefined}
       >
         {option.label}
       </a>
