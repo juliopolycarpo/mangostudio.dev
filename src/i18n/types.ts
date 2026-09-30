@@ -111,5 +111,6 @@ export interface SiteContent {
   copyToast: string;
   copyToastError: string;
   terminalLines: string[];
+  notFound: { title: string; heading: string; body: string; home: string; docs: string };
   langToggle: { pt: string; en: string };
 }
