@@ -23,11 +23,13 @@ const nav = [
     label: c.nav.home,
     href: routes.home(lang),
     active: page === 'home',
+    secondary: true,
   },
   {
     label: c.nav.features,
     href: `${routes.home(lang)}#features`,
     active: false,
+    secondary: true,
   },
   {
     label: c.nav.releases,
@@ -65,7 +67,7 @@ const nav = [
       nav.map((item) => (
         <a
           href={item.href}
-          class:list={['nav-link', { 'is-active': item.active }]}
+          class:list={['nav-link', { 'is-active': item.active, 'is-secondary': item.secondary }]}
           aria-current={item.active ? 'page' : undefined}
         >
           {item.label}
@@ -247,8 +249,56 @@ const nav = [
     font-size: 13.5px;
   }
 
+  /* Every control keeps its natural size: the header never squeezes a control below its
+     content. Room is made by hiding optional content per breakpoint instead. */
+  .brand,
+  .nav,
+  .search-btn,
+  .gh-link,
+  .header-cta {
+    flex-shrink: 0;
+  }
+
+  .search-btn svg {
+    flex-shrink: 0;
+  }
+
+  .search-btn,
+  .gh-link,
+  .header-cta,
+  kbd {
+    white-space: nowrap;
+  }
+
+  /* The full desktop header only just fits above 1080px, so tighten it until there is
+     comfortable room. */
+  @media (min-width: 1081px) and (max-width: 1279px) {
+    .site-header {
+      gap: 12px;
+    }
+    .search-btn {
+      min-width: 0;
+    }
+  }
+
+  /* Tablet: drop the labels and the secondary links, keep Docs and Releases. */
   @media (max-width: 1080px) {
-    .nav,
+    .site-header {
+      gap: 12px;
+    }
+    .nav {
+      margin-left: 0;
+      gap: 0;
+    }
+    .nav-link {
+      font-size: 13px;
+      padding: 8px 6px;
+    }
+    .nav-link.is-active::after {
+      left: 6px;
+      right: 6px;
+    }
+    .nav-link.is-secondary,
     .search-label,
     .gh-star,
     .gh-label {
@@ -259,16 +309,50 @@ const nav = [
     }
   }
 
+  /* The server-rendered hint ("Ctrl K / ⌘K") is wider than the platform hint JavaScript
+     swaps in, so the narrowest tablets need the phone spacing to stay inside the viewport
+     without JavaScript. */
+  @media (max-width: 860px) {
+    .site-header {
+      gap: 8px;
+    }
+  }
+
   @media (max-width: 720px) {
     .site-header {
-      gap: 12px;
       padding: 11px 16px;
       /* Avoid the per-scroll-frame backdrop blur repaint on phones; a near-opaque
          background keeps the sticky header legible at a fraction of the paint cost. */
       background: color-mix(in srgb, var(--bg) 94%, transparent);
       backdrop-filter: none;
     }
+    .nav,
     .header-cta {
+      display: none;
+    }
+  }
+
+  /* Phones have no keyboard shortcut, and the hint is what would push the header past the
+     viewport. Keep it in the accessible name but out of the layout. */
+  @media (max-width: 479px) {
+    .search-btn {
+      position: relative;
+    }
+    .search-btn kbd {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+
+  /* Below 390px the wordmark no longer fits next to the four controls; the logo link keeps
+     its aria-label. */
+  @media (max-width: 389px) {
+    .brand-name {
       display: none;
     }
   }
