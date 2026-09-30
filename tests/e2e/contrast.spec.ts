@@ -43,6 +43,22 @@ function contrastRatio(foreground: string, background: string): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// True when the two boxes share area; boxes that wrap onto separate lines do not overlap.
+function boxesOverlap(a: Box, b: Box): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+}
+
+function describeBox(box: Box): string {
+  return `[x=${box.x.toFixed(1)} y=${box.y.toFixed(1)} ${box.width.toFixed(1)}x${box.height.toFixed(1)}]`;
+}
+
 async function setTheme(page: Page, theme: (typeof THEMES)[number]): Promise<void> {
   await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme);
 }
@@ -138,11 +154,10 @@ test.describe('quickstart badge links', () => {
         }
 
         const [first, second] = boxes as [(typeof boxes)[number], (typeof boxes)[number]];
-        const gap = second.x - (first.x + first.width);
         expect(
-          gap,
-          `expected CI and Release badges not to overlap (gap >= 0px) | received: ${gap.toFixed(1)}px`
-        ).toBeGreaterThanOrEqual(0);
+          boxesOverlap(first, second),
+          `expected CI and Release badge boxes not to intersect | received: ${describeBox(first)} and ${describeBox(second)}`
+        ).toBe(false);
       });
     }
   }
