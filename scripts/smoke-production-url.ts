@@ -1,6 +1,8 @@
 export const APEX_URL = 'https://mangostudio.dev/';
 export const WWW_REDIRECT_PROBE_URL = 'https://www.mangostudio.dev/docs/quickstart?smoke=1';
 export const EXPECTED_WWW_REDIRECT_LOCATION = 'https://mangostudio.dev/docs/quickstart?smoke=1';
+export const DOCS_REDIRECT_PROBE_URL = 'https://mangostudio.dev/docs';
+export const EXPECTED_DOCS_REDIRECT_LOCATION = '/docs/quickstart/';
 
 export interface SmokeCheckResult {
   name: string;
@@ -26,7 +28,38 @@ export function validateWwwRedirectResponse(
   expectedLocation: string = EXPECTED_WWW_REDIRECT_LOCATION,
   probeUrl: string = WWW_REDIRECT_PROBE_URL
 ): SmokeCheckResult {
-  const name = 'www redirects to apex with path and query preserved';
+  return validatePermanentRedirect(
+    'www redirects to apex with path and query preserved',
+    { status, location },
+    expectedLocation,
+    probeUrl
+  );
+}
+
+/**
+ * Checks that bare /docs permanently redirects to the quickstart in one hop.
+ *
+ * @example validateDocsRedirectResponse(301, '/docs/quickstart/') // { ok: true, ... }
+ */
+export function validateDocsRedirectResponse(
+  status: number,
+  location: string | null
+): SmokeCheckResult {
+  return validatePermanentRedirect(
+    '/docs redirects permanently to the quickstart',
+    { status, location },
+    EXPECTED_DOCS_REDIRECT_LOCATION,
+    DOCS_REDIRECT_PROBE_URL
+  );
+}
+
+function validatePermanentRedirect(
+  name: string,
+  response: { status: number; location: string | null },
+  expectedLocation: string,
+  probeUrl: string
+): SmokeCheckResult {
+  const { status, location } = response;
 
   if (status !== 301 && status !== 308) {
     return {
@@ -68,8 +101,13 @@ async function fetchHead(url: string): Promise<{ status: number; location: strin
 async function runProductionSmoke(): Promise<SmokeCheckResult[]> {
   const apex = await fetchHead(APEX_URL);
   const www = await fetchHead(WWW_REDIRECT_PROBE_URL);
+  const docs = await fetchHead(DOCS_REDIRECT_PROBE_URL);
 
-  return [validateApexResponse(apex.status), validateWwwRedirectResponse(www.status, www.location)];
+  return [
+    validateApexResponse(apex.status),
+    validateWwwRedirectResponse(www.status, www.location),
+    validateDocsRedirectResponse(docs.status, docs.location),
+  ];
 }
 
 function formatFetchError(error: unknown): string {
