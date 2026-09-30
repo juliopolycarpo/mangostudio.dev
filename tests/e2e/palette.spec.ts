@@ -109,6 +109,16 @@ for (const locale of LOCALES) {
       await page.keyboard.press('Enter');
       await expect(page).toHaveURL(/releases/);
     });
+
+    test('is labelled as page navigation', async ({ page }) => {
+      await page.goto(locale.path);
+      const label = await page.locator('#cmdk').getAttribute('aria-label');
+      const placeholder = await page.locator('[data-cmdk-input]').getAttribute('placeholder');
+      expect(
+        `${label} ${placeholder}`.toLowerCase().includes(locale.pageLabel.toLowerCase()),
+        `expected label containing: ${locale.pageLabel} | received: aria-label=${label} placeholder=${placeholder}`
+      ).toBe(true);
+    });
   });
 }
 

@@ -102,6 +102,7 @@ export interface SiteContent {
     nextLabel: string;
   };
   cmdk: {
+    label: string;
     placeholder: string;
     noResults: string;
     open: string;

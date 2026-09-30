@@ -191,7 +191,8 @@ export const en = {
     nextLabel: 'Next →',
   },
   cmdk: {
-    placeholder: 'Search pages, commands, docs…',
+    label: 'Page navigation',
+    placeholder: 'Go to page…',
     noResults: 'Nothing found for',
     open: '↵ open',
     close: 'esc close',
