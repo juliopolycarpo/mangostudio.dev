@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
-import { INSTALL_TABS } from '../../src/data/site';
+import { GITHUB_URL, INSTALL_TABS } from '../../src/data/site';
 import { fillCopyLabel } from '../../src/i18n/copy-label';
 import { en } from '../../src/i18n/en';
 import { pt } from '../../src/i18n/pt';
@@ -134,7 +134,7 @@ for (const locale of LOCALES) {
       await expect(
         page.getByRole('link', { name: c.header.github, exact: true }).first(),
         `expected link named "${c.header.github}" | received: ${(await link.ariaSnapshot()).trim()}`
-      ).toHaveAttribute('href', /github\.com/);
+      ).toHaveAttribute('href', GITHUB_URL);
       // WCAG 2.5.3: when the visible label shows, the accessible name must contain it.
       const label = page.locator('.site-header .gh-label');
       const name = (await link.getAttribute('aria-label')) ?? '';
