@@ -190,6 +190,7 @@ export const en = {
     sourceLabel: 'Source on GitHub',
     previousLabel: '← Previous',
     nextLabel: 'Next →',
+    copyCode: 'Copy code',
   },
   cmdk: {
     label: 'Page navigation',

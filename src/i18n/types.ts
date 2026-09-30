@@ -101,6 +101,7 @@ export interface SiteContent {
     sourceLabel: string;
     previousLabel: string;
     nextLabel: string;
+    copyCode: string;
   };
   cmdk: {
     label: string;
