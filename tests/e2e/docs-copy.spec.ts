@@ -1,5 +1,6 @@
 import type { Browser, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+import { copyableText, SHELL_LANGUAGES } from '../../scripts/docs-code-copy';
 import { useContent } from '../../src/i18n/ui';
 
 // The quickstart page carries shell (bash, powershell) and non-shell (toml, plaintext, tsx) blocks.
@@ -8,8 +9,9 @@ const LOCALES = [
   { lang: 'en', path: '/en/docs/quickstart/' },
 ] as const;
 
-const SHELL_LANGUAGES = ['bash', 'sh', 'shell', 'zsh', 'powershell', 'pwsh', 'ps1', 'console'];
-const SHELL_SELECTOR = SHELL_LANGUAGES.map((lang) => `pre[data-language="${lang}"]`).join(', ');
+const SHELL_SELECTOR = [...SHELL_LANGUAGES]
+  .map((lang) => `pre[data-language="${lang}"]`)
+  .join(', ');
 const BUTTON_SELECTOR = '.code-block > button[data-copy]';
 
 type ClipboardWindow = Window & { __copied?: string[] };
@@ -121,11 +123,12 @@ for (const { lang, path } of LOCALES) {
       await page.goto(path);
       await expectCopyButtons(page, path);
 
-      const expected = await page.evaluate((shell) => {
+      const rendered = await page.evaluate((shell) => {
         return [...document.querySelectorAll(shell)].map(
-          (pre) => pre.querySelector('code')?.textContent?.replace(/\n$/, '') ?? ''
+          (pre) => pre.querySelector('code')?.textContent ?? ''
         );
       }, SHELL_SELECTOR);
+      const expected = rendered.map(copyableText);
       expect(
         expected.length,
         `expected shell snippets > 0 | received: ${expected.length}`
@@ -149,10 +152,12 @@ for (const { lang, path } of LOCALES) {
       await page.goto(path);
       await expectCopyButtons(page, path);
 
-      const snippet = await page
-        .locator(SHELL_SELECTOR)
-        .first()
-        .evaluate((pre) => pre.querySelector('code')?.textContent?.replace(/\n$/, '') ?? '');
+      const snippet = copyableText(
+        await page
+          .locator(SHELL_SELECTOR)
+          .first()
+          .evaluate((pre) => pre.querySelector('code')?.textContent ?? '')
+      );
       await page.locator(BUTTON_SELECTOR).first().click();
 
       const toast = page.locator('#copy-toast');
