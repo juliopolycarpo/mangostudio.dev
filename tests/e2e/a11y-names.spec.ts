@@ -204,6 +204,33 @@ for (const locale of LOCALES) {
     });
   }
 
+  test.describe(`${locale.name} skip link without JavaScript`, () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('is the first tab stop and moves focus into main', async ({ page }) => {
+      await page.goto(locale.path);
+      expect(
+        await page.evaluate(() => document.documentElement.classList.contains('js')),
+        'expected JavaScript disabled: html without .js | received: .js present'
+      ).toBe(false);
+
+      await page.keyboard.press('Tab');
+      const skip = page.getByRole('link', { name: locale.content.skipLink });
+      await expect(
+        skip,
+        'expected skip link focused first | received: another element'
+      ).toBeFocused();
+      await expect(skip).toBeInViewport({ ratio: 1 });
+
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(/#main$/);
+      await expect(
+        page.locator('main'),
+        'expected focus moved to <main> after activation | received: elsewhere'
+      ).toBeFocused();
+    });
+  });
+
   test(`${locale.name} primary navigation uses the localized landmark name`, async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto(locale.path);
