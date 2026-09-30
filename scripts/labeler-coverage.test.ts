@@ -68,6 +68,33 @@ run('astro.config.mjs-only changes resolve to area: deployment and type: hardeni
   );
 });
 
+run('browser test paths resolve to area: tooling and type: test', () => {
+  for (const filePath of ['tests/e2e/smoke.spec.ts', 'playwright.config.ts']) {
+    const areaLabels = matchingLabels(filePath, (label) => label.startsWith('area: '));
+    const typeLabels = matchingLabels(filePath, (label) => label.startsWith('type: '));
+
+    ok(
+      areaLabels.includes('area: tooling'),
+      `${filePath}: expected area: tooling | received: ${areaLabels.join(', ') || 'none'}`
+    );
+    ok(
+      typeLabels.includes('type: test'),
+      `${filePath}: expected type: test | received: ${typeLabels.join(', ') || 'none'}`
+    );
+  }
+});
+
+run('hosted installers resolve to area: security', () => {
+  for (const filePath of ['public/install.sh', 'public/install.ps1']) {
+    const areaLabels = matchingLabels(filePath, (label) => label.startsWith('area: '));
+
+    ok(
+      areaLabels.includes('area: security'),
+      `${filePath}: expected area: security | received: ${areaLabels.join(', ') || 'none'}`
+    );
+  }
+});
+
 function matchingLabels(filePath: string, predicate: (label: string) => boolean): string[] {
   const matches: string[] = [];
 
