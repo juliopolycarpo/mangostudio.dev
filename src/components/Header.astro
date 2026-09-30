@@ -23,25 +23,21 @@ const nav = [
     label: c.nav.home,
     href: routes.home(lang),
     active: page === 'home',
-    prefetch: page !== 'home',
   },
   {
     label: c.nav.features,
     href: `${routes.home(lang)}#features`,
     active: false,
-    prefetch: page !== 'home',
   },
   {
     label: c.nav.releases,
     href: routes.releases(lang),
     active: page === 'releases',
-    prefetch: page !== 'releases',
   },
   {
     label: c.nav.docs,
     href: routes.doc(lang, 'quickstart'),
     active: page === 'docs',
-    prefetch: page !== 'docs',
   },
 ];
 ---
