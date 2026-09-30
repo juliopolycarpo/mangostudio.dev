@@ -1,3 +1,5 @@
+import type { ReleaseChannel } from '@/data/release-channel';
+
 /** Shared content contract. `pt` and `en` both `satisfies SiteContent`, so the
  *  type checker guarantees the two locales never drift out of structural parity. */
 
@@ -88,8 +90,8 @@ export interface SiteContent {
   releases: {
     eyebrow: string;
     title: string;
-    intro: string;
-    latestBadge: string;
+    intro: Record<ReleaseChannel, string>;
+    latestBadge: Record<ReleaseChannel, string>;
     groups: ReleaseGroup[];
   };
   docs: {

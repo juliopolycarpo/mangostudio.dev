@@ -1,5 +1,6 @@
 ---
 import CopyButton from '@/components/CopyButton.astro';
+import { releaseChannel } from '@/data/release-channel';
 import { RELEASE } from '@/data/releases.generated';
 import type { ReleaseType, SiteContent } from '@/i18n/types';
 
@@ -9,6 +10,7 @@ interface Props {
 
 const { content: c } = Astro.props;
 const r = c.releases;
+const channel = releaseChannel(RELEASE.version);
 const releaseDate = new Intl.DateTimeFormat(c.lang === 'pt' ? 'pt-BR' : 'en-US', {
   dateStyle: 'long',
   timeZone: 'UTC',
@@ -28,13 +30,13 @@ const badge: Record<ReleaseType, { fg: string; bg: string }> = {
 <section class="releases">
   <div class="eyebrow">{r.eyebrow}</div>
   <h1 class="rel-title">{r.title}</h1>
-  <p class="rel-intro">{r.intro}</p>
+  <p class="rel-intro">{r.intro[channel]}</p>
 
   <div class="rel-latest">
     <div class="rel-latest-main">
       <div class="rel-ver-row">
         <a class="rel-ver" href={RELEASE.source}>{RELEASE.version}</a>
-        <span class="rel-badge-latest mono">{r.latestBadge}</span>
+        <span class="rel-badge-latest mono">{r.latestBadge[channel]}</span>
       </div>
       <div class="rel-date mono">{releaseDate}</div>
     </div>
