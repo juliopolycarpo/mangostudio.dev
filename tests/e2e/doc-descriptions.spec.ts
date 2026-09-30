@@ -4,6 +4,8 @@ import { DOCS_NAV } from '../../src/data/docs.generated';
 import type { Lang } from '../../src/i18n/types';
 import { routes } from '../../src/i18n/ui';
 
+/** Search snippets cut off near this length; the docs sync trims to it. */
+const MAX_LENGTH = 160;
 const LANGS: readonly Lang[] = ['pt', 'en'];
 
 async function metaContent(
@@ -42,6 +44,10 @@ for (const lang of LANGS) {
           description,
           `expected ${path} description to differ from the ${lang} home page | received: ${description}`
         ).not.toBe(home);
+        expect(
+          (description as string).length,
+          `expected ${path} description within ${MAX_LENGTH} chars | received ${(description as string).length}`
+        ).toBeLessThanOrEqual(MAX_LENGTH);
         expect(og, `expected og:description to match the description on ${path}`).toBe(description);
         expect(
           seen.get(description as string),
