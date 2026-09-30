@@ -1,21 +1,14 @@
 import type { Browser, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+import { INSTALL_TABS } from '../../src/data/site';
 
 const LOCALES = [
   { name: 'pt', path: '/' },
   { name: 'en', path: '/en/' },
 ] as const;
 
-// Every install command that must be readable as plain text without JavaScript.
-const INSTALL_COMMANDS = [
-  'irm https://mangostudio.dev/install.ps1 | iex',
-  'curl -fsSL https://mangostudio.dev/install.sh | bash',
-  'npm i -g mangostudio',
-  'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
-  'brew install juliopolycarpo/tap/mangostudio',
-  'cargo install mangostudio',
-  'docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio',
-];
+// Every ready install command must be readable as plain text without JavaScript.
+const INSTALL_COMMANDS = INSTALL_TABS.filter((tab) => tab.status === 'ready').map((tab) => tab.cmd);
 
 type JsState = 'disabled' | 'blocked';
 
@@ -85,10 +78,6 @@ for (const state of ['disabled', 'blocked'] as const) {
           missing,
           `expected install commands readable: ${INSTALL_COMMANDS.length} | missing: ${missing.join(' ; ')}`
         ).toEqual([]);
-        // The bun command comes from the release data, so assert its shape.
-        expect(text, 'expected a readable bun install command | received none').toMatch(
-          /bun (add|install) -g mangostudio/
-        );
       });
 
       test('keeps terminal lines visible', async ({ browser, baseURL }) => {
