@@ -95,5 +95,11 @@ export function reportResult(result: TestRunResult): number {
 
 function runWithBun(file: string): number {
   const child = spawnSync(process.execPath, [file], { stdio: 'inherit' });
+  if (child.error) {
+    console.error(
+      `expected ${file} to start under ${process.execPath} | received: ${child.error.message}`
+    );
+    return 1;
+  }
   return child.status ?? 1;
 }
