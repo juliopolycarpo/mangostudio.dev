@@ -211,6 +211,12 @@ const items = baseItems.map((item) => {
     color: var(--text);
   }
 
+  /* display:flex above outranks the UA [hidden] rule, so unmatched items must be
+     removed from layout and the tab order explicitly. */
+  .cmdk-item[hidden] {
+    display: none;
+  }
+
   .cmdk-item:hover,
   .cmdk-item:focus-visible,
   .cmdk-item.is-active {
