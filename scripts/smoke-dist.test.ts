@@ -1,9 +1,11 @@
 import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import {
   containsCanonicalOrigin,
   deriveDocSlugs,
   deriveRequiredDistFiles,
+  expectedDocsRedirects,
   extractCrawlHrefs,
   extractFragmentTargets,
   extractRouteIntegrityHrefs,
@@ -14,10 +16,10 @@ import {
   formatBrokenLink,
   isAstroPrefetchRuntime,
   parseRedirects,
-  redirectHtmlReferencesTarget,
   resolveInternalHrefToDistFile,
   resolveInternalHrefToRoutePath,
   resolveServedPath,
+  validateDocsRedirects,
   validateNotFoundMetadata,
 } from './smoke-dist';
 
@@ -124,15 +126,35 @@ run('findSitemapNotFoundUrls flags root and localized error pages only', () => {
   );
 });
 
-run('redirectHtmlReferencesTarget matches Astro redirect output form', () => {
-  const html =
-    '<!doctype html><title>Redirecting to: /docs/quickstart</title>' +
-    '<meta http-equiv="refresh" content="0;url=/docs/quickstart">' +
-    '<link rel="canonical" href="https://mangostudio.dev/docs/quickstart">' +
-    '<body><a href="/docs/quickstart">Redirect</a></body>';
+run('expectedDocsRedirects sends each docs root, with and without slash, to a slash target', () => {
+  deepStrictEqual(expectedDocsRedirects(), [
+    '/docs /docs/quickstart/ 302',
+    '/docs/ /docs/quickstart/ 302',
+    '/en/docs /en/docs/quickstart/ 302',
+    '/en/docs/ /en/docs/quickstart/ 302',
+  ]);
+});
 
-  strictEqual(redirectHtmlReferencesTarget(html, '/docs/quickstart'), true);
-  strictEqual(redirectHtmlReferencesTarget(html, '/en/docs/quickstart'), false);
+run('validateDocsRedirects reports each missing or slashless rule', () => {
+  const text = [
+    '# comment',
+    '/docs   /docs/quickstart/ 302',
+    '/en/docs /en/docs/quickstart 302',
+  ].join('\n');
+  const errors = validateDocsRedirects(text);
+
+  strictEqual(
+    errors.length,
+    3,
+    `expected 3 missing rules | received ${errors.length}: ${errors.join(' | ')}`
+  );
+  ok(errors[0]?.includes('"/docs/ /docs/quickstart/ 302"'), `received: ${errors[0]}`);
+});
+
+run('public/_redirects declares every docs redirect', () => {
+  const text = readFileSync(new URL('../public/_redirects', import.meta.url), 'utf8');
+
+  deepStrictEqual(validateDocsRedirects(text), []);
 });
 
 run('resolveInternalHrefToDistFile maps internal routes to emitted files', () => {
