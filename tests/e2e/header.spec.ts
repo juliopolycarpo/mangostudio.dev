@@ -7,9 +7,12 @@ const LOCALES = [
 ] as const;
 const THEMES = ['light', 'dark'] as const;
 
-// The phone/tablet widths that matter, plus the edges of each layout band: 721 is the
-// first tablet width, 1080 the last, 1081 the first full-desktop width.
-const WIDTHS = [320, 360, 390, 412, 721, 768, 1024, 1080, 1081, 1280] as const;
+// The phone/tablet widths that matter, plus both sides of every layout edge: the wordmark
+// hides at 389, the shortcut hint at 479, the phone layout ends at 720 and the tablet
+// layout at 1080.
+const WIDTHS = [
+  320, 360, 389, 390, 412, 479, 480, 600, 720, 721, 768, 1024, 1080, 1081, 1280,
+] as const;
 const PHONE_MAX = 720;
 const TABLET_MAX = 1080;
 
