@@ -15,7 +15,7 @@ const options: { code: Lang; label: string }[] = [
 ];
 ---
 
-<div class="lang-toggle" role="group" aria-label="Language">
+<div class="lang-toggle" role="group" aria-label={content.langToggle.label}>
   {
     options.map((option) => (
       <a

@@ -9,8 +9,16 @@ export const en = {
     description:
       'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — with your own keys. The app, database, and API keys stay on your machine; prompts and content go only to the provider you select. No telemetry, no Node.',
   },
-  nav: { home: 'Home', features: 'Features', releases: 'Releases', docs: 'Docs' },
+  skipLink: 'Skip to content',
+  nav: {
+    label: 'Primary',
+    home: 'Home',
+    features: 'Features',
+    releases: 'Releases',
+    docs: 'Docs',
+  },
   header: {
+    searchLabel: 'Search docs',
     search: 'Search…',
     cta: 'Get started',
     theme: 'Toggle theme',
@@ -246,5 +254,5 @@ export const en = {
     home: 'Back home',
     docs: 'Read the docs',
   },
-  langToggle: { pt: 'PT', en: 'EN' },
+  langToggle: { label: 'Language', pt: 'PT', en: 'EN' },
 } satisfies SiteContent;

@@ -338,6 +338,71 @@ export function extractDataCopyTargets(html: string): string[] {
   return [...targets].sort();
 }
 
+/**
+ * Aria-labels that intentionally read the same in every locale (proper nouns and
+ * product names), so a pt page may carry them unchanged.
+ */
+const LOCALE_NEUTRAL_ARIA_LABELS: ReadonlySet<string> = new Set(['MangoStudio', 'GitHub']);
+
+function extractAriaLabels(html: string): string[] {
+  const labels = new Set<string>();
+  const tagPattern = /<\s*[A-Za-z][^>]*\baria-label\s*=\s*(?:"[^"]*"|'[^']*')[^>]*>/gi;
+  let match = tagPattern.exec(html);
+
+  while (match !== null) {
+    const value = parseAttributes(match[0] ?? '').get('aria-label');
+
+    if (value !== undefined) {
+      labels.add(decodeHtmlAttribute(value));
+    }
+
+    match = tagPattern.exec(html);
+  }
+
+  return [...labels].sort();
+}
+
+/**
+ * Reports every aria-label on a Portuguese page that the matching English page carries
+ * verbatim, which means it was never translated. Pages pair up by path: `dist/x/index.html`
+ * with `dist/en/x/index.html`.
+ *
+ * @example
+ * findUntranslatedAriaLabels([
+ *   { relativePath: 'dist/index.html', text: '<nav aria-label="Primary">' },
+ *   { relativePath: 'dist/en/index.html', text: '<nav aria-label="Primary">' },
+ * ]); // ['dist/index.html has untranslated aria-label "Primary"; it matches dist/en/index.html.']
+ */
+export function findUntranslatedAriaLabels(htmlFiles: readonly TextFile[]): string[] {
+  const byPath = new Map(htmlFiles.map((file) => [file.relativePath, file.text]));
+  const errors: string[] = [];
+
+  for (const file of htmlFiles) {
+    if (!file.relativePath.startsWith('dist/') || file.relativePath.startsWith('dist/en/')) {
+      continue;
+    }
+
+    const englishPath = `dist/en/${file.relativePath.slice('dist/'.length)}`;
+    const englishText = byPath.get(englishPath);
+
+    if (englishText === undefined) {
+      continue;
+    }
+
+    const englishLabels = new Set(extractAriaLabels(englishText));
+
+    for (const label of extractAriaLabels(file.text)) {
+      if (englishLabels.has(label) && !LOCALE_NEUTRAL_ARIA_LABELS.has(label)) {
+        errors.push(
+          `${file.relativePath} has untranslated aria-label "${label}"; it matches ${englishPath}.`
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
 export function isPlaceholderInstallScript(script: string): boolean {
   return INSTALL_PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(script));
 }
@@ -1068,6 +1133,9 @@ async function auditBuiltOutput(repoRoot: string): Promise<AuditSection> {
   }
 
   errors.push(...findBrokenVersionedAssetReferences(textFiles, emittedAstroImageNames));
+  errors.push(
+    ...findUntranslatedAriaLabels(textFiles.filter((file) => file.relativePath.endsWith('.html')))
+  );
 
   return { name: 'Static build output', errors };
 }
