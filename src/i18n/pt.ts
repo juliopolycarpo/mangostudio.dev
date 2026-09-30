@@ -22,7 +22,7 @@ export const pt = {
     search: 'Buscar…',
     cta: 'Começar',
     theme: 'Alternar tema',
-    github: 'Ver no GitHub',
+    github: 'Dar estrela no GitHub',
     star: 'Dar estrela',
   },
   hero: {

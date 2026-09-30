@@ -121,6 +121,33 @@ for (const locale of LOCALES) {
     });
   }
 
+  for (const width of [390, 1024, 1280] as const) {
+    test(`${locale.name} GitHub link names the destination and keeps its visible text at ${width}px`, async ({
+      page,
+    }) => {
+      const c = locale.content;
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(locale.path);
+      const link = page.locator('.site-header .gh-link');
+      await expect(
+        page.getByRole('link', { name: c.header.github, exact: true }).first(),
+        `expected link named "${c.header.github}" | received: ${(await link.ariaSnapshot()).trim()}`
+      ).toHaveAttribute('href', /github\.com/);
+      // WCAG 2.5.3: when the visible label shows, the accessible name must contain it.
+      const label = page.locator('.site-header .gh-label');
+      const name = (await link.getAttribute('aria-label')) ?? '';
+      const visibleText = (await label.isVisible()) ? ((await label.textContent()) ?? '') : '';
+      expect(
+        name.includes(visibleText),
+        `expected name containing visible text "${visibleText}" | received: "${name}"`
+      ).toBe(true);
+      expect(
+        width === 1280 ? visibleText : c.header.star,
+        `expected visible label "${c.header.star}" at ${width}px | received: "${visibleText}"`
+      ).toBe(c.header.star);
+    });
+  }
+
   test(`${locale.name} primary navigation uses the localized landmark name`, async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto(locale.path);

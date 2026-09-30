@@ -22,7 +22,7 @@ export const en = {
     search: 'Search…',
     cta: 'Get started',
     theme: 'Toggle theme',
-    github: 'View on GitHub',
+    github: 'Star on GitHub',
     star: 'Star',
   },
   hero: {
