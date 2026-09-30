@@ -7,7 +7,7 @@ export const pt = {
   meta: {
     title: 'MangoStudio — Seu estúdio de IA local, em um único binário',
     description:
-      'Chat e geração de imagem com Gemini, OpenAI, Anthropic e DeepSeek — rodando na sua máquina, com as suas chaves. Sem nuvem, sem telemetria, sem Node.',
+      'Chat e geração de imagem com Gemini, OpenAI, Anthropic e DeepSeek — com as suas chaves. O app, o banco de dados e as chaves de API ficam na sua máquina; prompts e conteúdo vão apenas para o provedor que você escolher. Sem telemetria, sem Node.',
   },
   nav: { home: 'Início', features: 'Recursos', releases: 'Releases', docs: 'Docs' },
   header: {
@@ -18,12 +18,12 @@ export const pt = {
     star: 'Dar estrela',
   },
   hero: {
-    badge: `${RELEASE.version} · MIT · 100% local · BYOK`,
+    badge: `${RELEASE.version} · MIT · Local-first · BYOK`,
     titlePre: 'Seu estúdio de IA local, em um',
     titleHighlight: 'único binário',
     titlePost: '.',
     subtitle:
-      'Chat e geração de imagem com Gemini, OpenAI, Anthropic e DeepSeek — rodando na sua máquina, com as suas chaves. Sem nuvem, sem telemetria, sem Node.',
+      'Chat e geração de imagem com Gemini, OpenAI, Anthropic e DeepSeek — com as suas chaves. O app, o banco de dados e as chaves de API ficam na sua máquina; prompts e conteúdo vão apenas para o provedor que você escolher. Sem telemetria, sem Node.',
     terminalTitle: 'instalar',
     ctaPrimary: 'Começar agora',
     ctaSecondary: 'Ver no GitHub',
@@ -63,7 +63,7 @@ export const pt = {
   },
   features: {
     eyebrow: 'Recursos',
-    title: 'Um estúdio completo, offline-first',
+    title: 'Um estúdio completo, local-first',
     items: [
       {
         icon: 'chat',
@@ -93,7 +93,7 @@ export const pt = {
       {
         icon: 'database',
         title: 'Local-first & SQLite',
-        desc: 'Tudo persiste em SQLite local via Kysely. Seus dados nunca saem da sua máquina.',
+        desc: 'Conversas e configurações persistem em SQLite local via Kysely. O app, o banco de dados e as chaves de API ficam na sua máquina; prompts e conteúdo vão apenas para o provedor que você escolher.',
       },
     ],
   },

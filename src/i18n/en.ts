@@ -7,7 +7,7 @@ export const en = {
   meta: {
     title: 'MangoStudio — Your local AI studio in a single binary',
     description:
-      'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — running on your machine, with your own keys. No cloud, no telemetry, no Node.',
+      'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — with your own keys. The app, database, and API keys stay on your machine; prompts and content go only to the provider you select. No telemetry, no Node.',
   },
   nav: { home: 'Home', features: 'Features', releases: 'Releases', docs: 'Docs' },
   header: {
@@ -18,12 +18,12 @@ export const en = {
     star: 'Star',
   },
   hero: {
-    badge: `${RELEASE.version} · MIT · 100% local · BYOK`,
+    badge: `${RELEASE.version} · MIT · Local-first · BYOK`,
     titlePre: 'Your local AI studio, in a',
     titleHighlight: 'single binary',
     titlePost: '.',
     subtitle:
-      'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — running on your machine, with your own keys. No cloud, no telemetry, no Node.',
+      'Chat and image generation with Gemini, OpenAI, Anthropic, and DeepSeek — with your own keys. The app, database, and API keys stay on your machine; prompts and content go only to the provider you select. No telemetry, no Node.',
     terminalTitle: 'install',
     ctaPrimary: 'Get started',
     ctaSecondary: 'View on GitHub',
@@ -63,7 +63,7 @@ export const en = {
   },
   features: {
     eyebrow: 'Features',
-    title: 'A complete studio, offline-first',
+    title: 'A complete studio, local-first',
     items: [
       {
         icon: 'chat',
@@ -93,7 +93,7 @@ export const en = {
       {
         icon: 'database',
         title: 'Local-first & SQLite',
-        desc: 'Everything persists in local SQLite via Kysely. Your data never leaves your machine.',
+        desc: 'Chats and settings persist in local SQLite via Kysely. The app, database, and API keys stay on your machine; prompts and content go only to the provider you select.',
       },
     ],
   },
