@@ -123,28 +123,6 @@ export function findSlashlessInternalHrefs(
   });
 }
 
-export function extractRouteIntegrityHrefs(html: string): string[] {
-  const hrefs = new Set<string>();
-
-  for (const href of extractAnchorHrefs(html, (tag) => /\bdata-cmdk-item\b/i.test(tag))) {
-    hrefs.add(href);
-  }
-
-  for (const className of ['docs-sidebar', 'site-footer']) {
-    const block = extractElementWithClass(html, className);
-
-    if (!block) {
-      continue;
-    }
-
-    for (const href of extractAnchorHrefs(block)) {
-      hrefs.add(href);
-    }
-  }
-
-  return [...hrefs].sort();
-}
-
 export function resolveInternalHrefToRoutePath(
   href: string,
   canonicalOrigin = CANONICAL_ORIGIN
@@ -245,7 +223,6 @@ async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
     await smokeReadyDocs(distDir),
     await smokeNotFoundLinks(distDir),
     await smokeCanonicalHosts(distDir),
-    await smokeInternalLinkGraph(distDir),
     await smokeLinkCrawl(distDir),
     await smokeNoPrefetch(distDir),
     await smokeTrailingSlashHrefs(distDir),
@@ -442,51 +419,6 @@ async function smokeCanonicalHosts(distDir: string): Promise<SmokeSection> {
   }
 
   return { name: 'Sitemap and robots hosts', errors };
-}
-
-async function smokeInternalLinkGraph(distDir: string): Promise<SmokeSection> {
-  const errors: string[] = [];
-  const representativePages = [
-    'index.html',
-    'en/index.html',
-    'releases/index.html',
-    'en/releases/index.html',
-    routeToDistFile(routes.doc('pt', DOCS_DEFAULT_SLUG)),
-    routeToDistFile(routes.doc('en', DOCS_DEFAULT_SLUG)),
-    routeToDistFile(routes.doc('pt', 'reference/cli')),
-    routeToDistFile(routes.doc('en', 'reference/cli')),
-  ];
-  const seen = new Set<string>();
-
-  for (const page of representativePages) {
-    const html = await readTextFile(join(distDir, page), errors);
-
-    if (!html) {
-      continue;
-    }
-
-    for (const href of extractRouteIntegrityHrefs(html)) {
-      const relativePath = resolveInternalHrefToDistFile(href);
-
-      if (!relativePath) {
-        continue;
-      }
-
-      const key = `${page}\0${href}\0${relativePath}`;
-
-      if (seen.has(key)) {
-        continue;
-      }
-
-      seen.add(key);
-
-      if (!(await fileExists(join(distDir, relativePath)))) {
-        errors.push(`dist/${page} links to ${href}, but dist/${relativePath} is missing.`);
-      }
-    }
-  }
-
-  return { name: 'Internal link graph', errors };
 }
 
 async function smokeNoPrefetch(distDir: string): Promise<SmokeSection> {
