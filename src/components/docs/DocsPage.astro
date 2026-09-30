@@ -23,7 +23,7 @@ const { lang, content: c, entry, Content, headings } = Astro.props;
 const nav = docsNav(lang);
 const slug = entry.data.slug;
 const { previous, next } = previousNextDocs(lang, slug);
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3).slice(0, 12);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 ---
 
 <div class="docs">
@@ -96,15 +96,8 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
         <div class="docs-toc-inner">
           <div class="docs-toc-title">{c.docs.tocTitle}</div>
           <div class="docs-toc-list">
-            {toc.map((heading, index) => (
-              <a
-                class:list={[
-                  'docs-toc-item',
-                  `depth-${heading.depth}`,
-                  { 'is-active': index === 0 },
-                ]}
-                href={`#${heading.slug}`}
-              >
+            {toc.map((heading) => (
+              <a class:list={['docs-toc-item', `depth-${heading.depth}`]} href={`#${heading.slug}`}>
                 {heading.text}
               </a>
             ))}
@@ -430,6 +423,9 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     align-self: start;
     position: sticky;
     top: var(--header-h);
+    /* The full heading list can outgrow the viewport; scroll it inside the sticky column. */
+    max-height: calc(100vh - var(--header-h));
+    overflow-y: auto;
   }
 
   .docs-toc-title {
@@ -460,8 +456,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     padding-left: 12px;
   }
 
-  .docs-toc-item:hover,
-  .docs-toc-item.is-active {
+  .docs-toc-item:hover {
     color: var(--accent-text);
   }
 
