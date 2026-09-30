@@ -6,6 +6,8 @@ const LOCALES = [
   { name: 'en', root: '/en/docs/quickstart/' },
 ] as const;
 
+const PHONE = { width: 390, height: 844 };
+
 /** Every doc page reachable from the sidebar of `path`, including `path` itself. */
 async function docsRoutesFrom(page: Page, path: string): Promise<string[]> {
   await page.goto(path);
@@ -53,7 +55,122 @@ async function tocReports(page: Page, start: string): Promise<TocReport[]> {
   return reports;
 }
 
+/** Links a user can see. checkVisibility also honors the content-visibility a closed details applies. */
+async function sidebarLinksVisible(page: Page): Promise<number> {
+  return page
+    .locator('.docs-sidebar a.docs-link')
+    .evaluateAll(
+      (links) => links.filter((link) => link.checkVisibility({ visibilityProperty: true })).length
+    );
+}
+
+async function expectNavState(page: Page, state: 'open' | 'closed', context: string) {
+  const summaries = await page.locator('.docs-nav > summary').count();
+  expect(
+    summaries,
+    `${context}: expected 1 details.docs-nav > summary in the docs sidebar | received: ${summaries}`
+  ).toBe(1);
+  const open = await page.locator('.docs-nav').evaluate((el) => (el as HTMLDetailsElement).open);
+  const visible = await sidebarLinksVisible(page);
+  const total = await page.locator('.docs-sidebar a.docs-link').count();
+  expect(open, `${context}: expected details.open=${state === 'open'} | received: ${open}`).toBe(
+    state === 'open'
+  );
+  if (state === 'open') {
+    expect(
+      visible,
+      `${context}: expected all ${total} sidebar links visible | received: ${visible}`
+    ).toBe(total);
+    return;
+  }
+  expect(visible, `${context}: expected 0 sidebar links visible | received: ${visible}`).toBe(0);
+}
+
 for (const locale of LOCALES) {
+  test.describe(`${locale.name}: docs navigation at 390px`, () => {
+    test.use({ viewport: PHONE });
+
+    test('article title starts inside the first viewport', async ({ page }) => {
+      await page.goto(locale.root);
+      const top = await page
+        .locator('.docs-markdown h1')
+        .first()
+        .evaluate((el) => {
+          return el.getBoundingClientRect().top + window.scrollY;
+        });
+      expect(
+        top,
+        `expected article h1 top < ${PHONE.height}px (first viewport) | received: ${Math.round(top)}px`
+      ).toBeLessThan(PHONE.height);
+    });
+
+    test('sidebar is collapsed by default behind a localized summary', async ({ page }) => {
+      await page.goto(locale.root);
+      await expectNavState(page, 'closed', 'initial load');
+      const summary = page.locator('.docs-nav > summary');
+      await expect(summary, 'expected a visible <summary> at 390px').toBeVisible();
+      const label = (await summary.innerText()).trim();
+      expect(
+        label.length,
+        `expected a non-empty summary label | received: "${label}"`
+      ).toBeGreaterThan(0);
+    });
+
+    test('summary toggles from the keyboard', async ({ page }) => {
+      await page.goto(locale.root);
+      await expectNavState(page, 'closed', 'before toggling');
+      await page.locator('.docs-nav > summary').focus();
+      await page.keyboard.press('Enter');
+      await expectNavState(page, 'open', 'after Enter');
+      await page.keyboard.press('Space');
+      await expectNavState(page, 'closed', 'after Space');
+    });
+  });
+
+  test.describe(`${locale.name}: docs navigation at 390px without JavaScript`, () => {
+    test.use({ viewport: PHONE, javaScriptEnabled: false });
+
+    test('collapsed by default and opens natively', async ({ page }) => {
+      await page.goto(locale.root);
+      await expectNavState(page, 'closed', 'JS off, initial');
+      await page.locator('.docs-nav > summary').click();
+      await expectNavState(page, 'open', 'JS off, after click');
+    });
+
+    test('summary toggles from the keyboard', async ({ page }) => {
+      await page.goto(locale.root);
+      await expectNavState(page, 'closed', 'JS off, before toggling');
+      await page.locator('.docs-nav > summary').focus();
+      await page.keyboard.press('Enter');
+      await expectNavState(page, 'open', 'JS off, after Enter');
+    });
+  });
+
+  for (const withJs of [true, false]) {
+    test.describe(`${locale.name}: docs navigation at 1024px${withJs ? '' : ' without JavaScript'}`, () => {
+      test.use({ viewport: { width: 1024, height: 900 }, javaScriptEnabled: withJs });
+
+      test('sidebar list stays expanded regardless of the details state', async ({ page }) => {
+        await page.goto(locale.root);
+        const summaries = await page.locator('.docs-nav > summary').count();
+        expect(
+          summaries,
+          `expected 1 details.docs-nav > summary in the docs sidebar | received: ${summaries}`
+        ).toBe(1);
+        const total = await page.locator('.docs-sidebar a.docs-link').count();
+        const visible = await sidebarLinksVisible(page);
+        expect(
+          visible,
+          `expected all ${total} sidebar links visible at 1024px | received: ${visible}`
+        ).toBe(total);
+        await expect(
+          page.locator('.docs-nav > summary'),
+          'expected the disclosure summary hidden at 1024px'
+        ).toBeHidden();
+      });
+    });
+  }
+
   test.describe(`${locale.name}: table of contents`, () => {
     test.use({ viewport: { width: 1280, height: 700 } });
 

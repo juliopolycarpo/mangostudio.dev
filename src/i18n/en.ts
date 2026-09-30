@@ -185,6 +185,7 @@ export const en = {
   },
   docs: {
     searchSidebar: 'Search the docs',
+    navSummary: 'Browse the docs',
     tocTitle: 'On this page',
     sourceLabel: 'Source on GitHub',
     previousLabel: '← Previous',
