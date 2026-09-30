@@ -231,6 +231,18 @@ for (const locale of LOCALES) {
     });
   });
 
+  test(`${locale.name} docs code copy buttons use the localized name`, async ({ page }) => {
+    const c = locale.content;
+    const docsPath = locale.name === 'pt' ? '/docs/quickstart/' : '/en/docs/quickstart/';
+    await page.goto(docsPath);
+    const buttons = page.getByRole('button', { name: c.docs.copyCode, exact: true });
+    const total = await buttons.count();
+    expect(
+      total > 0,
+      `expected >0 buttons named "${c.docs.copyCode}" on ${docsPath} | received: ${total}`
+    ).toBe(true);
+  });
+
   test(`${locale.name} primary navigation uses the localized landmark name`, async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto(locale.path);
