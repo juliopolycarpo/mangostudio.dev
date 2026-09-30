@@ -5,6 +5,7 @@ import { basename, join, relative } from 'node:path';
 import { DOCS_DEFAULT_SLUG, DOCS_NAV } from '../src/data/docs.generated';
 import type { Lang } from '../src/i18n/types';
 import { routes } from '../src/i18n/ui';
+import { isNotFoundUrl } from './localized-not-found';
 
 const CANONICAL_ORIGIN = 'https://mangostudio.dev';
 /** Flat error pages Cloudflare's `404-page` handling serves per locale. */
@@ -167,7 +168,10 @@ export function findNonCanonicalOrigins(
 
 /** Sitemap `<loc>` URLs that point at an error page (`/404`, `/en/404/`). */
 export function findSitemapNotFoundUrls(locText: string): string[] {
-  return locText.split('\n').filter((url) => /\/404\/?$/.test(url.trim()));
+  return locText
+    .split('\n')
+    .map((url) => url.trim())
+    .filter((url) => url !== '' && isNotFoundUrl(url));
 }
 
 async function runSmoke(repoRoot: string): Promise<SmokeSection[]> {
@@ -279,6 +283,10 @@ export function validateNotFoundMetadata(
 
   if (!robots || !/\bnoindex\b/i.test(robots)) {
     errors.push(`${label} must set <meta name="robots" content="noindex"> | received: ${robots}`);
+  }
+
+  if (extractMetaTags(html).some((attrs) => attrs.get('property') === 'og:url')) {
+    errors.push(`${label} must not set og:url | received: a canonical URL signal`);
   }
 
   for (const rel of extractLinkTags(html)) {

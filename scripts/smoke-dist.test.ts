@@ -86,6 +86,17 @@ run('validateNotFoundMetadata reports missing noindex, canonical, and alternates
   ok(errors[2]?.includes('rel="alternate"'), errors[2]);
 });
 
+run('validateNotFoundMetadata rejects og:url on an error page', () => {
+  const html = notFoundHtml(
+    'en',
+    '<meta name="robots" content="noindex"><meta property="og:url" content="https://mangostudio.dev/en/404/">'
+  );
+
+  deepStrictEqual(validateNotFoundMetadata(html, EN_404), [
+    'dist/en/404.html must not set og:url | received: a canonical URL signal',
+  ]);
+});
+
 run('validateNotFoundMetadata rejects a language toggle that targets a missing 404 twin', () => {
   const html = notFoundHtml('en').replace(
     'href="/en/" hreflang="en"',
