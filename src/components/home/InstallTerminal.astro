@@ -40,103 +40,108 @@ const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map(
     <span class="terminal-title">{c.hero.terminalTitle}</span>
   </div>
 
-  <div
-    class="install-tabs"
-    id="install-platform-tabs"
-    data-enhance="install"
-    role="tablist"
-    aria-label={c.install.platformTabsLabel}
-  >
-    {
-      INSTALL_PLATFORMS.map((platform) => {
-        const isActive = platform.id === initialPlatform.id;
-        return (
-          <button
-            type="button"
-            class:list={['install-tab', { 'is-active': isActive }]}
-            id={`install-platform-${platform.id}`}
-            role="tab"
-            aria-selected={isActive ? 'true' : 'false'}
-            aria-controls="install-panel"
-            tabindex={isActive ? 0 : -1}
-            data-platform={platform.id}
-            data-default-channel={platform.defaultChannel}
-          >
-            {platform.label}
-          </button>
-        );
-      })
-    }
-  </div>
+  <div class="install-body">
+    <div
+      class="install-tabs"
+      id="install-platform-tabs"
+      data-enhance="install"
+      data-enhance-reserve
+      role="tablist"
+      aria-label={c.install.platformTabsLabel}
+    >
+      {
+        INSTALL_PLATFORMS.map((platform) => {
+          const isActive = platform.id === initialPlatform.id;
+          return (
+            <button
+              type="button"
+              class:list={['install-tab', { 'is-active': isActive }]}
+              id={`install-platform-${platform.id}`}
+              role="tab"
+              aria-selected={isActive ? 'true' : 'false'}
+              aria-controls="install-panel"
+              tabindex={isActive ? 0 : -1}
+              data-platform={platform.id}
+              data-default-channel={platform.defaultChannel}
+            >
+              {platform.label}
+            </button>
+          );
+        })
+      }
+    </div>
 
-  <div
-    class="install-tabs"
-    id="install-tabs"
-    data-enhance="install"
-    role="tablist"
-    aria-label={c.install.methodTabsLabel}
-  >
-    {
-      INSTALL_TABS.map((tab) => {
-        const isPlanned = tab.status === 'planned';
-        const isActive = tab.id === initial.id;
-        const isAvailable = tab.platforms.includes(initialPlatform.id);
-        const tabId = `install-tab-${tab.id}`;
-        return (
-          <button
-            type="button"
-            class:list={['install-tab', { 'is-active': isActive, 'is-planned': isPlanned }]}
-            id={tabId}
-            role="tab"
-            aria-selected={isActive ? 'true' : 'false'}
-            aria-controls="install-panel"
-            aria-disabled={isPlanned ? 'true' : undefined}
-            tabindex={isActive ? 0 : -1}
-            hidden={!isAvailable}
-            data-channel={tab.id}
-            data-cmd={tab.cmd}
-            data-platforms={tab.platforms.join(' ')}
-            data-prompt={tab.prompt}
-            data-status={tab.status}
-          >
-            {tab.label}
-            {isPlanned && <span class="planned-pill">{c.install.plannedLabel}</span>}
-          </button>
-        );
-      })
-    }
-  </div>
+    <div
+      class="install-tabs"
+      id="install-tabs"
+      data-enhance="install"
+      data-enhance-reserve
+      role="tablist"
+      aria-label={c.install.methodTabsLabel}
+    >
+      {
+        INSTALL_TABS.map((tab) => {
+          const isPlanned = tab.status === 'planned';
+          const isActive = tab.id === initial.id;
+          const isAvailable = tab.platforms.includes(initialPlatform.id);
+          const tabId = `install-tab-${tab.id}`;
+          return (
+            <button
+              type="button"
+              class:list={['install-tab', { 'is-active': isActive, 'is-planned': isPlanned }]}
+              id={tabId}
+              role="tab"
+              aria-selected={isActive ? 'true' : 'false'}
+              aria-controls="install-panel"
+              aria-disabled={isPlanned ? 'true' : undefined}
+              tabindex={isActive ? 0 : -1}
+              hidden={!isAvailable}
+              data-channel={tab.id}
+              data-cmd={tab.cmd}
+              data-platforms={tab.platforms.join(' ')}
+              data-prompt={tab.prompt}
+              data-status={tab.status}
+            >
+              {tab.label}
+              {isPlanned && <span class="planned-pill">{c.install.plannedLabel}</span>}
+            </button>
+          );
+        })
+      }
+    </div>
 
-  <ul class="install-static" data-enhance-fallback="install">
-    {
-      staticCommands.map((tab) => (
-        <li>
-          <span class="install-static-meta">
-            {tab.label} · {tab.platformLabels}
-          </span>
-          <code class="install-static-code">
-            <span class="prompt">{tab.prompt}</span>
-            {tab.cmd}
-          </code>
-        </li>
-      ))
-    }
-  </ul>
+    <ul class="install-static" data-enhance-fallback="install">
+      {
+        staticCommands.map((tab) => (
+          <li>
+            <span class="install-static-meta">
+              {tab.label} · {tab.platformLabels}
+            </span>
+            <code class="install-static-code">
+              <span class="prompt">{tab.prompt}</span>
+              {tab.cmd}
+            </code>
+          </li>
+        ))
+      }
+    </ul>
 
-  <div
-    class="install-cmd"
-    id="install-panel"
-    data-enhance="install"
-    role="tabpanel"
-    aria-labelledby={`install-tab-${initial.id}`}
-    data-platform={initialPlatform.id}
-    data-state={initial.status}
-  >
-    <code class="install-code">
-      <span class="prompt" id="hero-prompt">{initial.prompt}</span><span id="hero-cmd">{initial.cmd}</span>
-    </code>
-    <span class="install-hint" id="hero-hint">{c.install.plannedHint}</span>
-    <CopyButton text={initial.cmd} label={c.copyButtonLabel} id="hero-copy" />
+    <div
+      class="install-cmd"
+      id="install-panel"
+      data-enhance="install"
+      data-enhance-reserve
+      role="tabpanel"
+      aria-labelledby={`install-tab-${initial.id}`}
+      data-platform={initialPlatform.id}
+      data-state={initial.status}
+    >
+      <code class="install-code">
+        <span class="prompt" id="hero-prompt">{initial.prompt}</span><span id="hero-cmd">{initial.cmd}</span>
+      </code>
+      <span class="install-hint" id="hero-hint">{c.install.plannedHint}</span>
+      <CopyButton text={initial.cmd} label={c.copyButtonLabel} id="hero-copy" />
+    </div>
   </div>
 </div>
 
@@ -151,6 +156,12 @@ const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map(
     box-shadow: 0 30px 70px -28px var(--shadow), 0 0 0 1px var(--hair);
     text-align: left;
     min-height: 224px;
+  }
+
+  /* Positioning context for the static list while scripts are expected but not
+     yet running (see .install-static below). */
+  .install-body {
+    position: relative;
   }
 
   .install-tabs {
@@ -248,6 +259,19 @@ const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map(
     display: grid;
     gap: 10px;
     border-top: 1px solid var(--border);
+  }
+
+  /* Scripts expected (html.js) but not initialized: the interactive widget below
+     keeps its box (visibility hidden, see global.css) and the list overlays it,
+     scrolling if needed. Initializing swaps them with no layout shift, and a
+     blocked bundle still leaves every command reachable. */
+  :global(html.js) .install-static {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    align-content: start;
+    border-top: 0;
+    background: var(--code-bg);
   }
 
   .install-static-meta {

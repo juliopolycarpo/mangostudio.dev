@@ -225,11 +225,22 @@ a {
 }
 
 /* Progressive enhancement gate (see src/scripts/enhance.ts). Controls that need
-   JavaScript carry data-enhance="<name>" and stay hidden until their initializer
-   removes it; static fallbacks carry data-enhance-fallback="<name>" and are hidden
-   by the same call. */
-[data-enhance] {
+   JavaScript carry data-enhance="<name>" until their initializer removes it;
+   static fallbacks carry data-enhance-fallback="<name>" and are hidden by the
+   same call.
+   - Default: display none until revealed, so nothing dead shows and nothing
+     inert takes room.
+   - data-enhance-reserve (small inline controls): without JS (html:not(.js))
+     still display none; with JS expected (html.js) it keeps its box and only
+     turns invisible and inert, so revealing it never shifts the layout. If the
+     bundle is blocked it stays invisible and unfocusable. */
+[data-enhance]:not([data-enhance-reserve]),
+html:not(.js) [data-enhance] {
   display: none !important;
+}
+
+html.js [data-enhance][data-enhance-reserve] {
+  visibility: hidden !important;
 }
 
 [data-enhance-fallback][hidden] {

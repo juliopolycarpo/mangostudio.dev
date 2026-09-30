@@ -8,7 +8,7 @@ interface Props {
 const { label } = Astro.props;
 ---
 
-<button type="button" class="icon-btn theme-toggle" data-theme-toggle data-enhance="theme" aria-label={label}>
+<button type="button" class="icon-btn theme-toggle" data-theme-toggle data-enhance="theme" data-enhance-reserve aria-label={label}>
   <Icon name="sun" size={17} class="icon-dark" />
   <Icon name="moon" size={17} class="icon-light" />
 </button>

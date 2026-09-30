@@ -80,6 +80,31 @@ for (const state of ['disabled', 'blocked'] as const) {
         ).toEqual([]);
       });
 
+      test('keeps every install command reachable inside the widget', async ({
+        browser,
+        baseURL,
+      }) => {
+        const { page, close } = await openWithoutScripts(browser, baseURL, state, locale.path);
+        const outside = await page.locator('.install-static-code').evaluateAll((codes) => {
+          const list = codes[0]?.closest('.install');
+          if (!list) return ['missing .install container'];
+          const box = list.getBoundingClientRect();
+          return codes
+            .filter((code) => {
+              code.scrollIntoView({ block: 'nearest' });
+              const rect = code.getBoundingClientRect();
+              return rect.top < box.top - 1 || rect.bottom > box.bottom + 1;
+            })
+            .map((code) => code.textContent?.trim() ?? '');
+        });
+        await close();
+
+        expect(
+          outside,
+          `expected install commands reachable inside .install: 0 outside | received: ${outside.join(' ; ')}`
+        ).toEqual([]);
+      });
+
       test('keeps terminal lines visible', async ({ browser, baseURL }) => {
         const { page, close } = await openWithoutScripts(browser, baseURL, state, locale.path);
         const opacities = await page
@@ -167,6 +192,62 @@ test.describe('docs page controls', () => {
         labels,
         `expected visible buttons: 0 | received: ${labels.length} (${labels.join(', ')})`
       ).toEqual([]);
+    });
+  }
+});
+
+test.describe('layout stability while the bundle loads', () => {
+  const CONTROLS = 'header a, header button, .docs-search, .install, .hero-cta';
+
+  async function controlBoxes(page: Page): Promise<string[]> {
+    await page.evaluate(() => document.fonts.ready);
+    // initCmdkHints narrows the fallback "Ctrl K / ⌘K" text to the platform's
+    // shortcut, which resizes the search buttons by design. Apply it up front so
+    // this test isolates the enhancement gate; that hint swap is not what it checks.
+    await page.evaluate(() => {
+      for (const hint of document.querySelectorAll<HTMLElement>('[data-cmdk-hint]')) {
+        hint.textContent = hint.dataset.hintOther ?? hint.textContent;
+      }
+    });
+    return page.locator(CONTROLS).evaluateAll((els) =>
+      els.map((el) => {
+        const { x, y, width, height } = el.getBoundingClientRect();
+        return `${el.className || el.tagName}@${x},${y},${width}x${height}`;
+      })
+    );
+  }
+
+  for (const path of ['/', '/docs/quickstart/']) {
+    test(`header controls keep their boxes when scripts arrive late, ${path}`, async ({ page }) => {
+      let release: () => void = () => {};
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await page.route('**/*.js', async (route) => {
+        await gate;
+        await route.continue();
+      });
+
+      await page.goto(path, { waitUntil: 'commit' });
+      await page.locator('footer').waitFor({ state: 'attached' });
+      const pending = await page.locator('[data-enhance]').count();
+      const before = await controlBoxes(page);
+
+      release();
+      await expect(
+        page.locator('[data-enhance]'),
+        'expected pending [data-enhance]: 0'
+      ).toHaveCount(0);
+      const after = await controlBoxes(page);
+
+      expect(pending, 'expected pending [data-enhance] before scripts load: > 0').toBeGreaterThan(
+        0
+      );
+      expect(before.length, 'expected header controls measured: > 0').toBeGreaterThan(0);
+      expect(
+        after,
+        `expected control boxes unchanged after reveal | before: ${before.join(' ; ')}`
+      ).toEqual(before);
     });
   }
 });
