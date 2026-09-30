@@ -85,7 +85,9 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
     position: absolute;
     top: -40px;
     left: 50%;
-    transform: translateX(-50%);
+    /* Center with the individual translate property so the glowpulse keyframes can
+       animate transform: scale() without dropping the horizontal offset. */
+    translate: -50% 0;
     width: 560px;
     height: 360px;
     max-width: 100%;
