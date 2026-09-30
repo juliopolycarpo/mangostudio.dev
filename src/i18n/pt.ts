@@ -199,11 +199,12 @@ export const pt = {
     nextLabel: 'Próximo →',
   },
   cmdk: {
-    placeholder: 'Buscar páginas, comandos, docs…',
+    label: 'Navegação entre páginas',
+    placeholder: 'Ir para página…',
     noResults: 'Nada encontrado para',
     open: '↵ abrir',
     close: 'esc fechar',
-    footer: 'MangoStudio ⌘K',
+    footer: 'MangoStudio',
     items: [
       {
         glyph: '⌂',

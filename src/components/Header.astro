@@ -1,6 +1,6 @@
 ---
 import { getLogoImages } from '@/components/logo-images';
-import { GITHUB_URL } from '@/data/site';
+import { GITHUB_URL, PALETTE_SHORTCUT } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
 import Icon from './Icon.astro';
@@ -79,7 +79,11 @@ const nav = [
   <button type="button" class="search-btn" data-cmdk-open aria-haspopup="dialog">
     <Icon name="search" size={14} />
     <span class="search-label">{c.header.search}</span>
-    <kbd>⌘K</kbd>
+    <kbd
+      data-cmdk-hint
+      data-hint-mac={PALETTE_SHORTCUT.mac}
+      data-hint-other={PALETTE_SHORTCUT.other}>{PALETTE_SHORTCUT.fallback}</kbd
+    >
   </button>
 
   <ThemeToggle label={c.header.theme} />

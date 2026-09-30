@@ -2,6 +2,7 @@
 import Icon from '@/components/Icon.astro';
 import type { DocsEntry } from '@/data/docs';
 import { docsNav, previousNextDocs } from '@/data/docs';
+import { PALETTE_SHORTCUT } from '@/data/site';
 import type { Lang, SiteContent } from '@/i18n/types';
 import { routes } from '@/i18n/ui';
 
@@ -31,7 +32,11 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     <button type="button" class="docs-search" data-cmdk-open aria-haspopup="dialog">
       <Icon name="search" size={13} />
       <span class="docs-search-label">{c.docs.searchSidebar}</span>
-      <kbd>⌘K</kbd>
+      <kbd
+        data-cmdk-hint
+        data-hint-mac={PALETTE_SHORTCUT.mac}
+        data-hint-other={PALETTE_SHORTCUT.other}>{PALETTE_SHORTCUT.fallback}</kbd
+      >
     </button>
 
     {
