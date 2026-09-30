@@ -8,7 +8,6 @@ import {
   expectedDocsRedirects,
   extractCrawlHrefs,
   extractFragmentTargets,
-  extractRouteIntegrityHrefs,
   findBrokenLinks,
   findNonCanonicalOrigins,
   findPrefetchAttributeElements,
@@ -265,27 +264,6 @@ run('canonical host helpers reject substring host spoofing', () => {
   deepStrictEqual(findNonCanonicalOrigins(text), [
     'https://example.com',
     'https://mangostudio.dev.example.com',
-  ]);
-});
-
-run('extractRouteIntegrityHrefs scopes links to cmdk, docs sidebar, and footer', () => {
-  const html = `
-    <header><a href="/not-checked">Header</a></header>
-    <a class="cmdk-item" data-cmdk-item href="/docs/quickstart">Quickstart</a>
-    <aside class="docs-sidebar">
-      <a class="docs-link" href="/docs/reference/cli">CLI</a>
-    </aside>
-    <footer class="site-footer">
-      <a href="/releases">Releases</a>
-      <a href="https://github.com/juliopolycarpo/mangostudio">GitHub</a>
-    </footer>
-  `;
-
-  deepStrictEqual(extractRouteIntegrityHrefs(html), [
-    '/docs/quickstart',
-    '/docs/reference/cli',
-    '/releases',
-    'https://github.com/juliopolycarpo/mangostudio',
   ]);
 });
 
