@@ -1,6 +1,7 @@
 ---
 title: "Ferramentas"
 sidebarLabel: "Ferramentas"
+description: "Este monorepo usa Turborepo 2.x (atualmente 2.9.16) como camada compartilhada de build system. O Turborepo orquestra a execução de tasks entre workspaces e…"
 lang: "pt"
 slug: "reference/tooling"
 groupId: "reference"

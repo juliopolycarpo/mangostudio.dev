@@ -1,6 +1,7 @@
 ---
 title: "Contributor Quickstart"
 sidebarLabel: "Contributor Quickstart"
+description: "Use this guide when you want the shortest path from clone to a validated change."
 lang: "en"
 slug: "guides/contributor-quickstart"
 groupId: "guides"

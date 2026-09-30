@@ -1,6 +1,7 @@
 ---
 title: "Política De Segurança"
 sidebarLabel: "Política De Segurança"
+description: "Se você descobrir uma vulnerabilidade de segurança no MangoStudio, reporte-a de forma privada em vez de abrir uma issue pública."
 lang: "pt"
 slug: "operations/security"
 groupId: "operations"

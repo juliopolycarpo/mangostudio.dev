@@ -1,6 +1,7 @@
 ---
 title: "Image Generation"
 sidebarLabel: "Image Generation"
+description: "MangoStudio supports image generation through two paths: the generate_image tool (called by models during text chats) and direct generation from the UI."
 lang: "en"
 slug: "features/image-generation"
 groupId: "features"

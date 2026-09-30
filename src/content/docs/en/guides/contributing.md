@@ -1,6 +1,7 @@
 ---
 title: "Contributing to MangoStudio"
 sidebarLabel: "Contributing to MangoStudio"
+description: "Thank you for your interest in contributing to MangoStudio!"
 lang: "en"
 slug: "guides/contributing"
 groupId: "guides"

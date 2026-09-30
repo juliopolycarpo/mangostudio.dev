@@ -1,6 +1,7 @@
 ---
 title: "Provider Development Guide"
 sidebarLabel: "Provider Development Guide"
+description: "Every provider must implement the AIProvider interface (apps/api/src/services/providers/types.ts)."
 lang: "en"
 slug: "providers/development"
 groupId: "providers"

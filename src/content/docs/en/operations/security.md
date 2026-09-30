@@ -1,6 +1,7 @@
 ---
 title: "Security Policy"
 sidebarLabel: "Security Policy"
+description: "If you discover a security vulnerability in MangoStudio, please report it privately rather than opening a public issue."
 lang: "en"
 slug: "operations/security"
 groupId: "operations"

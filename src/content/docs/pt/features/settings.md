@@ -1,6 +1,7 @@
 ---
 title: "Arquitetura De Settings"
 sidebarLabel: "Arquitetura De Settings"
+description: "O MangoStudio tem três camadas independentes de settings, cada uma com sua própria persistência, API e módulo no frontend."
 lang: "pt"
 slug: "features/settings"
 groupId: "features"

@@ -1,6 +1,7 @@
 ---
 title: "Visão Geral Da Arquitetura"
 sidebarLabel: "Visão Geral Da Arquitetura"
+description: "O MangoStudio segue uma arquitetura modular inspirada em DDD distribuída em três workspaces. Este documento explica as decisões de design, as…"
 lang: "pt"
 slug: "architecture/overview"
 groupId: "architecture"

@@ -1,6 +1,7 @@
 ---
 title: "Arquitetura De Continuação"
 sidebarLabel: "Arquitetura De Continuação"
+description: "Continuação é o mecanismo que permite a uma conversa multi-turno preservar contexto entre interações separadas do usuário sem reenviar todo o histórico do…"
 lang: "pt"
 slug: "architecture/continuation"
 groupId: "architecture"

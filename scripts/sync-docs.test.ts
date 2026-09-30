@@ -1,10 +1,13 @@
-import { deepStrictEqual, ok, strictEqual } from 'node:assert/strict';
+import { deepStrictEqual, ok, strictEqual, throws } from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import {
+  assertUniqueDescriptions,
   collectDocDefinitions,
+  DESCRIPTION_MAX_LENGTH,
+  extractDescription,
   renderManifest,
   rewriteMarkdownLinks,
   sanitizeMarkdown,
@@ -67,6 +70,128 @@ await run('sanitizeMarkdown removes externally loaded images while preserving ba
 Remote
 # Title
 `
+  );
+});
+
+await run('extractDescription returns the first prose paragraph as plain text', () => {
+  strictEqual(
+    extractDescription(
+      '# CLI\n\nRun **mangostudio** from a [shell](/docs/) with `bun` and _care_.\n\n## Next\n\nLater text.\n',
+      'CLI'
+    ),
+    'Run mangostudio from a shell with bun and care.'
+  );
+});
+
+await run('extractDescription skips badge rows, quotes, and leading code', () => {
+  const markdown = [
+    '# MangoStudio',
+    '',
+    '[CI](https://example.com/ci)',
+    '[Release](https://example.com/release)',
+    '',
+    '![logo](./logo.png)',
+    '',
+    '> Read in English',
+    '',
+    '```bash',
+    'curl -fsSL https://example.com | bash',
+    '',
+    'echo not prose',
+    '```',
+    '',
+    '| a | b |',
+    '| - | - |',
+    '',
+    '- item',
+    '',
+    'The studio for local AI chat and images.',
+    '',
+  ].join('\n');
+
+  strictEqual(
+    extractDescription(markdown, 'MangoStudio'),
+    'The studio for local AI chat and images.'
+  );
+});
+
+await run('extractDescription drops HTML comments and inline tags but keeps autolinks', () => {
+  strictEqual(
+    extractDescription(
+      '# T\n\n<!--\nhidden\n\nnote -->\n\nSee <https://example.com> and <b>bold</b> <<b>script</b>>text.\n',
+      'T'
+    ),
+    'See https://example.com and bold text.'
+  );
+});
+
+await run('extractDescription finds prose that follows a heading when the intro is missing', () => {
+  strictEqual(
+    extractDescription('# Policy\n\n## Reporting\n\nReport issues privately.\n', 'Policy'),
+    'Report issues privately.'
+  );
+});
+
+await run('extractDescription keeps a paragraph that introduced a code block readable', () => {
+  strictEqual(
+    extractDescription(
+      '# Guide\n\nImplement the interface in `types.ts`:\n\n```ts\nx\n```\n',
+      'Guide'
+    ),
+    'Implement the interface in types.ts.'
+  );
+});
+
+await run('extractDescription joins a wrapped paragraph and stops at the next block', () => {
+  strictEqual(
+    extractDescription('# T\n\nFirst line\nsecond line.\n- list item\n\nOther.\n', 'T'),
+    'First line second line.'
+  );
+});
+
+await run('extractDescription truncates long paragraphs on a word boundary', () => {
+  const words = Array.from({ length: 60 }, (_, index) => `word${index}`).join(' ');
+  const description = extractDescription(`# T\n\n${words}\n`, 'T');
+
+  ok(
+    description.length <= DESCRIPTION_MAX_LENGTH,
+    `expected at most ${DESCRIPTION_MAX_LENGTH} chars | received ${description.length}: ${description}`
+  );
+  ok(description.endsWith('…'), `expected a trailing ellipsis | received: ${description}`);
+  ok(
+    words.startsWith(description.slice(0, -1)) && words[description.length - 1] === ' ',
+    `expected the cut to fall on a word boundary | received: ${description}`
+  );
+});
+
+await run('extractDescription falls back to the plain title when the doc has no prose', () => {
+  strictEqual(
+    extractDescription('# Tools\n\n```ts\nx\n```\n\n| a |\n| - |\n', 'Tools `v2`'),
+    'Tools v2'
+  );
+});
+
+await run('assertUniqueDescriptions names the duplicate value and both docs', () => {
+  const item = (slug: string, description: string) => ({
+    slug,
+    title: slug,
+    sidebarLabel: slug,
+    description,
+    sourcePath: `${slug}.md`,
+    sourceUrl: `https://example.com/${slug}.md`,
+    groupId: 'guides' as const,
+    groupTitle: 'Guides',
+    order: 10,
+  });
+  const docs = (items: ReturnType<typeof item>[]) => ({
+    pt: [],
+    en: [{ id: 'guides' as const, title: 'Guides', items }],
+  });
+
+  assertUniqueDescriptions(docs([item('a', 'One.'), item('b', 'Two.')]));
+  throws(
+    () => assertUniqueDescriptions(docs([item('a', 'Same.'), item('b', 'Same.')])),
+    /invalid: "Same\." shared by en\/a and en\/b/
   );
 });
 
@@ -227,6 +352,14 @@ await run('syncDocs writes localized content and a deterministic manifest', asyn
     ok(manifest.includes('"sourcePath": "docs/reference/cli.md"'));
     ok(englishCli.includes('sourceCommit: "abc123"'));
     ok(englishCli.includes('[Quickstart](/en/docs/quickstart/)'));
+    ok(
+      englishCli.includes('description: "CLI Reference"'),
+      `expected the link-only CLI doc to fall back to its title | received: ${englishCli.slice(0, 200)}`
+    );
+    ok(
+      manifest.includes('"description": "CLI Reference"'),
+      'expected the manifest to carry each doc description'
+    );
 
     await syncDocs({ sourceDir, repoRoot, sourceCommit: 'abc123', check: true });
 
@@ -366,6 +499,7 @@ await run('renderManifest includes source commit and per-locale slug lookup', ()
                 slug: 'quickstart',
                 title: 'MangoStudio',
                 sidebarLabel: 'Início rápido',
+                description: 'Estúdio de IA local.',
                 sourcePath: 'docs/pt-br/README.md',
                 sourceUrl:
                   'https://github.com/juliopolycarpo/mangostudio/blob/abc123/docs/pt-br/README.md',
@@ -385,6 +519,7 @@ await run('renderManifest includes source commit and per-locale slug lookup', ()
                 slug: 'quickstart',
                 title: 'MangoStudio',
                 sidebarLabel: 'Quickstart',
+                description: 'Local AI studio.',
                 sourcePath: 'README.md',
                 sourceUrl: 'https://github.com/juliopolycarpo/mangostudio/blob/abc123/README.md',
                 groupId: 'getting-started',

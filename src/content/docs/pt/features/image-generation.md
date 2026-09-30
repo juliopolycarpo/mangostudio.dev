@@ -1,6 +1,7 @@
 ---
 title: "Geração De Imagem"
 sidebarLabel: "Geração De Imagem"
+description: "O MangoStudio suporta geração de imagem por dois caminhos: a tool generate_image, chamada por modelos durante chats de texto, e a geração direta iniciada pela…"
 lang: "pt"
 slug: "features/image-generation"
 groupId: "features"

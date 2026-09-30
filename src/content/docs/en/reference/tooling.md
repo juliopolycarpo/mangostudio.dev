@@ -1,6 +1,7 @@
 ---
 title: "Tooling"
 sidebarLabel: "Tooling"
+description: "This monorepo uses Turborepo 2.x (currently 2.9.16) as its shared build-system layer. Turborepo orchestrates task execution across workspaces and provides a…"
 lang: "en"
 slug: "reference/tooling"
 groupId: "reference"

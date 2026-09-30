@@ -1,6 +1,7 @@
 ---
 title: "MangoStudio"
 sidebarLabel: "Início rápido"
+description: "Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI e Anthropic."
 lang: "pt"
 slug: "quickstart"
 groupId: "getting-started"

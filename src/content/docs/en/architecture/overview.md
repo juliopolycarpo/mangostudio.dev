@@ -1,6 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebarLabel: "Architecture Overview"
+description: "MangoStudio follows a modular DDD-inspired architecture across three workspaces. This document explains the design decisions, layer responsibilities, and data…"
 lang: "en"
 slug: "architecture/overview"
 groupId: "architecture"

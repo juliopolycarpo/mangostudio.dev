@@ -1,6 +1,7 @@
 ---
 title: "API Reference"
 sidebarLabel: "API Reference"
+description: "MangoStudio exposes a REST API under /api/ and an SSE streaming endpoint."
 lang: "en"
 slug: "reference/api"
 groupId: "reference"

@@ -1,6 +1,7 @@
 ---
 title: "Deployment"
 sidebarLabel: "Deployment"
+description: "MangoStudio can be deployed as standalone platform-specific binaries with embedded frontend assets."
 lang: "en"
 slug: "operations/deployment"
 groupId: "operations"

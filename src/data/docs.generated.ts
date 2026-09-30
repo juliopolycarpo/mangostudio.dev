@@ -14,6 +14,7 @@ export interface GeneratedDocNavItem {
   slug: string;
   title: string;
   sidebarLabel: string;
+  description: string;
   sourcePath: string;
   sourceUrl: string;
   groupId: DocGroupId;
@@ -44,6 +45,8 @@ export const DOCS_NAV = {
           slug: 'quickstart',
           title: 'MangoStudio',
           sidebarLabel: 'Início rápido',
+          description:
+            'Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI e Anthropic.',
           sourcePath: 'docs/pt-br/README.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/README.md',
@@ -61,6 +64,7 @@ export const DOCS_NAV = {
           slug: 'guides/contributing',
           title: 'Contribuindo com o MangoStudio',
           sidebarLabel: 'Contribuindo com o MangoStudio',
+          description: 'Obrigado pelo seu interesse em contribuir com o MangoStudio!',
           sourcePath: 'docs/pt-br/CONTRIBUTING.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/CONTRIBUTING.md',
@@ -72,6 +76,8 @@ export const DOCS_NAV = {
           slug: 'guides/contributor-quickstart',
           title: 'Início Rápido Para Contribuidores',
           sidebarLabel: 'Início Rápido Para Contribuidores',
+          description:
+            'Use este guia quando quiser o caminho mais curto entre o clone do repositório e uma alteração validada.',
           sourcePath: 'docs/pt-br/guides/contributor-quickstart.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/guides/contributor-quickstart.md',
@@ -89,6 +95,8 @@ export const DOCS_NAV = {
           slug: 'features/settings',
           title: 'Arquitetura De Settings',
           sidebarLabel: 'Arquitetura De Settings',
+          description:
+            'O MangoStudio tem três camadas independentes de settings, cada uma com sua própria persistência, API e módulo no frontend.',
           sourcePath: 'docs/pt-br/features/settings.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/settings.md',
@@ -100,6 +108,8 @@ export const DOCS_NAV = {
           slug: 'features/tools',
           title: 'Sistema De Tools',
           sidebarLabel: 'Sistema De Tools',
+          description:
+            'O MangoStudio suporta tool calling agnóstico a provedor durante turnos de chat. Modelos podem chamar tools, o sistema as executa e os resultados são…',
           sourcePath: 'docs/pt-br/features/tools.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/tools.md',
@@ -111,6 +121,8 @@ export const DOCS_NAV = {
           slug: 'features/attachments',
           title: 'Attachments',
           sidebarLabel: 'Attachments',
+          description:
+            'O MangoStudio suporta upload de arquivos como attachments de chat e sua entrega aos provedores de IA durante a geração.',
           sourcePath: 'docs/pt-br/features/attachments.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/attachments.md',
@@ -122,6 +134,8 @@ export const DOCS_NAV = {
           slug: 'features/image-generation',
           title: 'Geração De Imagem',
           sidebarLabel: 'Geração De Imagem',
+          description:
+            'O MangoStudio suporta geração de imagem por dois caminhos: a tool generate_image, chamada por modelos durante chats de texto, e a geração direta iniciada pela…',
           sourcePath: 'docs/pt-br/features/image-generation.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/image-generation.md',
@@ -139,6 +153,8 @@ export const DOCS_NAV = {
           slug: 'providers/development',
           title: 'Guia De Desenvolvimento De Provedores',
           sidebarLabel: 'Guia De Desenvolvimento De Provedores',
+          description:
+            'Todo provedor precisa implementar a interface AIProvider em apps/api/src/services/providers/types.ts.',
           sourcePath: 'docs/pt-br/providers/development.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/development.md',
@@ -150,6 +166,8 @@ export const DOCS_NAV = {
           slug: 'providers/deepseek',
           title: 'Provedor DeepSeek',
           sidebarLabel: 'Provedor DeepSeek',
+          description:
+            'O DeepSeek é modelado como um provedor de primeira classe, e não apenas como um connector OpenAI-compatible, para expor capacidades específicas do DeepSeek…',
           sourcePath: 'docs/pt-br/providers/deepseek.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/deepseek.md',
@@ -167,6 +185,8 @@ export const DOCS_NAV = {
           slug: 'architecture/overview',
           title: 'Visão Geral Da Arquitetura',
           sidebarLabel: 'Visão Geral Da Arquitetura',
+          description:
+            'O MangoStudio segue uma arquitetura modular inspirada em DDD distribuída em três workspaces. Este documento explica as decisões de design, as…',
           sourcePath: 'docs/pt-br/architecture/overview.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/overview.md',
@@ -178,6 +198,8 @@ export const DOCS_NAV = {
           slug: 'architecture/streaming',
           title: 'Arquitetura De Streaming',
           sidebarLabel: 'Arquitetura De Streaming',
+          description:
+            'As respostas do chat são entregues via Server-Sent Events (SSE) sobre uma única conexão HTTP. O frontend consome o stream usando ReadableStream da Fetch API e…',
           sourcePath: 'docs/pt-br/architecture/streaming.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/streaming.md',
@@ -189,6 +211,8 @@ export const DOCS_NAV = {
           slug: 'architecture/continuation',
           title: 'Arquitetura De Continuação',
           sidebarLabel: 'Arquitetura De Continuação',
+          description:
+            'Continuação é o mecanismo que permite a uma conversa multi-turno preservar contexto entre interações separadas do usuário sem reenviar todo o histórico do…',
           sourcePath: 'docs/pt-br/architecture/continuation.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/continuation.md',
@@ -200,6 +224,8 @@ export const DOCS_NAV = {
           slug: 'architecture/context-compaction',
           title: 'Compactação De Contexto',
           sidebarLabel: 'Compactação De Contexto',
+          description:
+            'Quando uma conversa se aproxima do limite da janela de contexto do modelo, o MangoStudio avisa o usuário e oferece opções de compactação. Este documento…',
           sourcePath: 'docs/pt-br/architecture/context-compaction.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/context-compaction.md',
@@ -211,6 +237,8 @@ export const DOCS_NAV = {
           slug: 'architecture/i18n',
           title: 'Internacionalização (i18n)',
           sidebarLabel: 'Internacionalização (i18n)',
+          description:
+            'O MangoStudio usa um sistema de i18n em TypeScript puro com verificação de traduções em tempo de compilação.',
           sourcePath: 'docs/pt-br/architecture/i18n.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/i18n.md',
@@ -228,6 +256,8 @@ export const DOCS_NAV = {
           slug: 'reference/cli',
           title: 'Referência da CLI',
           sidebarLabel: 'Referência da CLI',
+          description:
+            'O MangoStudio é distribuído como um binário único que também funciona como CLI para rodar e gerenciar um servidor local. Os mesmos comandos funcionam no…',
           sourcePath: 'docs/pt-br/reference/cli.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/cli.md',
@@ -239,6 +269,7 @@ export const DOCS_NAV = {
           slug: 'reference/api',
           title: 'Referência Da API',
           sidebarLabel: 'Referência Da API',
+          description: 'O MangoStudio expõe uma API REST em /api/ e um endpoint de streaming SSE.',
           sourcePath: 'docs/pt-br/reference/api.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/api.md',
@@ -250,6 +281,8 @@ export const DOCS_NAV = {
           slug: 'reference/testing',
           title: 'Estratégia De Testes',
           sidebarLabel: 'Estratégia De Testes',
+          description:
+            'Este monorepo usa uma arquitetura de testes orientada a workspaces em apps/*/tests. O código de produção permanece em src/, e os testes são agrupados por…',
           sourcePath: 'docs/pt-br/reference/testing.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/testing.md',
@@ -261,6 +294,8 @@ export const DOCS_NAV = {
           slug: 'reference/tooling',
           title: 'Ferramentas',
           sidebarLabel: 'Ferramentas',
+          description:
+            'Este monorepo usa Turborepo 2.x (atualmente 2.9.16) como camada compartilhada de build system. O Turborepo orquestra a execução de tasks entre workspaces e…',
           sourcePath: 'docs/pt-br/reference/tooling.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/tooling.md',
@@ -272,6 +307,8 @@ export const DOCS_NAV = {
           slug: 'reference/agent-playbooks',
           title: 'Playbooks De Agentes',
           sidebarLabel: 'Playbooks De Agentes',
+          description:
+            'Abra apenas a seção que corresponda à tarefa atual. Este arquivo é intencionalmente mais detalhado que AGENTS.md e deve ser usado sob demanda, não por padrão.',
           sourcePath: 'docs/pt-br/reference/agent-playbooks.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/agent-playbooks.md',
@@ -283,6 +320,8 @@ export const DOCS_NAV = {
           slug: 'reference/releasing',
           title: 'Releases',
           sidebarLabel: 'Releases',
+          description:
+            'O MangoStudio é distribuído como binários standalone (GitHub Releases), imagem Docker no GHCR, CLI npm (mangostudio), tap Homebrew, bucket Scoop (Windows) e…',
           sourcePath: 'docs/pt-br/reference/releasing.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/releasing.md',
@@ -300,6 +339,8 @@ export const DOCS_NAV = {
           slug: 'operations/deployment',
           title: 'Deploy',
           sidebarLabel: 'Deploy',
+          description:
+            'O MangoStudio pode ser implantado como binários standalone específicos por plataforma com assets do frontend embutidos.',
           sourcePath: 'docs/pt-br/operations/deployment.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/deployment.md',
@@ -311,6 +352,8 @@ export const DOCS_NAV = {
           slug: 'operations/security',
           title: 'Política De Segurança',
           sidebarLabel: 'Política De Segurança',
+          description:
+            'Se você descobrir uma vulnerabilidade de segurança no MangoStudio, reporte-a de forma privada em vez de abrir uma issue pública.',
           sourcePath: 'docs/pt-br/operations/security.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/security.md',
@@ -330,6 +373,8 @@ export const DOCS_NAV = {
           slug: 'quickstart',
           title: 'MangoStudio',
           sidebarLabel: 'Quickstart',
+          description:
+            'AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, and Anthropic models.',
           sourcePath: 'README.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/README.md',
@@ -347,6 +392,7 @@ export const DOCS_NAV = {
           slug: 'guides/contributing',
           title: 'Contributing to MangoStudio',
           sidebarLabel: 'Contributing to MangoStudio',
+          description: 'Thank you for your interest in contributing to MangoStudio!',
           sourcePath: '.github/CONTRIBUTING.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/CONTRIBUTING.md',
@@ -358,6 +404,8 @@ export const DOCS_NAV = {
           slug: 'guides/contributor-quickstart',
           title: 'Contributor Quickstart',
           sidebarLabel: 'Contributor Quickstart',
+          description:
+            'Use this guide when you want the shortest path from clone to a validated change.',
           sourcePath: 'docs/guides/contributor-quickstart.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md',
@@ -375,6 +423,8 @@ export const DOCS_NAV = {
           slug: 'features/settings',
           title: 'Settings Architecture',
           sidebarLabel: 'Settings Architecture',
+          description:
+            'MangoStudio has three independent settings layers, each with its own persistence, API, and frontend module.',
           sourcePath: 'docs/features/settings.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/settings.md',
@@ -386,6 +436,8 @@ export const DOCS_NAV = {
           slug: 'features/tools',
           title: 'Tools System',
           sidebarLabel: 'Tools System',
+          description:
+            'MangoStudio supports provider-agnostic tool calling during chat turns. Models can call tools, the system executes them, and results are fed back to the model…',
           sourcePath: 'docs/features/tools.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/tools.md',
@@ -397,6 +449,8 @@ export const DOCS_NAV = {
           slug: 'features/attachments',
           title: 'Attachments',
           sidebarLabel: 'Attachments',
+          description:
+            'MangoStudio supports uploading files as chat attachments and delivering them to AI providers during generation.',
           sourcePath: 'docs/features/attachments.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/attachments.md',
@@ -408,6 +462,8 @@ export const DOCS_NAV = {
           slug: 'features/image-generation',
           title: 'Image Generation',
           sidebarLabel: 'Image Generation',
+          description:
+            'MangoStudio supports image generation through two paths: the generate_image tool (called by models during text chats) and direct generation from the UI.',
           sourcePath: 'docs/features/image-generation.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/image-generation.md',
@@ -425,6 +481,8 @@ export const DOCS_NAV = {
           slug: 'providers/development',
           title: 'Provider Development Guide',
           sidebarLabel: 'Provider Development Guide',
+          description:
+            'Every provider must implement the AIProvider interface (apps/api/src/services/providers/types.ts).',
           sourcePath: 'docs/providers/development.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/development.md',
@@ -436,6 +494,8 @@ export const DOCS_NAV = {
           slug: 'providers/deepseek',
           title: 'DeepSeek Provider',
           sidebarLabel: 'DeepSeek Provider',
+          description:
+            'DeepSeek is modeled as a first-class provider (not just an OpenAI-compatible connector) to surface DeepSeek-specific capabilities: reasoning tokens, prefix…',
           sourcePath: 'docs/providers/deepseek.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/deepseek.md',
@@ -453,6 +513,8 @@ export const DOCS_NAV = {
           slug: 'architecture/overview',
           title: 'Architecture Overview',
           sidebarLabel: 'Architecture Overview',
+          description:
+            'MangoStudio follows a modular DDD-inspired architecture across three workspaces. This document explains the design decisions, layer responsibilities, and data…',
           sourcePath: 'docs/architecture/overview.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/overview.md',
@@ -464,6 +526,8 @@ export const DOCS_NAV = {
           slug: 'architecture/streaming',
           title: 'Streaming Architecture',
           sidebarLabel: 'Streaming Architecture',
+          description:
+            "Chat responses are delivered via Server-Sent Events (SSE) over a single HTTP connection. The frontend consumes the stream using the Fetch API's ReadableStream…",
           sourcePath: 'docs/architecture/streaming.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/streaming.md',
@@ -475,6 +539,8 @@ export const DOCS_NAV = {
           slug: 'architecture/continuation',
           title: 'Continuation Architecture',
           sidebarLabel: 'Continuation Architecture',
+          description:
+            'Continuation is the mechanism that lets a multi-turn conversation preserve context across separate user interactions without resending the entire chat history…',
           sourcePath: 'docs/architecture/continuation.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/continuation.md',
@@ -486,6 +552,8 @@ export const DOCS_NAV = {
           slug: 'architecture/context-compaction',
           title: 'Context Compaction',
           sidebarLabel: 'Context Compaction',
+          description:
+            "When a conversation approaches the model's context window limit, MangoStudio warns the user and offers compaction options. This document explains the snapshot…",
           sourcePath: 'docs/architecture/context-compaction.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/context-compaction.md',
@@ -497,6 +565,8 @@ export const DOCS_NAV = {
           slug: 'architecture/i18n',
           title: 'Internationalization (i18n)',
           sidebarLabel: 'Internationalization (i18n)',
+          description:
+            'MangoStudio uses a pure TypeScript i18n system with compile-time translation verification.',
           sourcePath: 'docs/architecture/i18n.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/i18n.md',
@@ -514,6 +584,8 @@ export const DOCS_NAV = {
           slug: 'reference/cli',
           title: 'CLI Reference',
           sidebarLabel: 'CLI Reference',
+          description:
+            'MangoStudio ships as a single binary that doubles as a CLI for running and managing one local server. The same commands work from the installed binary…',
           sourcePath: 'docs/reference/cli.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/cli.md',
@@ -525,6 +597,7 @@ export const DOCS_NAV = {
           slug: 'reference/api',
           title: 'API Reference',
           sidebarLabel: 'API Reference',
+          description: 'MangoStudio exposes a REST API under /api/ and an SSE streaming endpoint.',
           sourcePath: 'docs/reference/api.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/api.md',
@@ -536,6 +609,8 @@ export const DOCS_NAV = {
           slug: 'reference/testing',
           title: 'Testing Strategy',
           sidebarLabel: 'Testing Strategy',
+          description:
+            'This monorepo uses a workspace-first testing architecture under apps/*/tests. Production code stays in src/, and tests are grouped by intent as unit or…',
           sourcePath: 'docs/reference/testing.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/testing.md',
@@ -547,6 +622,8 @@ export const DOCS_NAV = {
           slug: 'reference/tooling',
           title: 'Tooling',
           sidebarLabel: 'Tooling',
+          description:
+            'This monorepo uses Turborepo 2.x (currently 2.9.16) as its shared build-system layer. Turborepo orchestrates task execution across workspaces and provides a…',
           sourcePath: 'docs/reference/tooling.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/tooling.md',
@@ -558,6 +635,8 @@ export const DOCS_NAV = {
           slug: 'reference/agent-playbooks',
           title: 'Agent Playbooks',
           sidebarLabel: 'Agent Playbooks',
+          description:
+            'Open only the section that matches the current task. This file is intentionally more detailed than AGENTS.md and should be used on demand, not by default.',
           sourcePath: 'docs/reference/agent-playbooks.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/agent-playbooks.md',
@@ -569,6 +648,8 @@ export const DOCS_NAV = {
           slug: 'reference/releasing',
           title: 'Releasing',
           sidebarLabel: 'Releasing',
+          description:
+            'MangoStudio ships as standalone binaries (GitHub Releases), as a Docker image on GHCR, as an npm CLI (mangostudio), via a Homebrew tap, via a Scoop bucket…',
           sourcePath: 'docs/reference/releasing.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/releasing.md',
@@ -586,6 +667,8 @@ export const DOCS_NAV = {
           slug: 'operations/deployment',
           title: 'Deployment',
           sidebarLabel: 'Deployment',
+          description:
+            'MangoStudio can be deployed as standalone platform-specific binaries with embedded frontend assets.',
           sourcePath: 'docs/operations/deployment.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/operations/deployment.md',
@@ -597,6 +680,8 @@ export const DOCS_NAV = {
           slug: 'operations/security',
           title: 'Security Policy',
           sidebarLabel: 'Security Policy',
+          description:
+            'If you discover a security vulnerability in MangoStudio, please report it privately rather than opening a public issue.',
           sourcePath: '.github/SECURITY.md',
           sourceUrl:
             'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/SECURITY.md',
@@ -615,6 +700,8 @@ export const DOCS_BY_SLUG = {
       slug: 'quickstart',
       title: 'MangoStudio',
       sidebarLabel: 'Início rápido',
+      description:
+        'Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI e Anthropic.',
       sourcePath: 'docs/pt-br/README.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/README.md',
@@ -626,6 +713,7 @@ export const DOCS_BY_SLUG = {
       slug: 'guides/contributing',
       title: 'Contribuindo com o MangoStudio',
       sidebarLabel: 'Contribuindo com o MangoStudio',
+      description: 'Obrigado pelo seu interesse em contribuir com o MangoStudio!',
       sourcePath: 'docs/pt-br/CONTRIBUTING.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/CONTRIBUTING.md',
@@ -637,6 +725,8 @@ export const DOCS_BY_SLUG = {
       slug: 'guides/contributor-quickstart',
       title: 'Início Rápido Para Contribuidores',
       sidebarLabel: 'Início Rápido Para Contribuidores',
+      description:
+        'Use este guia quando quiser o caminho mais curto entre o clone do repositório e uma alteração validada.',
       sourcePath: 'docs/pt-br/guides/contributor-quickstart.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/guides/contributor-quickstart.md',
@@ -648,6 +738,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/settings',
       title: 'Arquitetura De Settings',
       sidebarLabel: 'Arquitetura De Settings',
+      description:
+        'O MangoStudio tem três camadas independentes de settings, cada uma com sua própria persistência, API e módulo no frontend.',
       sourcePath: 'docs/pt-br/features/settings.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/settings.md',
@@ -659,6 +751,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/tools',
       title: 'Sistema De Tools',
       sidebarLabel: 'Sistema De Tools',
+      description:
+        'O MangoStudio suporta tool calling agnóstico a provedor durante turnos de chat. Modelos podem chamar tools, o sistema as executa e os resultados são…',
       sourcePath: 'docs/pt-br/features/tools.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/tools.md',
@@ -670,6 +764,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/attachments',
       title: 'Attachments',
       sidebarLabel: 'Attachments',
+      description:
+        'O MangoStudio suporta upload de arquivos como attachments de chat e sua entrega aos provedores de IA durante a geração.',
       sourcePath: 'docs/pt-br/features/attachments.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/attachments.md',
@@ -681,6 +777,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/image-generation',
       title: 'Geração De Imagem',
       sidebarLabel: 'Geração De Imagem',
+      description:
+        'O MangoStudio suporta geração de imagem por dois caminhos: a tool generate_image, chamada por modelos durante chats de texto, e a geração direta iniciada pela…',
       sourcePath: 'docs/pt-br/features/image-generation.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/features/image-generation.md',
@@ -692,6 +790,8 @@ export const DOCS_BY_SLUG = {
       slug: 'providers/development',
       title: 'Guia De Desenvolvimento De Provedores',
       sidebarLabel: 'Guia De Desenvolvimento De Provedores',
+      description:
+        'Todo provedor precisa implementar a interface AIProvider em apps/api/src/services/providers/types.ts.',
       sourcePath: 'docs/pt-br/providers/development.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/development.md',
@@ -703,6 +803,8 @@ export const DOCS_BY_SLUG = {
       slug: 'providers/deepseek',
       title: 'Provedor DeepSeek',
       sidebarLabel: 'Provedor DeepSeek',
+      description:
+        'O DeepSeek é modelado como um provedor de primeira classe, e não apenas como um connector OpenAI-compatible, para expor capacidades específicas do DeepSeek…',
       sourcePath: 'docs/pt-br/providers/deepseek.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/deepseek.md',
@@ -714,6 +816,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/overview',
       title: 'Visão Geral Da Arquitetura',
       sidebarLabel: 'Visão Geral Da Arquitetura',
+      description:
+        'O MangoStudio segue uma arquitetura modular inspirada em DDD distribuída em três workspaces. Este documento explica as decisões de design, as…',
       sourcePath: 'docs/pt-br/architecture/overview.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/overview.md',
@@ -725,6 +829,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/streaming',
       title: 'Arquitetura De Streaming',
       sidebarLabel: 'Arquitetura De Streaming',
+      description:
+        'As respostas do chat são entregues via Server-Sent Events (SSE) sobre uma única conexão HTTP. O frontend consome o stream usando ReadableStream da Fetch API e…',
       sourcePath: 'docs/pt-br/architecture/streaming.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/streaming.md',
@@ -736,6 +842,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/continuation',
       title: 'Arquitetura De Continuação',
       sidebarLabel: 'Arquitetura De Continuação',
+      description:
+        'Continuação é o mecanismo que permite a uma conversa multi-turno preservar contexto entre interações separadas do usuário sem reenviar todo o histórico do…',
       sourcePath: 'docs/pt-br/architecture/continuation.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/continuation.md',
@@ -747,6 +855,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/context-compaction',
       title: 'Compactação De Contexto',
       sidebarLabel: 'Compactação De Contexto',
+      description:
+        'Quando uma conversa se aproxima do limite da janela de contexto do modelo, o MangoStudio avisa o usuário e oferece opções de compactação. Este documento…',
       sourcePath: 'docs/pt-br/architecture/context-compaction.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/context-compaction.md',
@@ -758,6 +868,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/i18n',
       title: 'Internacionalização (i18n)',
       sidebarLabel: 'Internacionalização (i18n)',
+      description:
+        'O MangoStudio usa um sistema de i18n em TypeScript puro com verificação de traduções em tempo de compilação.',
       sourcePath: 'docs/pt-br/architecture/i18n.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/i18n.md',
@@ -769,6 +881,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/cli',
       title: 'Referência da CLI',
       sidebarLabel: 'Referência da CLI',
+      description:
+        'O MangoStudio é distribuído como um binário único que também funciona como CLI para rodar e gerenciar um servidor local. Os mesmos comandos funcionam no…',
       sourcePath: 'docs/pt-br/reference/cli.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/cli.md',
@@ -780,6 +894,7 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/api',
       title: 'Referência Da API',
       sidebarLabel: 'Referência Da API',
+      description: 'O MangoStudio expõe uma API REST em /api/ e um endpoint de streaming SSE.',
       sourcePath: 'docs/pt-br/reference/api.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/api.md',
@@ -791,6 +906,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/testing',
       title: 'Estratégia De Testes',
       sidebarLabel: 'Estratégia De Testes',
+      description:
+        'Este monorepo usa uma arquitetura de testes orientada a workspaces em apps/*/tests. O código de produção permanece em src/, e os testes são agrupados por…',
       sourcePath: 'docs/pt-br/reference/testing.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/testing.md',
@@ -802,6 +919,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/tooling',
       title: 'Ferramentas',
       sidebarLabel: 'Ferramentas',
+      description:
+        'Este monorepo usa Turborepo 2.x (atualmente 2.9.16) como camada compartilhada de build system. O Turborepo orquestra a execução de tasks entre workspaces e…',
       sourcePath: 'docs/pt-br/reference/tooling.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/tooling.md',
@@ -813,6 +932,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/agent-playbooks',
       title: 'Playbooks De Agentes',
       sidebarLabel: 'Playbooks De Agentes',
+      description:
+        'Abra apenas a seção que corresponda à tarefa atual. Este arquivo é intencionalmente mais detalhado que AGENTS.md e deve ser usado sob demanda, não por padrão.',
       sourcePath: 'docs/pt-br/reference/agent-playbooks.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/agent-playbooks.md',
@@ -824,6 +945,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/releasing',
       title: 'Releases',
       sidebarLabel: 'Releases',
+      description:
+        'O MangoStudio é distribuído como binários standalone (GitHub Releases), imagem Docker no GHCR, CLI npm (mangostudio), tap Homebrew, bucket Scoop (Windows) e…',
       sourcePath: 'docs/pt-br/reference/releasing.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/releasing.md',
@@ -835,6 +958,8 @@ export const DOCS_BY_SLUG = {
       slug: 'operations/deployment',
       title: 'Deploy',
       sidebarLabel: 'Deploy',
+      description:
+        'O MangoStudio pode ser implantado como binários standalone específicos por plataforma com assets do frontend embutidos.',
       sourcePath: 'docs/pt-br/operations/deployment.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/deployment.md',
@@ -846,6 +971,8 @@ export const DOCS_BY_SLUG = {
       slug: 'operations/security',
       title: 'Política De Segurança',
       sidebarLabel: 'Política De Segurança',
+      description:
+        'Se você descobrir uma vulnerabilidade de segurança no MangoStudio, reporte-a de forma privada em vez de abrir uma issue pública.',
       sourcePath: 'docs/pt-br/operations/security.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/security.md',
@@ -859,6 +986,8 @@ export const DOCS_BY_SLUG = {
       slug: 'quickstart',
       title: 'MangoStudio',
       sidebarLabel: 'Quickstart',
+      description:
+        'AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, and Anthropic models.',
       sourcePath: 'README.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/README.md',
@@ -870,6 +999,7 @@ export const DOCS_BY_SLUG = {
       slug: 'guides/contributing',
       title: 'Contributing to MangoStudio',
       sidebarLabel: 'Contributing to MangoStudio',
+      description: 'Thank you for your interest in contributing to MangoStudio!',
       sourcePath: '.github/CONTRIBUTING.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/CONTRIBUTING.md',
@@ -881,6 +1011,8 @@ export const DOCS_BY_SLUG = {
       slug: 'guides/contributor-quickstart',
       title: 'Contributor Quickstart',
       sidebarLabel: 'Contributor Quickstart',
+      description:
+        'Use this guide when you want the shortest path from clone to a validated change.',
       sourcePath: 'docs/guides/contributor-quickstart.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md',
@@ -892,6 +1024,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/settings',
       title: 'Settings Architecture',
       sidebarLabel: 'Settings Architecture',
+      description:
+        'MangoStudio has three independent settings layers, each with its own persistence, API, and frontend module.',
       sourcePath: 'docs/features/settings.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/settings.md',
@@ -903,6 +1037,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/tools',
       title: 'Tools System',
       sidebarLabel: 'Tools System',
+      description:
+        'MangoStudio supports provider-agnostic tool calling during chat turns. Models can call tools, the system executes them, and results are fed back to the model…',
       sourcePath: 'docs/features/tools.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/tools.md',
@@ -914,6 +1050,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/attachments',
       title: 'Attachments',
       sidebarLabel: 'Attachments',
+      description:
+        'MangoStudio supports uploading files as chat attachments and delivering them to AI providers during generation.',
       sourcePath: 'docs/features/attachments.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/attachments.md',
@@ -925,6 +1063,8 @@ export const DOCS_BY_SLUG = {
       slug: 'features/image-generation',
       title: 'Image Generation',
       sidebarLabel: 'Image Generation',
+      description:
+        'MangoStudio supports image generation through two paths: the generate_image tool (called by models during text chats) and direct generation from the UI.',
       sourcePath: 'docs/features/image-generation.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/image-generation.md',
@@ -936,6 +1076,8 @@ export const DOCS_BY_SLUG = {
       slug: 'providers/development',
       title: 'Provider Development Guide',
       sidebarLabel: 'Provider Development Guide',
+      description:
+        'Every provider must implement the AIProvider interface (apps/api/src/services/providers/types.ts).',
       sourcePath: 'docs/providers/development.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/development.md',
@@ -947,6 +1089,8 @@ export const DOCS_BY_SLUG = {
       slug: 'providers/deepseek',
       title: 'DeepSeek Provider',
       sidebarLabel: 'DeepSeek Provider',
+      description:
+        'DeepSeek is modeled as a first-class provider (not just an OpenAI-compatible connector) to surface DeepSeek-specific capabilities: reasoning tokens, prefix…',
       sourcePath: 'docs/providers/deepseek.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/deepseek.md',
@@ -958,6 +1102,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/overview',
       title: 'Architecture Overview',
       sidebarLabel: 'Architecture Overview',
+      description:
+        'MangoStudio follows a modular DDD-inspired architecture across three workspaces. This document explains the design decisions, layer responsibilities, and data…',
       sourcePath: 'docs/architecture/overview.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/overview.md',
@@ -969,6 +1115,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/streaming',
       title: 'Streaming Architecture',
       sidebarLabel: 'Streaming Architecture',
+      description:
+        "Chat responses are delivered via Server-Sent Events (SSE) over a single HTTP connection. The frontend consumes the stream using the Fetch API's ReadableStream…",
       sourcePath: 'docs/architecture/streaming.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/streaming.md',
@@ -980,6 +1128,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/continuation',
       title: 'Continuation Architecture',
       sidebarLabel: 'Continuation Architecture',
+      description:
+        'Continuation is the mechanism that lets a multi-turn conversation preserve context across separate user interactions without resending the entire chat history…',
       sourcePath: 'docs/architecture/continuation.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/continuation.md',
@@ -991,6 +1141,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/context-compaction',
       title: 'Context Compaction',
       sidebarLabel: 'Context Compaction',
+      description:
+        "When a conversation approaches the model's context window limit, MangoStudio warns the user and offers compaction options. This document explains the snapshot…",
       sourcePath: 'docs/architecture/context-compaction.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/context-compaction.md',
@@ -1002,6 +1154,8 @@ export const DOCS_BY_SLUG = {
       slug: 'architecture/i18n',
       title: 'Internationalization (i18n)',
       sidebarLabel: 'Internationalization (i18n)',
+      description:
+        'MangoStudio uses a pure TypeScript i18n system with compile-time translation verification.',
       sourcePath: 'docs/architecture/i18n.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/i18n.md',
@@ -1013,6 +1167,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/cli',
       title: 'CLI Reference',
       sidebarLabel: 'CLI Reference',
+      description:
+        'MangoStudio ships as a single binary that doubles as a CLI for running and managing one local server. The same commands work from the installed binary…',
       sourcePath: 'docs/reference/cli.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/cli.md',
@@ -1024,6 +1180,7 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/api',
       title: 'API Reference',
       sidebarLabel: 'API Reference',
+      description: 'MangoStudio exposes a REST API under /api/ and an SSE streaming endpoint.',
       sourcePath: 'docs/reference/api.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/api.md',
@@ -1035,6 +1192,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/testing',
       title: 'Testing Strategy',
       sidebarLabel: 'Testing Strategy',
+      description:
+        'This monorepo uses a workspace-first testing architecture under apps/*/tests. Production code stays in src/, and tests are grouped by intent as unit or…',
       sourcePath: 'docs/reference/testing.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/testing.md',
@@ -1046,6 +1205,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/tooling',
       title: 'Tooling',
       sidebarLabel: 'Tooling',
+      description:
+        'This monorepo uses Turborepo 2.x (currently 2.9.16) as its shared build-system layer. Turborepo orchestrates task execution across workspaces and provides a…',
       sourcePath: 'docs/reference/tooling.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/tooling.md',
@@ -1057,6 +1218,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/agent-playbooks',
       title: 'Agent Playbooks',
       sidebarLabel: 'Agent Playbooks',
+      description:
+        'Open only the section that matches the current task. This file is intentionally more detailed than AGENTS.md and should be used on demand, not by default.',
       sourcePath: 'docs/reference/agent-playbooks.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/agent-playbooks.md',
@@ -1068,6 +1231,8 @@ export const DOCS_BY_SLUG = {
       slug: 'reference/releasing',
       title: 'Releasing',
       sidebarLabel: 'Releasing',
+      description:
+        'MangoStudio ships as standalone binaries (GitHub Releases), as a Docker image on GHCR, as an npm CLI (mangostudio), via a Homebrew tap, via a Scoop bucket…',
       sourcePath: 'docs/reference/releasing.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/releasing.md',
@@ -1079,6 +1244,8 @@ export const DOCS_BY_SLUG = {
       slug: 'operations/deployment',
       title: 'Deployment',
       sidebarLabel: 'Deployment',
+      description:
+        'MangoStudio can be deployed as standalone platform-specific binaries with embedded frontend assets.',
       sourcePath: 'docs/operations/deployment.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/operations/deployment.md',
@@ -1090,6 +1257,8 @@ export const DOCS_BY_SLUG = {
       slug: 'operations/security',
       title: 'Security Policy',
       sidebarLabel: 'Security Policy',
+      description:
+        'If you discover a security vulnerability in MangoStudio, please report it privately rather than opening a public issue.',
       sourcePath: '.github/SECURITY.md',
       sourceUrl:
         'https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/SECURITY.md',

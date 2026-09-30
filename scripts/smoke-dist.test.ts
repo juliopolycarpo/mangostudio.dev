@@ -8,6 +8,7 @@ import {
   expectedDocsRedirects,
   extractCrawlHrefs,
   extractFragmentTargets,
+  extractMetaDescription,
   findBrokenLinks,
   findNonCanonicalOrigins,
   findPrefetchAttributeElements,
@@ -19,9 +20,55 @@ import {
   resolveInternalHrefToDistFile,
   resolveInternalHrefToRoutePath,
   resolveServedPath,
+  validateDocsDescriptions,
   validateDocsRedirects,
   validateNotFoundMetadata,
 } from './smoke-dist';
+
+run('extractMetaDescription reads the description meta and ignores og:description', () => {
+  strictEqual(
+    extractMetaDescription(
+      '<meta property="og:description" content="Social"><meta name="description" content="Page &amp; more">'
+    ),
+    'Page &amp; more'
+  );
+  strictEqual(
+    extractMetaDescription('<meta property="og:description" content="Social">'),
+    undefined
+  );
+});
+
+run('validateDocsDescriptions accepts distinct descriptions', () => {
+  deepStrictEqual(
+    validateDocsDescriptions('pt', 'Home.', [
+      { file: 'docs/a/index.html', description: 'A.' },
+      { file: 'docs/b/index.html', description: 'B.' },
+    ]),
+    []
+  );
+});
+
+run('validateDocsDescriptions reports home reuse, duplicates, gaps, and overlong text', () => {
+  const errors = validateDocsDescriptions(
+    'en',
+    'Home.',
+    [
+      { file: 'en/docs/a/index.html', description: 'Home.' },
+      { file: 'en/docs/b/index.html', description: 'Same.' },
+      { file: 'en/docs/c/index.html', description: 'Same.' },
+      { file: 'en/docs/d/index.html', description: undefined },
+      { file: 'en/docs/e/index.html', description: 'x'.repeat(11) },
+    ],
+    10
+  );
+
+  deepStrictEqual(errors, [
+    'dist/en/docs/a/index.html expected a description distinct from the en home page | received: "Home."',
+    'dist/en/docs/c/index.html expected a description unique within en | received the same as dist/en/docs/b/index.html: "Same."',
+    'dist/en/docs/d/index.html expected a meta description | received: undefined',
+    'dist/en/docs/e/index.html expected a description of at most 10 chars | received 11',
+  ]);
+});
 
 run('deriveDocSlugs returns unique sorted doc slugs from grouped content', () => {
   deepStrictEqual(

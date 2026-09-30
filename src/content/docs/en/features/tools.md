@@ -1,6 +1,7 @@
 ---
 title: "Tools System"
 sidebarLabel: "Tools System"
+description: "MangoStudio supports provider-agnostic tool calling during chat turns. Models can call tools, the system executes them, and results are fed back to the model…"
 lang: "en"
 slug: "features/tools"
 groupId: "features"

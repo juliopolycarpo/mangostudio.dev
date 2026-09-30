@@ -1,6 +1,7 @@
 ---
 title: "Referência Da API"
 sidebarLabel: "Referência Da API"
+description: "O MangoStudio expõe uma API REST em /api/ e um endpoint de streaming SSE."
 lang: "pt"
 slug: "reference/api"
 groupId: "reference"

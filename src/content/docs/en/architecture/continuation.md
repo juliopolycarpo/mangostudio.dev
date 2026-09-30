@@ -1,6 +1,7 @@
 ---
 title: "Continuation Architecture"
 sidebarLabel: "Continuation Architecture"
+description: "Continuation is the mechanism that lets a multi-turn conversation preserve context across separate user interactions without resending the entire chat history…"
 lang: "en"
 slug: "architecture/continuation"
 groupId: "architecture"

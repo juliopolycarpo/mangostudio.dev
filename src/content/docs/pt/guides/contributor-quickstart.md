@@ -1,6 +1,7 @@
 ---
 title: "Início Rápido Para Contribuidores"
 sidebarLabel: "Início Rápido Para Contribuidores"
+description: "Use este guia quando quiser o caminho mais curto entre o clone do repositório e uma alteração validada."
 lang: "pt"
 slug: "guides/contributor-quickstart"
 groupId: "guides"
