@@ -10,6 +10,48 @@ import {
   sanitizeMarkdown,
   syncDocs,
 } from './sync-docs';
+import { applyHostedInstallers, assertHostedInstallers } from './sync-docs-installers';
+
+const UPSTREAM_SH =
+  'https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh';
+
+const UPSTREAM_QUICKSTART = {
+  en: [
+    '# MangoStudio',
+    '',
+    '| Channel | Command |',
+    '| --- | --- |',
+    '| npm / bun | `npm i -g mangostudio` |',
+    '| Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio` |',
+    `| Shell installer | \`curl -fsSL ${UPSTREAM_SH} \\| bash\` |`,
+    '',
+    '```bash',
+    `curl -fsSL ${UPSTREAM_SH} | bash`,
+    '```',
+    '',
+    'On Windows, download and run `install.ps1` from the',
+    '[latest release](https://github.com/juliopolycarpo/mangostudio/releases/latest),',
+    'or use Scoop (see table above).',
+    '',
+  ].join('\n'),
+  pt: [
+    '# MangoStudio',
+    '',
+    '| Canal | Comando |',
+    '| --- | --- |',
+    '| Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio` |',
+    `| Instalador shell | \`curl -fsSL ${UPSTREAM_SH} \\| bash\` |`,
+    '',
+    '```bash',
+    `curl -fsSL ${UPSTREAM_SH} | bash`,
+    '```',
+    '',
+    'No Windows, baixe e execute `install.ps1` na',
+    '[release mais recente](https://github.com/juliopolycarpo/mangostudio/releases/latest),',
+    'ou use Scoop (veja a tabela acima).',
+    '',
+  ].join('\n'),
+};
 
 await run('sanitizeMarkdown removes externally loaded images while preserving badge links', () => {
   strictEqual(
@@ -119,6 +161,89 @@ await run('syncDocs writes localized content and a deterministic manifest', asyn
   }
 });
 
+for (const lang of ['en', 'pt'] as const) {
+  await run(`applyHostedInstallers serves hosted installers in the ${lang} quickstart`, () => {
+    const output = applyHostedInstallers(UPSTREAM_QUICKSTART[lang], lang);
+
+    ok(
+      !output.includes('releases/latest/download/install'),
+      `expected no release-asset installer URL | received: ${output}`
+    );
+    ok(
+      output.includes('curl -fsSL https://mangostudio.dev/install.sh | bash'),
+      `expected hosted install.sh command | received: ${output}`
+    );
+    ok(
+      output.includes('irm https://mangostudio.dev/install.ps1 \\| iex'),
+      `expected PowerShell table row | received: ${output}`
+    );
+    ok(
+      output.includes('```powershell\nirm https://mangostudio.dev/install.ps1 | iex\n```'),
+      `expected PowerShell code block | received: ${output}`
+    );
+    ok(
+      output.indexOf('PowerShell (Windows)') < output.indexOf('Homebrew (macOS/Linux)'),
+      `expected PowerShell row before Homebrew | received: ${output}`
+    );
+    ok(
+      !output.includes('install.ps1` '),
+      `expected upstream Windows paragraph replaced | received: ${output}`
+    );
+  });
+}
+
+await run('applyHostedInstallers is idempotent and ignores unrelated docs', () => {
+  const hosted = applyHostedInstallers(UPSTREAM_QUICKSTART.en, 'en');
+
+  strictEqual(applyHostedInstallers(hosted, 'en'), hosted);
+  strictEqual(
+    applyHostedInstallers('# CLI\n\nRun `mangostudio serve`.\n', 'en'),
+    '# CLI\n\nRun `mangostudio serve`.\n'
+  );
+});
+
+await run('assertHostedInstallers names the missing commands and source path', () => {
+  assertHostedInstallers(applyHostedInstallers(UPSTREAM_QUICKSTART.en, 'en'), 'README.md');
+
+  let message = '';
+
+  try {
+    assertHostedInstallers('# MangoStudio\n', 'README.md');
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+
+  ok(
+    message.includes('README.md') && message.includes('install.ps1'),
+    `expected error naming README.md and install.ps1 | received: ${JSON.stringify(message)}`
+  );
+});
+
+await run('syncDocs reproduces hosted installers from upstream release-asset text', async () => {
+  const sourceDir = await createSourceFixture();
+  const repoRoot = await mkdtemp(join(tmpdir(), 'mango-site-'));
+
+  try {
+    await syncDocs({ sourceDir, repoRoot, sourceCommit: 'abc123' });
+
+    for (const lang of ['en', 'pt']) {
+      const quickstart = await readFile(
+        join(repoRoot, `src/content/docs/${lang}/quickstart.md`),
+        'utf8'
+      );
+
+      ok(
+        quickstart.includes('irm https://mangostudio.dev/install.ps1 | iex') &&
+          !quickstart.includes('releases/latest/download/install'),
+        `expected hosted installers in ${lang} quickstart | received: ${quickstart}`
+      );
+    }
+  } finally {
+    await rm(sourceDir, { force: true, recursive: true });
+    await rm(repoRoot, { force: true, recursive: true });
+  }
+});
+
 await run('renderManifest includes source commit and per-locale slug lookup', () => {
   strictEqual(
     renderManifest({
@@ -170,14 +295,14 @@ await run('renderManifest includes source commit and per-locale slug lookup', ()
 async function createSourceFixture(): Promise<string> {
   const sourceDir = await mkdtemp(join(tmpdir(), 'mangostudio-source-'));
   const files = {
-    'README.md': '# MangoStudio\n\nSee [CLI](docs/reference/cli.md).\n',
+    'README.md': `${UPSTREAM_QUICKSTART.en}\nSee [CLI](docs/reference/cli.md).\n`,
     '.github/CONTRIBUTING.md': '# Contributing\n',
     '.github/SECURITY.md': '# Security Policy\n',
     'docs/README.md': '# Documentation\n',
     'docs/guides/contributor-quickstart.md': '# Contributor Quickstart\n',
     'docs/features/tools.md': '# Tools\n',
     'docs/reference/cli.md': '# CLI Reference\n\n[Quickstart](../../README.md)\n',
-    'docs/pt-br/README.md': '# MangoStudio\n\nVeja [CLI](reference/cli.md).\n',
+    'docs/pt-br/README.md': `${UPSTREAM_QUICKSTART.pt}\nVeja [CLI](reference/cli.md).\n`,
     'docs/pt-br/CONTRIBUTING.md': '# Contribuindo com o MangoStudio\n',
     'docs/pt-br/guides/contributor-quickstart.md': '# Onboarding De Contribuidor\n',
     'docs/pt-br/features/tools.md': '# Ferramentas\n',

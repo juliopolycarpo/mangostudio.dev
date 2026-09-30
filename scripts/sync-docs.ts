@@ -4,6 +4,7 @@ import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
 import type { Lang } from '../src/i18n/types';
+import { applyHostedInstallers, assertHostedInstallers } from './sync-docs-installers';
 
 const execFileAsync = promisify(execFile);
 
@@ -152,7 +153,12 @@ export async function syncDocs(options: SyncDocsOptions = {}): Promise<SyncDocsR
       const sourcePath = definition.sources[lang];
       const sourceFile = join(sourceDir, sourcePath);
       const original = await readFile(sourceFile, 'utf8');
-      const cleaned = sanitizeMarkdown(original);
+      const cleaned = applyHostedInstallers(sanitizeMarkdown(original), lang);
+
+      if (definition.slug === 'quickstart') {
+        assertHostedInstallers(cleaned, sourcePath);
+      }
+
       const linked = rewriteMarkdownLinks(cleaned, {
         lang,
         sourcePath,

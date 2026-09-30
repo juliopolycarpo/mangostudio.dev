@@ -10,8 +10,11 @@ export const CONTRIBUTING_URL =
 export const REPO = 'juliopolycarpo/mangostudio';
 export const VERSION = RELEASE.version;
 export const NPM_INSTALL_CMD = 'npm i -g mangostudio';
-export const POWERSHELL_INSTALL_CMD = 'irm https://mangostudio.dev/install.ps1 | iex';
-export const SHELL_INSTALL_CMD = 'curl -fsSL https://mangostudio.dev/install.sh | bash';
+/** Canonical hosted installers, served from public/install.{sh,ps1}. */
+export const INSTALL_SH_URL = 'https://mangostudio.dev/install.sh';
+export const INSTALL_PS1_URL = 'https://mangostudio.dev/install.ps1';
+export const POWERSHELL_INSTALL_CMD = `irm ${INSTALL_PS1_URL} | iex`;
+export const SHELL_INSTALL_CMD = `curl -fsSL ${INSTALL_SH_URL} | bash`;
 
 export type ChannelStatus = 'ready' | 'planned';
 export type InstallPlatformId = 'windows' | 'linux' | 'macos' | 'docker';
