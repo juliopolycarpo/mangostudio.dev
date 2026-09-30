@@ -16,6 +16,11 @@ export const INSTALL_PS1_URL = 'https://mangostudio.dev/install.ps1';
 export const POWERSHELL_INSTALL_CMD = `irm ${INSTALL_PS1_URL} | iex`;
 export const SHELL_INSTALL_CMD = `curl -fsSL ${INSTALL_SH_URL} | bash`;
 
+/** Longest platform hint, in characters. The hint boxes in `Header.astro` and
+ *  `DocsPage.astro` reserve this as `inline-size: 6ch`; `site.test.ts` fails when a
+ *  platform hint outgrows it, so update both CSS rules together with this value. */
+export const PALETTE_HINT_MAX_CH = 6;
+
 /** Command-palette shortcut hint. `fallback` is rendered on the server so it is correct
  *  without JavaScript; `src/scripts/cmdk-hint.ts` narrows it to the current platform. */
 export const PALETTE_SHORTCUT = {

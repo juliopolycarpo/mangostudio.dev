@@ -223,6 +223,14 @@ const nav = [
     color: var(--text-3);
   }
 
+  /* The hint is swapped from the static "Ctrl K / ⌘K" to one platform's shortcut on init.
+     Reserve the room of the longest platform hint ("Ctrl K") so the swap never resizes the
+     button, whichever platform resolves. */
+  .search-btn kbd {
+    inline-size: 6ch;
+    text-align: center;
+  }
+
   .gh-link {
     display: flex;
     align-items: center;

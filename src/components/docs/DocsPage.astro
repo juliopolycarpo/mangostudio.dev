@@ -166,6 +166,14 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
     text-align: left;
   }
 
+  /* Same reservation as the header search button: the hint swap on init must not resize the
+     label beside it, or the page list below jumps when the label re-wraps. */
+  .docs-search kbd {
+    inline-size: 6ch;
+    text-align: center;
+    white-space: nowrap;
+  }
+
   /* Phones collapse the page list behind a native disclosure. Desktop keeps the list
      open: where ::details-content is supported it is forced visible and the summary is
      hidden, so the closed state cannot hide it. Older engines keep a working toggle. */
