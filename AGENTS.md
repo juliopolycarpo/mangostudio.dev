@@ -48,8 +48,10 @@ The toolchain uses these checkers:
   `console.error` when console output is intentional.
 - dprint formats Markdown, TOML, and YAML.
 - `bun run typecheck:native` checks TypeScript with the native TypeScript 7 compiler and emits no
-  files. `typescript-native` aliases the pinned `typescript` release so it can coexist with the
-  TypeScript 6 JavaScript API required by `astro check`.
+  files. It runs `astro sync` first, so the generated `.astro/types.d.ts` exists on a fresh clone;
+  without it, content collection types are loose and errors pass. `typescript-native` aliases the
+  pinned `typescript` release so it can coexist with the TypeScript 6 JavaScript API required by
+  `astro check`.
 - `bun --check` also checks TypeScript; `astro check` checks `.astro` files using the root
   `typescript` dependency. Keep that dependency on TypeScript 6 until Astro supports the native API.
 
