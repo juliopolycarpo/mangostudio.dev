@@ -6,5 +6,12 @@
     }
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", ".wrangler-dry"]
+  "exclude": [
+    "dist",
+    ".wrangler",
+    ".wrangler-dry",
+    "test-results",
+    "playwright-report",
+    "blob-report"
+  ]
 }
