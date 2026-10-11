@@ -223,22 +223,33 @@ function validateRewrittenCommits(input: string): CommitPolicyResult[] {
   return validateExistingCommits(shas);
 }
 
-function listCommitsForPushUpdate(update: PushUpdate, remoteName: string): string[] {
+/**
+ * Builds the `git rev-list` arguments that select the commits a push adds to the remote, or
+ * `null` when the push deletes the ref. Commits reachable from the remote's refs are left out, so
+ * rebasing a branch onto an updated base does not re-check the base's commits.
+ *
+ * @example
+ * outgoingRevListArgs(update, 'origin');
+ * // ['rev-list', '--reverse', '<localSha>', '--not', '<remoteSha>', '--remotes=origin']
+ */
+export function outgoingRevListArgs(update: PushUpdate, remoteName: string): string[] | null {
   if (zeroOidPattern.test(update.localSha)) {
-    return [];
+    return null;
   }
+
+  const remoteRefs = `--remotes=${remoteName || 'origin'}`;
 
   if (zeroOidPattern.test(update.remoteSha)) {
-    return gitLines([
-      'rev-list',
-      '--reverse',
-      update.localSha,
-      '--not',
-      `--remotes=${remoteName || 'origin'}`,
-    ]);
+    return ['rev-list', '--reverse', update.localSha, '--not', remoteRefs];
   }
 
-  return listCommitsInRange(`${update.remoteSha}..${update.localSha}`);
+  return ['rev-list', '--reverse', update.localSha, '--not', update.remoteSha, remoteRefs];
+}
+
+function listCommitsForPushUpdate(update: PushUpdate, remoteName: string): string[] {
+  const args = outgoingRevListArgs(update, remoteName);
+
+  return args ? gitLines(args) : [];
 }
 
 function listCommitsInRange(range: string): string[] {

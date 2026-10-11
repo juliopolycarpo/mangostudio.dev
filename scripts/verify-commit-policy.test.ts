@@ -2,6 +2,7 @@ import { deepStrictEqual, strictEqual } from 'node:assert/strict';
 
 import {
   commitHasSignature,
+  outgoingRevListArgs,
   parsePrePushInput,
   parseSignoffs,
   validateCommitMessage,
@@ -117,6 +118,53 @@ run('parsePrePushInput decodes pushed ref updates', () => {
         remoteSha: '0000000000000000000000000000000000000000',
       },
     ]
+  );
+});
+
+run('outgoingRevListArgs excludes commits the remote already has on a rewritten branch', () => {
+  const localSha = '1111111111111111111111111111111111111111';
+  const remoteSha = '2222222222222222222222222222222222222222';
+  const args = outgoingRevListArgs(
+    { localRef: 'refs/heads/topic', localSha, remoteRef: 'refs/heads/topic', remoteSha },
+    'origin'
+  );
+
+  deepStrictEqual(
+    args,
+    ['rev-list', '--reverse', localSha, '--not', remoteSha, '--remotes=origin'],
+    `expected rev-list args to exclude: ${remoteSha} and --remotes=origin | received: ${args?.join(' ') ?? 'null'}`
+  );
+});
+
+run('outgoingRevListArgs lists a new branch against the remote refs only', () => {
+  const localSha = '1111111111111111111111111111111111111111';
+
+  deepStrictEqual(
+    outgoingRevListArgs(
+      {
+        localRef: 'refs/heads/topic',
+        localSha,
+        remoteRef: 'refs/heads/topic',
+        remoteSha: '0000000000000000000000000000000000000000',
+      },
+      'upstream'
+    ),
+    ['rev-list', '--reverse', localSha, '--not', '--remotes=upstream']
+  );
+});
+
+run('outgoingRevListArgs returns null when the push deletes a ref', () => {
+  strictEqual(
+    outgoingRevListArgs(
+      {
+        localRef: '(delete)',
+        localSha: '0000000000000000000000000000000000000000',
+        remoteRef: 'refs/heads/topic',
+        remoteSha: '2222222222222222222222222222222222222222',
+      },
+      'origin'
+    ),
+    null
   );
 });
 
