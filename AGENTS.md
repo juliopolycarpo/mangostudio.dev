@@ -113,6 +113,9 @@ request from a feature branch.
 
 ## Dependency Updates
 
+Setup Bun steps use `bun-version-file: package.json` to read the exact `packageManager` version.
+Update that version, `engines.bun`, and the contributor prerequisite together.
+
 Dependabot uses the Bun ecosystem for `package.json` and `bun.lock` updates. If a Dependabot package
 PR changes `package.json` without updating `bun.lock`, `lockfile-sync.yml` runs `bun install
 --ignore-scripts`, commits only `bun.lock`, and lets the normal QA workflow re-run with
