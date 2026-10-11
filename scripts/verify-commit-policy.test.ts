@@ -196,6 +196,37 @@ Signed-off-by: dependabot[bot] <support@github.com>
   );
 });
 
+run('a Dependabot squash commit needs the Dependabot sign-off, not only the merger', () => {
+  const dependabot = {
+    name: 'dependabot[bot]',
+    email: '49699333+dependabot[bot]@users.noreply.github.com',
+  };
+  const github = { name: 'GitHub', email: 'noreply@github.com' };
+  const identities = signoffIdentities(dependabot, github);
+  const squash = (trailers: string) => `chore: Bump the dependencies group with 2 updates (#1)
+
+Bumps the dependencies group with 2 updates.
+
+${trailers}
+`;
+
+  deepStrictEqual(
+    validateCommitMessage(squash('Signed-off-by: Julio Polycarpo <julio@polycarpo.dev>'), {
+      identities,
+    }),
+    ['DCO Signed-off-by trailer must match the author or committer email']
+  );
+  deepStrictEqual(
+    validateCommitMessage(
+      squash(
+        'Signed-off-by: dependabot[bot] <support@github.com>\nSigned-off-by: Julio Polycarpo <julio@polycarpo.dev>'
+      ),
+      { identities }
+    ),
+    []
+  );
+});
+
 run('signoffIdentities keeps the Dependabot sign-off out of commits by other authors', () => {
   const github = { name: 'GitHub', email: 'noreply@github.com' };
 
