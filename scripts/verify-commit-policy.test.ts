@@ -5,6 +5,7 @@ import {
   outgoingRevListArgs,
   parsePrePushInput,
   parseSignoffs,
+  signoffIdentities,
   validateCommitMessage,
 } from './verify-commit-policy';
 
@@ -166,6 +167,40 @@ run('outgoingRevListArgs returns null when the push deletes a ref', () => {
     ),
     null
   );
+});
+
+run('signoffIdentities accepts the Dependabot sign-off on commits Dependabot authored', () => {
+  const dependabot = {
+    name: 'dependabot[bot]',
+    email: '49699333+dependabot[bot]@users.noreply.github.com',
+  };
+  const github = { name: 'GitHub', email: 'noreply@github.com' };
+  const emails = signoffIdentities(dependabot, github).map((identity) => identity.email);
+
+  strictEqual(
+    emails.includes('support@github.com'),
+    true,
+    `expected accepted sign-off emails to contain: support@github.com | received: ${emails.join(', ')}`
+  );
+  deepStrictEqual(
+    validateCommitMessage(
+      `chore: Bump the dependencies group with 2 updates
+
+Bumps the dependencies group with 2 updates.
+
+Signed-off-by: dependabot[bot] <support@github.com>
+`,
+      { identities: signoffIdentities(dependabot, github) }
+    ),
+    []
+  );
+});
+
+run('signoffIdentities keeps the Dependabot sign-off out of commits by other authors', () => {
+  const github = { name: 'GitHub', email: 'noreply@github.com' };
+
+  deepStrictEqual(signoffIdentities(author, github), [author, github]);
+  deepStrictEqual(signoffIdentities(author, null), [author]);
 });
 
 run('parseSignoffs extracts valid DCO identities', () => {

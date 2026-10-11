@@ -6,6 +6,8 @@ const signatureHeaderPattern = /^gpgsig(?:-sha256)?(?: |$)/;
 const trailerPattern = /^[A-Za-z0-9-]+:\s+\S/;
 const signoffPattern = /^Signed-off-by:\s*(?<name>[^<]+?)\s*<(?<email>[^<>\s@]+@[^<>\s@]+)>$/i;
 const scissorsPattern = /^# ------------------------ >8 ------------------------/;
+const dependabotAuthorEmail = '49699333+dependabot[bot]@users.noreply.github.com';
+const dependabotSignoffIdentity = { name: 'dependabot[bot]', email: 'support@github.com' };
 
 export interface Identity {
   name: string;
@@ -185,14 +187,32 @@ async function validateMessageFile(path: string | undefined): Promise<CommitPoli
   };
 }
 
+/**
+ * Lists the identities whose `Signed-off-by` satisfies the DCO rule for a commit: its author and
+ * its committer. Dependabot authors commits with its noreply address but signs off as
+ * `support@github.com`, so that sign-off is accepted for commits Dependabot authored.
+ *
+ * @example
+ * signoffIdentities(commit.author, commit.committer); // [author, committer]
+ */
+export function signoffIdentities(author: Identity | null, committer: Identity | null): Identity[] {
+  const identities = [author, committer].filter((identity): identity is Identity =>
+    Boolean(identity)
+  );
+
+  if (author?.email.toLowerCase() !== dependabotAuthorEmail) {
+    return identities;
+  }
+
+  return [...identities, dependabotSignoffIdentity];
+}
+
 function validateExistingCommits(shas: string[]): CommitPolicyResult[] {
   const uniqueShas = [...new Set(shas)].filter(Boolean);
 
   return uniqueShas.map((sha) => {
     const commit = readCommit(sha);
-    const identities = [commit.author, commit.committer].filter((identity): identity is Identity =>
-      Boolean(identity)
-    );
+    const identities = signoffIdentities(commit.author, commit.committer);
     const errors = validateCommitMessage(commit.message, { identities });
 
     if (!commit.hasSignature) {
