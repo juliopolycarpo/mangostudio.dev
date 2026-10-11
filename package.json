@@ -33,7 +33,7 @@
     "audit:static": "bun ./scripts/audit-static-site.ts",
     "audit:payloads": "bun ./scripts/report-static-payloads.ts --check",
     "smoke:dist": "bun ./scripts/smoke-dist.ts",
-    "test:e2e": "playwright test",
+    "test:e2e": "bun --bun playwright test",
     "report:payloads": "bun ./scripts/report-static-payloads.ts",
     "sync:docs": "bun ./scripts/sync-docs.ts",
     "smoke:production": "bun ./scripts/smoke-production-url.ts",
