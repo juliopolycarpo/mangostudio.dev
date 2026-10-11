@@ -8,15 +8,15 @@ Cloudflare Workers static assets.
 
 ## Stack
 
-| Concern        | Tool                                                              |
-| -------------- | ----------------------------------------------------------------- |
-| Framework      | [Astro](https://astro.build) (static output, no UI framework)     |
-| Language       | TypeScript, type-checked with TSGO (`@typescript/native-preview`) |
-| Lint + format  | [Biome](https://biomejs.dev) (TS/JS/JSON/CSS)                     |
-| Format (prose) | [dprint](https://dprint.dev) (Markdown/TOML/YAML)                 |
-| Runtime / PM   | [Bun](https://bun.sh)                                             |
-| Fonts          | Self-hosted Geist + Geist Mono (Fontsource) — no third-party CDN  |
-| Hosting        | Cloudflare Workers static assets                                  |
+| Concern        | Tool                                                             |
+| -------------- | ---------------------------------------------------------------- |
+| Framework      | [Astro](https://astro.build) (static output, no UI framework)    |
+| Language       | TypeScript, checked with `bun --check` and `astro check`         |
+| Lint + format  | [Biome](https://biomejs.dev) (TS/JS/JSON/CSS)                    |
+| Format (prose) | [dprint](https://dprint.dev) (Markdown/TOML/YAML)                |
+| Runtime / PM   | [Bun](https://bun.sh)                                            |
+| Fonts          | Self-hosted Geist + Geist Mono (Fontsource) — no third-party CDN |
+| Hosting        | Cloudflare Workers static assets                                 |
 
 Interactivity (theme toggle, ⌘K command palette, install-channel tabs, terminal animation,
 copy-to-clipboard) is implemented as small vanilla-TS progressive-enhancement modules in
@@ -34,7 +34,7 @@ bun run preview    # preview the production build locally
 ### Quality gates
 
 ```bash
-bun run check      # astro check + tsgo + biome + dprint
+bun run check      # astro check + bun --check + biome + dprint
 bun run test       # Bun tests for repo automation
 bun run qa         # full CI gate: check + test + build + audit + Wrangler dry-run
 bun run fix        # biome --write + dprint fmt (auto-fix)

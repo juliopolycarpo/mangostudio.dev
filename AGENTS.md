@@ -12,11 +12,11 @@ Use Bun from the repository root. Do not use npm, npx, pnpm, or yarn.
 bun run dev              # local dev server at http://localhost:4321
 bun run build            # static Astro build to ./dist
 bun run preview          # preview the production build locally
-bun run check            # Astro diagnostics, tsgo, Biome, dprint
+bun run check            # Astro diagnostics, bun --check, Biome, dprint
 bun run test             # Bun tests for repo automation
 bun run qa               # full local/CI gate
 bun run fix              # auto-fix Biome and dprint formatting
-bun run typecheck        # Astro diagnostics and tsgo only
+bun run typecheck        # Astro diagnostics and bun --check only
 bun run deploy:dry-run   # build and validate Wrangler without uploading
 ```
 
@@ -46,7 +46,10 @@ Three checkers own non-overlapping file sets:
   concatenation, and no non-null assertions. `console.log` warns; use `console.warn` or
   `console.error` when console output is intentional.
 - dprint formats Markdown, TOML, and YAML.
-- `tsgo` and `astro check` own type checking, including `.astro` files.
+- `bun --check` checks TypeScript; `astro check` also checks `.astro` files.
+
+Use `bun --check` to invoke Bun's built-in checker explicitly. `bun check` runs the repository's
+`check` package script.
 
 The import alias is `@/*` for `src/*`.
 
@@ -109,6 +112,9 @@ through the protected `production` GitHub Environment. Never push directly to `m
 request from a feature branch.
 
 ## Dependency Updates
+
+Setup Bun steps use `bun-version-file: package.json` to read the exact `packageManager` version.
+Update that version, `engines.bun`, and the contributor prerequisite together.
 
 Dependabot uses the Bun ecosystem for `package.json` and `bun.lock` updates. If a Dependabot package
 PR changes `package.json` without updating `bun.lock`, `lockfile-sync.yml` runs `bun install
