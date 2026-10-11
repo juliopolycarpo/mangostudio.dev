@@ -28,7 +28,7 @@ bun run qa
 
 That command runs:
 
-- Astro diagnostics and TSGO type checking
+- Astro diagnostics and Bun's built-in TypeScript checking
 - Biome and dprint checks
 - Bun tests
 - Static build
