@@ -23,9 +23,10 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check && bun --check && biome check . && dprint check",
+    "check": "bun run typecheck && biome check . && dprint check",
     "qa": "bun run check && bun run test && bun run build && bun run smoke:dist && bun run audit:static && bun run audit:payloads && bun run labels:check && bun run cloudflare:dry-run",
-    "typecheck": "astro check && bun --check",
+    "typecheck": "astro check && bun run typecheck:native && bun --check",
+    "typecheck:native": "bun ./node_modules/typescript-native/bin/tsc --noEmit",
     "lint": "biome check .",
     "test": "bun ./scripts/run-tests.ts",
     "fix": "biome check --write . && dprint fmt",
@@ -57,6 +58,7 @@
     "dprint": "^0.54.0",
     "lefthook": "^2.1.9",
     "typescript": "~6.0.3",
+    "typescript-native": "npm:typescript@7.0.2",
     "wrangler": "^4.105.0"
   }
 }

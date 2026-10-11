@@ -11,7 +11,7 @@ Cloudflare Workers static assets.
 | Concern        | Tool                                                             |
 | -------------- | ---------------------------------------------------------------- |
 | Framework      | [Astro](https://astro.build) (static output, no UI framework)    |
-| Language       | TypeScript, checked with `bun --check` and `astro check`         |
+| Language       | TypeScript 7 native compiler, `bun --check`, and `astro check`   |
 | Lint + format  | [Biome](https://biomejs.dev) (TS/JS/JSON/CSS)                    |
 | Format (prose) | [dprint](https://dprint.dev) (Markdown/TOML/YAML)                |
 | Runtime / PM   | [Bun](https://bun.sh)                                            |
@@ -34,11 +34,15 @@ bun run preview    # preview the production build locally
 ### Quality gates
 
 ```bash
-bun run check      # astro check + bun --check + biome + dprint
+bun run check      # typecheck (Astro + native TypeScript + Bun) + biome + dprint
+bun run typecheck:native # TypeScript 7 native compiler, without emitting files
 bun run test       # Bun tests for repo automation
 bun run qa         # full CI gate: check + test + build + audit + Wrangler dry-run
 bun run fix        # biome --write + dprint fmt (auto-fix)
 ```
+
+The native compiler is pinned through the `typescript-native` package alias. The root `typescript`
+dependency stays on version 6 because Astro's checker requires its JavaScript API.
 
 `lefthook` runs Biome, dprint, and `astro check` before commits. It also blocks commits and pushes
 that miss the required commit body, DCO signoff, or GPG/SSH signature.

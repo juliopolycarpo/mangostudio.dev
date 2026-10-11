@@ -12,11 +12,12 @@ Use Bun from the repository root. Do not use npm, npx, pnpm, or yarn.
 bun run dev              # local dev server at http://localhost:4321
 bun run build            # static Astro build to ./dist
 bun run preview          # preview the production build locally
-bun run check            # Astro diagnostics, bun --check, Biome, dprint
+bun run check            # Astro, native TypeScript, bun --check, Biome, dprint
 bun run test             # Bun tests for repo automation
 bun run qa               # full local/CI gate
 bun run fix              # auto-fix Biome and dprint formatting
-bun run typecheck        # Astro diagnostics and bun --check only
+bun run typecheck        # Astro diagnostics, native TypeScript, bun --check
+bun run typecheck:native # native TypeScript compiler only, without emitting files
 bun run deploy:dry-run   # build and validate Wrangler without uploading
 ```
 
@@ -38,7 +39,7 @@ Language-neutral values such as URLs, install commands, provider glyphs, and ver
 
 ## Toolchain Split
 
-Three checkers own non-overlapping file sets:
+The toolchain uses these checkers:
 
 - Biome lints and formats TypeScript, JavaScript, JSON, JSONC, and CSS. It ignores `.astro`, SVG,
   generated output, and Markdown. Follow the configured style: single quotes, semicolons, es5
@@ -46,7 +47,11 @@ Three checkers own non-overlapping file sets:
   concatenation, and no non-null assertions. `console.log` warns; use `console.warn` or
   `console.error` when console output is intentional.
 - dprint formats Markdown, TOML, and YAML.
-- `bun --check` checks TypeScript; `astro check` also checks `.astro` files.
+- `bun run typecheck:native` checks TypeScript with the native TypeScript 7 compiler and emits no
+  files. `typescript-native` aliases the pinned `typescript` release so it can coexist with the
+  TypeScript 6 JavaScript API required by `astro check`.
+- `bun --check` also checks TypeScript; `astro check` checks `.astro` files using the root
+  `typescript` dependency. Keep that dependency on TypeScript 6 until Astro supports the native API.
 
 Use `bun --check` to invoke Bun's built-in checker explicitly. `bun check` runs the repository's
 `check` package script.
