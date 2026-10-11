@@ -65,7 +65,7 @@ await run('transformer wraps shell blocks with a gated, labelled copy button', (
     dataCopy: 'bun run dev',
     dataEnhance: 'copy',
     dataEnhanceReserve: '',
-    ariaLabelledBy: DOCS_COPY_LABEL_ID,
+    ariaLabelledBy: [DOCS_COPY_LABEL_ID],
   });
 });
 

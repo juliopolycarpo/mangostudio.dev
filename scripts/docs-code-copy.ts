@@ -63,14 +63,14 @@ function copyIcon() {
       strokeLinejoin: 'round',
       fill: 'none',
       stroke: 'currentColor',
-      strokeWidth: 2,
+      strokeWidth: '2',
       ariaHidden: 'true',
     },
     children: [
       {
         type: 'element' as const,
         tagName: 'rect',
-        properties: { x: 9, y: 9, width: 11, height: 11, rx: 2 },
+        properties: { x: '9', y: '9', width: 11, height: 11, rx: '2' },
         children: [],
       },
       {
@@ -110,7 +110,7 @@ export function docsCodeCopyTransformer(): ShikiTransformer {
           dataCopy: copyableText(this.source),
           dataEnhance: 'copy',
           dataEnhanceReserve: '',
-          ariaLabelledBy: DOCS_COPY_LABEL_ID,
+          ariaLabelledBy: [DOCS_COPY_LABEL_ID],
         },
         children: [copyIcon()],
       };
