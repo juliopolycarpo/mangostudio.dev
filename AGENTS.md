@@ -132,6 +132,10 @@ PR changes `package.json` without updating `bun.lock`, `lockfile-sync.yml` runs 
 Bun security updates are not currently covered by Dependabot. Keep Dependency Review and CodeQL
 enabled as the supply-chain safety gates.
 
+Dependabot does not track the `typescript-native` alias: its dependency snapshot lists only
+`typescript`, and it checks only the root `typescript` version. Bump the native compiler by hand,
+changing the alias version in `package.json` and `bun.lock` together.
+
 ## GitHub Maintenance
 
 Path labels are defined in `.github/labels.json` and applied by `.github/labeler.yml`. After label
