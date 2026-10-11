@@ -6,7 +6,7 @@ runtime issues belong in the main product repository.
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) v1.3.14 or newer
+- [Bun](https://bun.sh/) v1.4.3 or newer
 - Git with commit signing configured
 
 ## Development
