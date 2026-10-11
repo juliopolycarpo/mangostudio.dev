@@ -5,6 +5,7 @@ import {
   outgoingRevListArgs,
   parsePrePushInput,
   parseSignoffs,
+  signoffIdentities,
   validateCommitMessage,
 } from './verify-commit-policy';
 
@@ -166,6 +167,71 @@ run('outgoingRevListArgs returns null when the push deletes a ref', () => {
     ),
     null
   );
+});
+
+run('signoffIdentities accepts the Dependabot sign-off on commits Dependabot authored', () => {
+  const dependabot = {
+    name: 'dependabot[bot]',
+    email: '49699333+dependabot[bot]@users.noreply.github.com',
+  };
+  const github = { name: 'GitHub', email: 'noreply@github.com' };
+  const emails = signoffIdentities(dependabot, github).map((identity) => identity.email);
+
+  strictEqual(
+    emails.includes('support@github.com'),
+    true,
+    `expected accepted sign-off emails to contain: support@github.com | received: ${emails.join(', ')}`
+  );
+  deepStrictEqual(
+    validateCommitMessage(
+      `chore: Bump the dependencies group with 2 updates
+
+Bumps the dependencies group with 2 updates.
+
+Signed-off-by: dependabot[bot] <support@github.com>
+`,
+      { identities: signoffIdentities(dependabot, github) }
+    ),
+    []
+  );
+});
+
+run('a Dependabot squash commit needs the Dependabot sign-off, not only the merger', () => {
+  const dependabot = {
+    name: 'dependabot[bot]',
+    email: '49699333+dependabot[bot]@users.noreply.github.com',
+  };
+  const github = { name: 'GitHub', email: 'noreply@github.com' };
+  const identities = signoffIdentities(dependabot, github);
+  const squash = (trailers: string) => `chore: Bump the dependencies group with 2 updates (#1)
+
+Bumps the dependencies group with 2 updates.
+
+${trailers}
+`;
+
+  deepStrictEqual(
+    validateCommitMessage(squash('Signed-off-by: Julio Polycarpo <julio@polycarpo.dev>'), {
+      identities,
+    }),
+    ['DCO Signed-off-by trailer must match the author or committer email']
+  );
+  deepStrictEqual(
+    validateCommitMessage(
+      squash(
+        'Signed-off-by: dependabot[bot] <support@github.com>\nSigned-off-by: Julio Polycarpo <julio@polycarpo.dev>'
+      ),
+      { identities }
+    ),
+    []
+  );
+});
+
+run('signoffIdentities keeps the Dependabot sign-off out of commits by other authors', () => {
+  const github = { name: 'GitHub', email: 'noreply@github.com' };
+
+  deepStrictEqual(signoffIdentities(author, github), [author, github]);
+  deepStrictEqual(signoffIdentities(author, null), [author]);
 });
 
 run('parseSignoffs extracts valid DCO identities', () => {

@@ -129,6 +129,11 @@ PR changes `package.json` without updating `bun.lock`, `lockfile-sync.yml` runs 
 --ignore-scripts`, commits only `bun.lock`, and lets the normal QA workflow re-run with
 `--frozen-lockfile --ignore-scripts`.
 
+Dependabot authors commits with its noreply address and signs off as `support@github.com`. The
+commit policy accepts that sign-off only on commits Dependabot authored. GitHub keeps Dependabot as
+the author of the squash commit, so keep `Signed-off-by: dependabot[bot] <support@github.com>` in
+the squash message's trailer block next to your own sign-off.
+
 Bun security updates are not currently covered by Dependabot. Keep Dependency Review and CodeQL
 enabled as the supply-chain safety gates.
 
