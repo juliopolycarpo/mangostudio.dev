@@ -11,7 +11,7 @@ Cloudflare Workers static assets.
 | Concern        | Tool                                                             |
 | -------------- | ---------------------------------------------------------------- |
 | Framework      | [Astro](https://astro.build) (static output, no UI framework)    |
-| Language       | TypeScript 7 native compiler, `bun --check`, and `astro check`   |
+| Language       | TypeScript 7 native compiler and `astro check`                   |
 | Lint + format  | [Biome](https://biomejs.dev) (TS/JS/JSON/CSS)                    |
 | Format (prose) | [dprint](https://dprint.dev) (Markdown/TOML/YAML)                |
 | Runtime / PM   | [Bun](https://bun.sh)                                            |
@@ -34,7 +34,7 @@ bun run preview    # preview the production build locally
 ### Quality gates
 
 ```bash
-bun run check      # typecheck (Astro + native TypeScript + Bun) + biome + dprint
+bun run check      # typecheck (Astro + native TypeScript) + biome + dprint
 bun run typecheck:native # TypeScript 7 native compiler, without emitting files
 bun run test       # Bun tests for repo automation
 bun run qa         # full CI gate: check + test + build + audit + Wrangler dry-run

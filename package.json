@@ -25,7 +25,7 @@
     "preview": "astro preview",
     "check": "bun run typecheck && biome check . && dprint check",
     "qa": "bun run check && bun run test && bun run build && bun run smoke:dist && bun run audit:static && bun run audit:payloads && bun run labels:check && bun run cloudflare:dry-run",
-    "typecheck": "astro check && bun run typecheck:native && bun --check",
+    "typecheck": "astro check && bun run typecheck:native",
     "typecheck:native": "astro sync && bun ./node_modules/typescript-native/bin/tsc --noEmit",
     "lint": "biome check .",
     "test": "bun ./scripts/run-tests.ts",

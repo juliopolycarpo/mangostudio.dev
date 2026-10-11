@@ -12,11 +12,11 @@ Use Bun from the repository root. Do not use npm, npx, pnpm, or yarn.
 bun run dev              # local dev server at http://localhost:4321
 bun run build            # static Astro build to ./dist
 bun run preview          # preview the production build locally
-bun run check            # Astro, native TypeScript, bun --check, Biome, dprint
+bun run check            # Astro, native TypeScript, Biome, dprint
 bun run test             # Bun tests for repo automation
 bun run qa               # full local/CI gate
 bun run fix              # auto-fix Biome and dprint formatting
-bun run typecheck        # Astro diagnostics, native TypeScript, bun --check
+bun run typecheck        # Astro diagnostics, native TypeScript
 bun run typecheck:native # native TypeScript compiler only, without emitting files
 bun run deploy:dry-run   # build and validate Wrangler without uploading
 ```
@@ -52,11 +52,12 @@ The toolchain uses these checkers:
   without it, content collection types are loose and errors pass. `typescript-native` aliases the
   pinned `typescript` release so it can coexist with the TypeScript 6 JavaScript API required by
   `astro check`.
-- `bun --check` also checks TypeScript; `astro check` checks `.astro` files using the root
-  `typescript` dependency. Keep that dependency on TypeScript 6 until Astro supports the native API.
+- `astro check` checks `.astro` files using the root `typescript` dependency. Keep that dependency on
+  TypeScript 6 until Astro supports the native API.
 
-Use `bun --check` to invoke Bun's built-in checker explicitly. `bun check` runs the repository's
-`check` package script.
+Bun's built-in checker (`bun --check`) is not part of the gate: it reads the same `tsconfig.json`
+and files as the pinned native compiler, and its version moves with each Bun upgrade. `bun check`
+runs the repository's `check` package script.
 
 The import alias is `@/*` for `src/*`.
 
