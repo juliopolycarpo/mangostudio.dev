@@ -39,6 +39,8 @@ jobs:
         run: bun run qa
 
   deploy:
+    # workflow_dispatch can select any ref; only main may reach production.
+    if: github.ref == 'refs/heads/main'
     name: Deploy to Cloudflare Workers
     needs: verify
     runs-on: ubuntu-latest
