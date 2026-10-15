@@ -8,8 +8,8 @@ groupId: "providers"
 groupTitle: "Provedores"
 order: 10
 sourcePath: "docs/pt-br/providers/development.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/development.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/providers/development.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Guia De Desenvolvimento De Provedores
@@ -54,7 +54,7 @@ capabilities: {
 }
 ```
 
-O DeepSeek é modelado como provedor de primeira classe, em vez de mero connector OpenAI-compatible. Ele ainda usa a superfície de runtime do AI SDK, mas o tipo separado permite ao catálogo expor capacidades específicas de reasoning, tool, cache e continuação sem alterar o comportamento genérico OpenAI-compatible.
+O DeepSeek é modelado como provedor de primeira classe, em vez de mero connector OpenAI-compatible. Ele ainda fala com o DeepSeek pelo SDK da OpenAI, mas o tipo separado permite ao catálogo expor capacidades específicas de reasoning, tool, cache e continuação sem alterar o comportamento genérico OpenAI-compatible.
 
 ---
 
@@ -94,6 +94,7 @@ Replay é o caminho de fallback usado quando não há cursor durável disponíve
 | Provedor            | Função de replay                | Formato de saída                                                             |
 | ------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
 | OpenAI Responses    | `buildOpenAIResponsesReplay`    | Array de `ResponseInputItem` com roles e function calls                      |
+| ChatGPT             | `buildOpenAIResponsesReplay`    | Input Responses mais itens locais de loop de reasoning/function-call         |
 | Gemini Interactions | `buildGeminiInteractionsReplay` | Array de objetos de turno com role, content, function_call e function_result |
 | OpenAI-compatible   | `buildChatCompletionsReplay`    | `ChatCompletionMessageParam[]` com array `tool_calls`                        |
 | DeepSeek            | `buildChatCompletionsReplay`    | `ChatCompletionMessageParam[]` com `reasoning_content` nos loops de tools    |

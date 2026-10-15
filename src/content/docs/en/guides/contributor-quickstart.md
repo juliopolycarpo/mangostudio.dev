@@ -8,8 +8,8 @@ groupId: "guides"
 groupTitle: "Guides"
 order: 20
 sourcePath: "docs/guides/contributor-quickstart.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/guides/contributor-quickstart.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/guides/contributor-quickstart.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Contributor Quickstart
@@ -17,6 +17,11 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 Use this guide when you want the shortest path from clone to a validated change.
 
 ## 1. Set Up
+
+You need [Bun](https://bun.sh/) and Rust 1.99.0 or newer from [rustup](https://rustup.rs/)
+(`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`). The hub launches Local as
+the cargo-built `mangostudio-runtime` binary, and `rust-toolchain.toml` pins the version rustup
+installs on first build.
 
 ```bash
 git clone <repo-url>
@@ -38,14 +43,24 @@ cp .mango/.env.example ~/.mango/.env
 bun run dev
 ```
 
-Default local URLs:
+It runs `cargo build -p mangostudio-runtime --locked` first, so Local has a binary to launch; set
+`MANGOSTUDIO_RUNTIME_BINARY` to use one you already built instead. API tests that reach Local
+need the same binary.
 
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:3001`
+One server, one URL — the API builds and serves the frontend:
+
+- App and API: `http://localhost:3001`
+
+Nothing watches the frontend. After editing a frontend file, rebuild it and refresh the
+browser — there is no HMR, so a refresh is needed either way:
+
+```bash
+bun run --filter @mangostudio/frontend build
+```
 
 ## 3. Know Where To Start
 
-- Read [`../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) for repository rules and routing.
+- Read [`../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) for repository rules and routing.
 - Use [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) when you need a feature-by-feature file map.
 - Use [`../reference/testing.md`](/en/docs/reference/testing/) before adding or changing behavior.
 - Use [`../architecture/overview.md`](/en/docs/architecture/overview/) for the workspace and module layout.
@@ -54,14 +69,15 @@ Default local URLs:
 
 A [lefthook](https://github.com/evilmartians/lefthook) pre-commit hook is installed automatically during `bun install`. It runs these checks on every commit:
 
-| Check              | Trigger      | Files targeted              | Fails commit on                    |
-| ------------------ | ------------ | --------------------------- | ---------------------------------- |
-| Biome format/lint  | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | Format or lint errors              |
-| dprint format      | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | Format errors                      |
-| dprint Dockerfile  | `pre-commit` | `{Dockerfile,Dockerfile.*}` | Format errors                      |
-| Typecheck affected | `pre-commit` | All staged files            | Type errors in affected workspaces |
+| Check             | Trigger      | Files targeted              | Fails commit on                                                      |
+| ----------------- | ------------ | --------------------------- | -------------------------------------------------------------------- |
+| Biome format/lint | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | Format or lint errors                                                |
+| dprint format     | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | Format errors                                                        |
+| dprint Dockerfile | `pre-commit` | `{Dockerfile,Dockerfile.*}` | Format errors                                                        |
+| Affected checks   | `pre-commit` | All staged files            | Workspace validation and relevant repository-wide code-health errors |
 
-Formatted files are re-staged automatically. The typecheck step is skipped during merge or rebase.
+Formatted files are re-staged automatically. The affected-check step is skipped during merge or
+rebase.
 
 ## 5. Common Commands
 
@@ -93,7 +109,7 @@ bun run fix --staged      # auto-fix only affected workspaces
 
 ## 7. PR Automation
 
-Pull requests are classified by `.github/labeler.yml`, and the `auto-assign.yml` workflow assigns you as the owner and requests reviews from contributors who have previously committed to the files your PR changes. Both run automatically — there is no per-label routing config to update when adding labels or onboarding contributors.
+Pull requests are classified by `.github/labeler.yml`, and the `auto-assign.yml` workflow assigns you as the owner and requests reviews from contributors who have previously committed to the files your PR changes. Both run automatically — there is no per-label routing config to update when adding labels or onboarding contributors. See [`../reference/labels.md`](/en/docs/reference/labels/) for the label taxonomy and when to add one by hand.
 
 ## 8. Related Docs
 

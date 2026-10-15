@@ -8,8 +8,8 @@ groupId: "features"
 groupTitle: "Features"
 order: 30
 sourcePath: "docs/features/attachments.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/attachments.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/features/attachments.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Attachments

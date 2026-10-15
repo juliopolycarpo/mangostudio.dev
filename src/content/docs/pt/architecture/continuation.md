@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Arquitetura"
 order: 30
 sourcePath: "docs/pt-br/architecture/continuation.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/continuation.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/architecture/continuation.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Arquitetura De Continuação
@@ -92,6 +92,7 @@ O orquestrador lê exclusivamente `chats.lastProviderState`.
 | OpenAI-compatible     | não            | nenhum                    | `buildChatCompletionsReplay`    | nenhum (sempre começa do zero)                | apenas `loopMessages`                |
 | Anthropic             | não            | nenhum                    | replay direto de Messages       | nenhum (sempre começa do zero)                | apenas `loopMessages`                |
 | DeepSeek              | não            | nenhum                    | `buildChatCompletionsReplay`    | nenhum (sempre começa do zero)                | apenas `loopMessages`                |
+| ChatGPT               | não            | nenhum                    | `buildOpenAIResponsesReplay`    | nenhum (sempre começa do zero)                | itens de loop Responses              |
 
 Arquivos principais:
 
@@ -180,14 +181,14 @@ O DeepSeek usa estratégia de continuação `turn-local`. Regras principais:
 
 ## Modos Comuns De Falha E Onde Depurar
 
-| Sintoma                                     | Causa provável                               | Onde olhar                                                                     |
-| ------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| Todo turno começa com `degrade_to_replay`   | `chats.lastProviderState` é nulo ou inválido | Verifique a linha do chat no DB e logs `[continuation][clear]`                 |
-| `cursor_expired` no meio do turno com tools | Cursor expirou durante execução de tools     | Handler de erro de cursor em `responses-stream.ts` ou `interactions-stream.ts` |
-| Mismatch de provedor em toda troca          | `lastProviderState` guarda provedor antigo   | Esperado: o primeiro turno após trocar sempre degrada                          |
-| Modelo errado foi chamado                   | `resolve-model.ts` escolheu outro modelo     | Verifique `modelId` no topo de `stream-text-turn.ts`                           |
-| Replay envia mensagens erradas              | `replay-builder.ts` formatou incorretamente  | Testes unitários em `tests/unit/services/providers/replay-builder.test.ts`     |
-| `stateless-loop` vazando entre turnos       | `loopMessages` persistido como durável       | Filtro `decideTurnPersistence`; deve retornar `null` para modos stateless      |
+| Sintoma                                     | Causa provável                               | Onde olhar                                                                          |
+| ------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Todo turno começa com `degrade_to_replay`   | `chats.lastProviderState` é nulo ou inválido | Verifique a linha do chat no DB e logs `[continuation][clear]`                      |
+| `cursor_expired` no meio do turno com tools | Cursor expirou durante execução de tools     | Handler de erro de cursor em `responses-stream.ts` ou `interactions-stream.ts`      |
+| Mismatch de provedor em toda troca          | `lastProviderState` guarda provedor antigo   | Esperado: o primeiro turno após trocar sempre degrada                               |
+| Modelo errado foi chamado                   | `resolve-model.ts` escolheu outro modelo     | Verifique `modelId` no topo de `stream-text-turn.ts`                                |
+| Replay envia mensagens erradas              | `replay-builder.ts` formatou incorretamente  | Testes unitários em `apps/api/tests/unit/services/providers/replay-builder.test.ts` |
+| `stateless-loop` vazando entre turnos       | `loopMessages` persistido como durável       | Filtro `decideTurnPersistence`; deve retornar `null` para modos stateless           |
 
 ---
 

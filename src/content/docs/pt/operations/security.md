@@ -8,8 +8,8 @@ groupId: "operations"
 groupTitle: "Operações"
 order: 20
 sourcePath: "docs/pt-br/operations/security.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/security.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/operations/security.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Política De Segurança
@@ -47,7 +47,15 @@ As chaves nunca são expostas ao frontend. A API resolve os secrets server-side 
 
 ### Rate Limiting
 
-O rate limiter em memória conta requests por (bucket, IP do cliente). Uma função `classify` (`rate-limit-policy.ts`) classifica cada path em um bucket nomeado — `health` e `auth` têm buckets próprios e mais generosos, então nunca ficam sujeitos ao limite geral da API, enquanto os demais endpoints compartilham o bucket `general` de base. Requests bloqueados retornam `429` no formato `ApiErrorResponse` (`code: RATE_LIMITED`) com header `Retry-After`. Ele protege contra brute-force e abuso da API. Pode ser configurado para confiar em headers de proxy quando o app roda atrás de reverse proxy.
+O rate limiter em memória conta requests por (bucket, id do cliente). A função
+`classify` (`rate-limit-policy.ts`) classifica cada path em um bucket — `health`,
+`auth`, `general` e `api-key` (tráfego com `x-api-key`) têm contadores
+independentes no mesmo IP. Requests bloqueados retornam `429` no formato
+`ApiErrorResponse` (`code: RATE_LIMITED`) com header `Retry-After`. Protege
+contra brute-force e abuso. Headers de proxy (`X-Forwarded-For`, etc.) só
+definem o cliente quando `trustProxy` / `TRUST_PROXY` está habilitado
+explicitamente e apenas atrás de um proxy confiável que sobrescreve esses
+headers; caso contrário o limiter usa o IP do socket.
 
 ### Validação De Entrada
 

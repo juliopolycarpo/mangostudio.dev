@@ -8,8 +8,8 @@ groupId: "operations"
 groupTitle: "Operações"
 order: 10
 sourcePath: "docs/pt-br/operations/deployment.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/operations/deployment.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/operations/deployment.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Deploy
@@ -57,10 +57,16 @@ estão documentados em
 ## Build De Produção
 
 ```bash
-bun run build --binary
+bun run build --binary --platform linux-x64                  # a plataforma desta máquina
+bun run build --binary --runtime-dir .mango/runtime-prebuilt # as 8, com runtimes pré-construídos
 ```
 
-Isso compila a API em binários sob `.mango/out/<platform>/` com os assets do frontend como arquivos sidecar.
+Isso compila o hub (com o frontend embarcado) em `.mango/out/<platform>/mangostudio` e coloca o
+`mangostudio-runtime` construído com cargo ao lado. Sem `--runtime-dir`, só a plataforma do
+próprio host pode ser construída, porque só o runtime dela é compilado localmente com
+`cargo build`. Qualquer outra plataforma precisa de um runtime pré-construído em
+`<dir>/<platform>/mangostudio-runtime[.exe]` (`bun run build:runtime` ou o artefato do CI); veja
+[releasing.md](/docs/reference/releasing/#como-o-binário-do-runtime-é-construído).
 
 ## Alvos De Plataforma
 
@@ -79,13 +85,42 @@ Isso compila a API em binários sob `.mango/out/<platform>/` com os assets do fr
 
 ```
 .mango/out/linux-x64/
-  ├── mangostudio       # Binário compilado estaticamente
-  ├── public/           # Assets SPA do frontend (index.html, JS, CSS)
-  ├── run.sh            # Script auxiliar de inicialização
-  └── README.md         # Notas da plataforma
+  ├── mangostudio          # Hub compilado com Bun (frontend embarcado)
+  ├── mangostudio-runtime  # Runtime construído com cargo; iniciado como Local
+  ├── run.sh               # Script auxiliar de inicialização
+  └── README.md            # Notas da plataforma
 ```
 
-O binário serve a SPA do frontend a partir do diretório `public/` ao lado do executável. Rotas da API são servidas sob `/api/`, e rotas SPA fazem fallback para `index.html`.
+O binário serve a SPA do frontend embarcada. Rotas da API são servidas sob `/api/`, e rotas SPA fazem fallback para `index.html`.
+
+Os dois binários são uma unidade: o hub inicia o `mangostudio-runtime` ao lado do próprio
+executável, e o handshake do protocolo recusa um runtime de outra versão. Mantenha os dois
+juntos ao copiar um build e atualize ambos de uma vez.
+
+## Requisitos Do Binário Do Runtime
+
+O runtime é um binário Rust nativo, sem interpretador nem runtime compartilhado para instalar:
+
+- **Linux glibc** (`linux-x64`, `linux-arm64`): glibc 2.17 ou mais novo, o mesmo piso do hub.
+- **Linux musl** (`*-musl`): o runtime é linkado estaticamente e não precisa de pacotes extras. O
+  hub é um binário compilado pelo Bun que linka `libstdc++` dinamicamente, então um Alpine puro
+  precisa de `apk add libstdc++` (mais `bash` e `curl`, que o instalador usa) antes do `install.sh`. Sem ele, a verificação de versão do
+  instalador falha; o instalador imprime a mensagem do próprio loader e essa dica do `apk`.
+- **Windows**: o runtime C do MSVC é linkado estaticamente, então o Visual C++ Redistributable
+  não é necessário.
+- **macOS**: um binário por arquitetura (`darwin-x64`, `darwin-arm64`).
+
+`mangostudio-runtime --version` imprime só a versão da release; `mangostudio doctor` e o
+provisionamento WSL/SSH a comparam com a do hub. Todo asset da release, inclusive os binários
+crus do runtime, está no `SHA256SUMS`, e o `SHA256SUMS` tem uma attestation de proveniência de
+build:
+
+```bash
+gh attestation verify SHA256SUMS --repo juliopolycarpo/mangostudio
+```
+
+Veja [releasing.md](/docs/reference/releasing/#como-o-binário-do-runtime-é-construído) para
+como cada alvo é construído e verificado.
 
 ## Configuração
 
@@ -95,6 +130,18 @@ A configuração de produção usa `~/.mango/config.toml` e `~/.mango/.env` para
 [server]
 host = "0.0.0.0"
 port = 3001
+# Como pares fora deste processo alcançam o hub, o que é uma pergunta diferente
+# de como ele faz o bind. Obrigatório para runtimes WebSocket pareados: o cartão
+# de pareamento não tem outra forma de imprimir o endereço que eles discam, e um
+# cabeçalho de requisição seria um palpite falsificável. Env: PUBLIC_URL.
+publicUrl = "https://seu-dominio.com"
+# Apenas para deploy dividido, em que o bundle do frontend é servido a partir de
+# uma origem diferente desta API. É somado às origens do próprio servidor, nunca
+# as substitui. Cada entrada precisa ser um scheme://host[:port] puro — caminho,
+# barra final ou porta padrão explícita falham na inicialização, porque cada
+# gate compara o cabeçalho Origin do navegador por string exata. Env:
+# ALLOWED_ORIGINS (separado por vírgulas), que substitui esta lista.
+allowedOrigins = ["https://studio.example.com"]
 
 [database]
 path = "/var/lib/mangostudio/database.sqlite"
@@ -119,6 +166,22 @@ url = "https://your-domain.com"
 - Defina `auth.url` com a URL pública da aplicação.
 - Use um reverse proxy para terminação TLS.
 
+### Deploy dividido
+
+`allowedOrigins` é só metade de um deploy dividido. Ele diz a esta API de qual origem aceitar
+requisições; o bundle também precisa saber onde a API está. Extraia
+`mangostudio-<versão>-frontend-dist.tar.gz` e edite o `config.js` ao lado do `index.html`:
+
+```js
+window.__MANGO_CONFIG__ = { apiUrl: 'https://api.example.com' };
+```
+
+Não é preciso rebuildar — o arquivo é lido no carregamento da página e tem precedência sobre
+qualquer valor embutido em tempo de build. Deixe `apiUrl` vazio (o padrão distribuído) para
+usar a origem que serviu a página, que é o que tanto uma instalação de origem única quanto o
+binário standalone querem. `MANGO_API_URL` define o mesmo valor em tempo de build, para quem
+compila o bundle por conta própria. Veja `docs/architecture/frontend-build.md`.
+
 ## Banco De Dados
 
 O banco SQLite usa `~/.mango/database.sqlite` por padrão. Em produção, configure um path persistente:
@@ -142,6 +205,12 @@ server {
     ssl_certificate /etc/ssl/certs/your-cert.pem;
     ssl_certificate_key /etc/ssl/private/your-key.pem;
 
+    # Comprime o bundle do frontend e JSON. text/html entra sempre que o gzip
+    # está ligado; text/event-stream fica de fora, então o SSE não é comprimido.
+    gzip on;
+    gzip_vary on;
+    gzip_types text/css text/javascript application/javascript application/json image/svg+xml;
+
     location / {
         proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
@@ -162,9 +231,49 @@ server {
 
 ```
 your-domain.com {
+    # Comprime o bundle do frontend e JSON. A lista é explícita porque a padrão
+    # casa text/*, o que também comprime SSE (text/event-stream) quando um
+    # evento passa de 512 bytes.
+    encode zstd gzip {
+        match {
+            header Content-Type text/html*
+            header Content-Type text/css*
+            header Content-Type text/javascript*
+            header Content-Type application/javascript*
+            header Content-Type application/json*
+            header Content-Type image/svg+xml*
+        }
+    }
     reverse_proxy 127.0.0.1:3001
 }
 ```
+
+### Compressão
+
+O hub serve o bundle do frontend sem compressão e deixa a compressão para o proxy. Os dois
+exemplos acima comprimem: o arquivo JavaScript principal cai de cerca de 1,8 MB para cerca de
+0,6 MB na rede, o que importa no acesso remoto (um navegador na mesma máquina ganha pouco).
+Fontes e imagens já são comprimidas e não entram na lista.
+
+Respostas SSE (`text/event-stream`) ficam sem compressão de propósito, para que cada evento
+chegue ao navegador assim que o hub o envia. Se você ampliar alguma das listas, mantenha
+`text/event-stream` fora dela e mantenha `proxy_buffering off` no nginx.
+
+Se outro proxy, load balancer ou CDN ficar na frente do nginx e adicionar o header de requisição
+`Via`, o nginx trata a requisição como proxied e, por padrão, não aplica gzip. Nesse cenário,
+adicione `gzip_proxied any;` ao lado de `gzip on;`.
+
+Para conferir um deploy, peça um asset com hash da página com `GET` e leia os headers
+(`curl -I` envia `HEAD`, que as rotas de assets do hub não respondem):
+
+```bash
+curl -sS -o /dev/null -D - -H 'Accept-Encoding: gzip' \
+  https://your-domain.com/assets/main-<hash>.js | grep -i '^content-encoding:'
+```
+
+Uma resposta comprimida imprime o header `Content-Encoding: gzip` (a caixa varia conforme o
+proxy). Nenhuma saída (e o `grep` saindo com 1) significa que o proxy enviou o arquivo sem
+compressão. Para conferir o caminho zstd do Caddy, envie `Accept-Encoding: zstd` e espere `zstd`.
 
 ### Confiar nos headers de proxy
 
@@ -175,10 +284,55 @@ caem em um único contador de rate limit. Defina `TRUST_PROXY=true` (env) ou
 IP real do cliente a partir dos headers `X-Forwarded-For` / `X-Real-IP` /
 `CF-Connecting-IP` que o proxy define.
 
-> **Só habilite isso atrás de um proxy que sobrescreve esses headers** (a config
-> nginx acima usa `$proxy_add_x_forwarded_for`). Com exposição direta à internet,
-> um header confiável permite que qualquer cliente forje seu IP e burle o rate
-> limiting.
+A mesma configuração decide o guard de superfície local que protege as
+instalações de ambiente e as ações de máquina (`/api/machine/restart`,
+`/api/machine/service`, `/api/machine/logs`). Esse guard pergunta se o browser
+está no teclado desta máquina, e o peer do socket não responde isso atrás de um
+proxy — todo chamador chega de loopback. Com `TRUST_PROXY=true` quem responde é o
+cliente encaminhado, então uma sessão remota autenticada é corretamente recusada.
+
+Os dois leem hops diferentes do `X-Forwarded-For`, porque as perguntas são
+diferentes. O header é uma lista, e um proxy *acrescenta* o endereço que viu em
+vez de substituir a lista — tanto o `$proxy_add_x_forwarded_for` acima quanto o
+`reverse_proxy` do Caddy fazem isso. O limiter usa o **primeiro** hop, o cliente
+de origem, que é a chave certa para um contador. O guard usa o **último**, o que
+o seu proxy escreveu, porque toda entrada anterior é o que o chamador mandou —
+um browser remoto pode pôr `X-Forwarded-For: 127.0.0.1` numa requisição de mesma
+origem, e o guard não pode ler isso como o seu teclado.
+
+> **Só habilite isso atrás de um proxy que de fato define esses headers.** Com
+> exposição direta à internet, ou atrás de algo que repassa o `X-Forwarded-For`
+> do chamador sem acrescentar nada, um header confiável permite que qualquer
+> cliente forje seu IP — burlando o rate limiting e passando pelo guard de
+> superfície local.
+
+#### Quando o proxy não define header encaminhado
+
+Um proxy que repassa sem `X-Forwarded-For` — um bloco `location` do nginx sem
+`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` — deixa o guard
+apenas com o peer do socket para ler, e esse peer é o próprio proxy, em loopback.
+Aí todo browser remoto passa por uma verificação que significa "no teclado desta
+máquina".
+
+`ALLOW_DIRECT_LOOPBACK` (env) ou `allowDirectLoopback` em `[security]` decide o
+que acontece nesse caso. O padrão é `true`: uma requisição sem encaminhamento é
+julgada pelo peer do socket, exatamente como antes de `TRUST_PROXY` ser ligado,
+então um browser que fala direto com o hub — passando por cima do proxy em
+`localhost:3001` — mantém a página da máquina e suas instalações.
+
+```toml
+[security]
+trustProxy = true
+allowDirectLoopback = false
+```
+
+Defina `false` quando o proxy à frente deste hub não define `X-Forwarded-For` e
+você não pode mudar isso. Uma requisição sem encaminhamento passa a ser recusada
+como `client-unverified` em vez de aceita como local — um motivo distinto de
+`client-not-loopback`, então a página diz que o endereço não pôde ser
+estabelecido em vez de afirmar que o chamador está em outro lugar. Requisições
+diretas à porta do hub são recusadas junto, e a CLI (`mangostudio restart`,
+`mangostudio service install`) continua sendo o caminho.
 
 ## Serviço systemd
 
@@ -205,7 +359,7 @@ WantedBy=multi-user.target
 Valide o binário antes do deploy:
 
 ```bash
-PLATFORM=linux-x64 bun run test-build
+PLATFORM=linux-x64 bun run scripts/test-build.ts
 ```
 
 Isso verifica:

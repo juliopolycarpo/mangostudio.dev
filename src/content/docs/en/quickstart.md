@@ -1,15 +1,15 @@
 ---
 title: "MangoStudio"
 sidebarLabel: "Quickstart"
-description: "AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, and Anthropic models."
+description: "AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, Anthropic, DeepSeek, and ChatGPT models."
 lang: "en"
 slug: "quickstart"
 groupId: "getting-started"
 groupTitle: "Getting Started"
 order: 10
 sourcePath: "README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/README.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/README.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # MangoStudio
@@ -17,14 +17,19 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 [CI](https://github.com/juliopolycarpo/mangostudio/actions/workflows/ci.yml)
 [Release](https://github.com/juliopolycarpo/mangostudio/actions/workflows/release.yml)
 
-AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, and Anthropic models.
+AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible, Anthropic, DeepSeek, and ChatGPT models.
+
+Extend the agent without touching the codebase:
+
+- **Agent Skills** — drop reusable instruction packs (plus bundled files and scripts) into a skills directory; MangoStudio advertises them to the model and loads each one on demand. See [`docs/reference/skills.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/skills.md).
+- **MCP servers** — connect [Model Context Protocol](https://modelcontextprotocol.io) servers over stdio or HTTP and expose their tools to the agent, namespaced per server and scoped by per-agent allowlists. See [`docs/reference/mcp.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/mcp.md).
 
 > 🇧🇷 [Leia em Português](/docs/quickstart/)
 
 ## Install
 
 Run MangoStudio without cloning the repository. Every channel ships the same
-prebuilt binary (plus its `public/` frontend sidecar) and verifies downloads
+prebuilt binary and verifies downloads
 against `SHA256SUMS` where applicable.
 
 | Channel                | Command                                                                                                                  |
@@ -34,33 +39,83 @@ against `SHA256SUMS` where applicable.
 | Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio`                                                                            |
 | Shell installer        | `curl -fsSL https://mangostudio.dev/install.sh \| bash`                                                                  |
 | Scoop (Windows)        | `scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket` then `scoop install mangostudio`        |
-| Cargo                  | `cargo install mangostudio` (or `cargo binstall mangostudio`)                                                            |
+| Cargo                  | `cargo install mangostudio` (full app) or `cargo binstall mangostudio` (prebuilt)                                        |
 | Docker                 | `docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio`                                         |
 | Manual                 | Download from [GitHub Releases](https://github.com/juliopolycarpo/mangostudio/releases/latest), verify with `SHA256SUMS` |
+
+The prebuilt app needs no local Rust compiler. `cargo install mangostudio` compiles the launcher
+and requires Rust 1.99.0 or newer. `cargo binstall` uses a prebuilt archive when available; its
+compilation fallback has the same Rust requirement. See the
+[Rust support and release policy](/en/docs/reference/releasing/#rust-support-and-releases) when
+upgrading from Rust 1.96 or 1.97.
 
 Quick start with the shell installer:
 
 ```bash
 curl -fsSL https://mangostudio.dev/install.sh | bash
-mangostudio serve # start on http://localhost:3001
+mangostudio setup           # secret, service, start, and open a browser
 ```
 
-On Windows, run the hosted PowerShell installer:
+On a bare Alpine (musl) system, run `apk add bash curl libstdc++` first: the installer is a
+bash script, and the hub links `libstdc++` dynamically. Without it the installer's version
+check fails with the loader's message and this same hint.
+
+`setup` is the one command a fresh install needs: it generates an auth secret if
+none exists, asks whether to keep the hub running across logout, starts it (or
+reuses one already running), and opens it. Over SSH it prints the address and a
+port-forward line instead of pretending to open a window. `mangostudio serve`
+and `mangostudio service install` remain the direct equivalents.
+
+The first time you sign in, the browser opens a short setup flow — folder,
+toolchain, who answers, and one real question in your own project. Every step is
+skippable and re-runnable from **Settings → General**. See
+[`docs/guides/first-run.md`](/en/docs/guides/first-run/).
+
+On Windows, run the PowerShell installer:
 
 ```powershell
 irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 or use Scoop (see table above). The Cargo channel installs a
-[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) that downloads the same
+[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) that downloads the same
 checksum-verified archive on first run.
+
+Both install scripts live in this repository (`scripts/install/`), ship as
+release assets beside the archives they install, and are listed in `SHA256SUMS`;
+the copies at `https://mangostudio.dev/install.sh` and `install.ps1` mirror them.
+Pass `--canary` (`-Canary`) for the newest canary pre-release or `--version x.y.z`
+(`-Version`) to pin one.
+
+### Upgrade
+
+`mangostudio upgrade` (alias `update`) works out how the binary was installed
+and either upgrades in place or hands the job to the tool that owns it:
+
+| Installed via                | Upgrade                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Shell / PowerShell installer | `mangostudio upgrade` — also `--canary`, `--canary <sha7>`, `--version x.y.z`, `--rollback`, `--check`               |
+| npm / bun / pnpm             | `npm i -g mangostudio@latest` (`bun add -g` / `pnpm add -g`); `mangostudio upgrade --yes` runs it on macOS and Linux |
+| Homebrew                     | `brew upgrade mangostudio` (stable only)                                                                             |
+| Scoop                        | `scoop update mangostudio` (stable only)                                                                             |
+| Cargo                        | `cargo install mangostudio --locked`                                                                                 |
+| Docker                       | `docker pull ghcr.io/juliopolycarpo/mangostudio:<version>` and recreate the container                                |
+
+The hub checks for a newer release once a day; `mangostudio status`,
+`mangostudio doctor` and the "This machine" page say when one exists, and the
+page can apply it from the hub's own machine. `[updates] check = false` in
+`config.toml`, `MANGO_UPDATES_CHECK=false`, `NO_UPDATE_NOTIFIER`, `DO_NOT_TRACK`
+or `CI` turn the check off.
 
 `mangostudio` is a single-binary CLI that manages one local server:
 
 ```bash
 mangostudio serve [host|port|host:port] # foreground (default localhost:3001)
 mangostudio serve lan:3001 -d           # background (logs to ~/.mango/logs/)
+mangostudio service install # keep it running across logout and reboot
 mangostudio status         # show the running instance
+mangostudio restart        # restart it the way it was started
+mangostudio logs -f        # follow the server log
 mangostudio stop           # graceful shutdown
 mangostudio doctor         # environment diagnostics
 ```
@@ -70,13 +125,18 @@ Run `mangostudio` with no arguments for the full command list. See
 
 On first run, `mangostudio serve` can generate a strong `BETTER_AUTH_SECRET` and store it in `~/.mango/.env` or `~/.mango/config.toml`.
 Set provider keys such as `GEMINI_API_KEY` when you are ready to use hosted models. Optional runtime settings include `API_HOST`, `API_PORT`, and `DATABASE_PATH`.
-See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) for the full environment.
+See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) for the full environment.
 For container deployment details, see [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
-## Prerequisites
+## Prerequisites (development)
 
-- [Bun](https://bun.sh/) (v1.3.14+)
-- One or more API keys for supported providers (Gemini, OpenAI-compatible, Anthropic)
+- [Bun](https://bun.sh/) 1.4.3 or newer (`bun upgrade`, or
+  `curl -fsSL https://bun.sh/install | bash` for a first install)
+- Rust 1.99.0 or newer via [rustup](https://rustup.rs/) (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`). The hub launches
+  Local as the cargo-built `mangostudio-runtime`, and `rust-toolchain.toml` pins the version
+  rustup installs on first build.
+- One or more API keys or sign-in capable accounts for supported providers
+  (Gemini, OpenAI-compatible, Anthropic, DeepSeek, ChatGPT)
 
 ## Develop from source
 
@@ -99,9 +159,11 @@ For container deployment details, see [`docs/operations/deployment.md`](/en/docs
    bun run dev
    ```
 
-   This starts:
-   - **API** at `http://localhost:3001` (Elysia + Kysely/SQLite)
-   - **Frontend** at `http://localhost:5173` (Vite + React)
+   This first runs `cargo build -p mangostudio-runtime --locked` — the Local runtime the hub spawns —
+   then starts one server at `http://localhost:3001` (Elysia + Kysely/SQLite) that also
+   builds and serves the React frontend. There is no separate frontend port. Without cargo it
+   stops and prints the rustup one-liner; set `MANGOSTUDIO_RUNTIME_BINARY` to use a binary you
+   already built instead.
 
 ## Connector Configuration (Secrets)
 
@@ -119,6 +181,17 @@ Go to the **Settings** page in the MangoStudio interface to add and manage conne
 
 For each connector, you can enable or disable specific models (e.g., Gemini 2.5 Flash, Gemini 2.0 Flash Image). MangoStudio automatically selects the correct connector based on the active model in the chat.
 
+### Supported Providers
+
+| Provider          | Credential                                  | Notes                                         |
+| ----------------- | ------------------------------------------- | --------------------------------------------- |
+| Gemini            | API key                                     | Text and image models                         |
+| OpenAI            | API key                                     | Optional organization/project IDs             |
+| OpenAI-compatible | API key + base URL                          | Custom compatible endpoints                   |
+| Anthropic         | API key                                     | Claude text models                            |
+| DeepSeek          | API key                                     | First-class reasoning provider                |
+| ChatGPT           | Browser sign-in with a ChatGPT subscription | Stores rotating tokens in the OS secret store |
+
 ### Terminal Sync
 
 You can manually add keys to `~/.mango/config.toml`:
@@ -130,6 +203,21 @@ work = "another-key-here"
 ```
 
 MangoStudio will sync these keys automatically the next time the Settings page is loaded or a generation is requested.
+
+### Cursor
+
+Cursor is **not** a connector. It runs as an external agent — pick it in the composer's runner
+selector and it uses your own Cursor CLI login, rules and MCP configuration. The
+MangoStudio-owned Cursor provider is deprecated; existing connectors stay editable but no longer
+run turns. See [docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+
+### ChatGPT Subscription Connector
+
+The **ChatGPT** provider uses browser sign-in instead of an API key. It starts a
+temporary callback server on port `1455`, stores rotating OAuth tokens in the OS
+secret store, and uses the models available to the signed-in ChatGPT plan. See
+[docs/providers/chatgpt.md](/en/docs/providers/chatgpt/) for details and remote-host
+port-forwarding notes.
 
 ## Project Structure
 
@@ -193,8 +281,9 @@ mangostudio/
 | `bun run dev`             | Start all dev servers concurrently                             |
 | `bun run dev --api`       | Start only the API dev server                                  |
 | `bun run build`           | Build the frontend for production                              |
-| `bun run build --binary`  | Generate standalone binaries with embedded frontend            |
-| `bun run check`           | Run Biome, dprint, madge, and typecheck                        |
+| `bun run build --binary`  | Build the host's standalone binaries (hub + cargo runtime)     |
+| `bun run check`           | Run formatting, lint, typecheck, and code-health gates         |
+| `bun run code-health`     | Run the standalone Knip unused code/dependency report          |
 | `bun run test`            | Run unit and integration lanes                                 |
 | `bun run test --unit`     | Run unit suites only                                           |
 | `bun run test:e2e:setup`  | Install Playwright Chromium for browser smoke tests            |
@@ -207,16 +296,15 @@ mangostudio/
 
 ## Development Tooling
 
-| Tool           | Scope                                         | Primary Functionality                              |
-| -------------- | --------------------------------------------- | -------------------------------------------------- |
-| **Biome**      | JS, TS, JSX, TSX, JSON, JSONC, CSS, HTML      | Linter and formatter with unified rule sets        |
-| **dprint**     | Markdown, MDX, TOML, YAML, Dockerfile         | Pluggable formatter with WASM-based plugins        |
-| **lefthook**   | Git hooks (pre-commit)                        | Git hooks manager that runs checks on staged files |
-| **madge**      | JS/TS dependency graphs                       | Circular dependency detection across workspaces    |
-| **jscpd**      | All source files                              | Copy/paste detection for code duplication alerts   |
-| **bun:test**   | Unit tests (api, shared, frontend pure logic) | Fast native test runner with LCOV coverage         |
-| **Vitest**     | Frontend React and Vite-bound tests           | jsdom, Vite plugins, coverage, and watch mode      |
-| **Playwright** | End-to-end browser smoke tests                | Chromium-based browser automation for auth flows   |
+| Tool           | Scope                                        | Primary Functionality                                 |
+| -------------- | -------------------------------------------- | ----------------------------------------------------- |
+| **Biome**      | JS, TS, JSX, TSX, JSON, JSONC, CSS, HTML     | Lint, format, value and type-only import-cycle checks |
+| **dprint**     | Markdown, MDX, TOML, YAML, Dockerfile        | Pluggable formatter with WASM-based plugins           |
+| **lefthook**   | Git hooks (pre-commit)                       | Git hooks manager that runs checks on staged files    |
+| **Knip**       | Root and workspace entry graphs              | Unused code and dependency detection                  |
+| **jscpd**      | All source files                             | Copy/paste detection for code duplication alerts      |
+| **bun:test**   | Every workspace's unit and integration tests | Fast native test runner with LCOV coverage            |
+| **Playwright** | End-to-end browser smoke tests               | Chromium-based browser automation for auth flows      |
 
 These binaries are installed as devDependencies and invoked through the root `bun run` scripts. No global installation is required.
 
@@ -226,32 +314,32 @@ These binaries are installed as devDependencies and invoked through the root `bu
 
 A [lefthook](https://github.com/evilmartians/lefthook) pre-commit hook is installed automatically via `bun install` (through the `prepare` script). It runs the following checks in parallel on every `git commit`:
 
-| Hook                 | Trigger      | Files targeted              | Command                                                              |
-| -------------------- | ------------ | --------------------------- | -------------------------------------------------------------------- |
-| `biome`              | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | `bunx biome check --write {staged_files}`                            |
-| `dprint`             | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | `bunx dprint fmt {staged_files}`                                     |
-| `dprint-dockerfile`  | `pre-commit` | `{Dockerfile,Dockerfile.*}` | `bunx dprint fmt {staged_files}`                                     |
-| `typecheck-affected` | `pre-commit` | All staged files            | `bun run check --staged --skip-format` (skipped during merge/rebase) |
+| Hook                | Trigger      | Files targeted              | Command                                                              |
+| ------------------- | ------------ | --------------------------- | -------------------------------------------------------------------- |
+| `biome`             | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | `bunx biome check --write {staged_files}`                            |
+| `dprint`            | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | `bunx dprint fmt {staged_files}`                                     |
+| `dprint-dockerfile` | `pre-commit` | `{Dockerfile,Dockerfile.*}` | `bunx dprint fmt {staged_files}`                                     |
+| `check-affected`    | `pre-commit` | All staged files            | `bun run check --staged --skip-format` (skipped during merge/rebase) |
 
 Files that pass formatting are re-staged automatically. All hooks must succeed for the commit to proceed.
 
 ### Manual Checks
 
-- `bun run check` — full check (Biome, dprint, typecheck, circular deps).
+- `bun run check` — full check (Biome, dprint, typecheck, circular deps, and Knip).
 - `bun run check --staged` — only the workspaces touched by staged files (used by the pre-commit hook).
 - `bun run check --changed` — only the workspaces changed vs `origin/main`.
 - `bun run fix --staged` — auto-fix only the affected workspaces.
 
 ## Architecture
 
-| Layer        | Technologies                                                                 |
-| ------------ | ---------------------------------------------------------------------------- |
-| **Frontend** | React 19, Vite 8, Tailwind CSS v4, TanStack Router/Query                     |
-| **API**      | Elysia, Better Auth, native rate limiting, DDD-inspired modular architecture |
-| **Database** | SQLite via Kysely (type-safe query builder)                                  |
-| **AI**       | Multi-provider (Gemini, OpenAI, Anthropic, DeepSeek, OpenAI-compatible)      |
-| **Runtime**  | Bun — no Node.js dependency                                                  |
-| **i18n**     | Pure TypeScript dictionary in `@mangostudio/shared/i18n`                     |
+| Layer        | Technologies                                                                     |
+| ------------ | -------------------------------------------------------------------------------- |
+| **Frontend** | React 19, Bun bundler, Tailwind CSS v4, TanStack Router/Query                    |
+| **API**      | Elysia, Better Auth, native rate limiting, DDD-inspired modular architecture     |
+| **Database** | SQLite via Kysely (type-safe query builder)                                      |
+| **AI**       | Multi-provider (Gemini, OpenAI, Anthropic, DeepSeek, ChatGPT, OpenAI-compatible) |
+| **Runtime**  | Bun — no Node.js dependency                                                      |
+| **i18n**     | Pure TypeScript dictionary in `@mangostudio/shared/i18n`                         |
 
 ## Editor Setup
 
@@ -334,7 +422,7 @@ Configured in `dprint.json` with the following scope and settings:
 
 ### Circular Dependencies
 
-Detected via `madge` as part of `bun run check`. The check fails if any circular import paths exist across the workspace packages.
+Biome checks imports as part of `bun run check`, including value, type-only and self-import cycles. Each workspace scans TS, TSX, MTS, CTS, JS, JSX, MJS and CJS files, including top-level helpers, generated files and gitignored build output, through `biome.cycles.json`. JavaScript files are checked both as dependencies of TypeScript files and as independent roots. Only `node_modules` and `.git` are excluded from the cycle scan. Normal formatting and lint still follow `biome.json`.
 
 ### Copy/Paste Detection
 
@@ -368,7 +456,7 @@ The `Messages` type is inferred directly from the `pt-BR.ts` dictionary (`as con
 
 ## Documentation
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — docs hub, audiences, and reading order
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — docs hub, audiences, and reading order
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — fastest contributor onboarding path
 - [`docs/architecture/continuation.md`](/en/docs/architecture/continuation/) — continuation architecture deep-dive
 - [`docs/providers/development.md`](/en/docs/providers/development/) — provider integration guide
@@ -380,11 +468,11 @@ The `Messages` type is inferred directly from the `pt-BR.ts` dictionary (`as con
 
 ## Standalone Build Notes
 
-The `bun run build --binary` command compiles the API into platform-specific binaries under `.mango/out/<platform>/`.
+The `bun run build --binary` command compiles the API into platform-specific binaries under `.mango/out/<platform>/`, next to the cargo-built `mangostudio-runtime`. Locally it builds the host's own platform (`--platform <host>`); other platforms need prebuilt runtimes via `--runtime-dir <dir>` (see [releasing](/en/docs/reference/releasing/#how-the-runtime-binary-is-built)).
 
 - The database is persisted at `~/.mango/database.sqlite` by default.
-- Frontend assets are served from the `public/` directory next to the executable.
+- Frontend assets are embedded into the executable at build time.
 
 ## License
 
-This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/LICENSE).
+This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/LICENSE).

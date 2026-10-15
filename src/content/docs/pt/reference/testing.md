@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Referência"
 order: 30
 sourcePath: "docs/pt-br/reference/testing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/testing.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/reference/testing.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Estratégia De Testes
@@ -33,9 +33,9 @@ apps/
       unit/
       integration/
       support/
-        setup/     # vitest.setup.ts
-        harness/   # render.tsx
-        mocks/     # create-fetch-scenario.ts (apenas hooks em jsdom)
+        setup/     # dom-setup.ts + bun.setup.ts (preloads do bunfig)
+        harness/   # render.tsx, render-with-router.tsx, timers.ts
+        mocks/     # create-fetch-scenario.ts (apenas testes de hooks em happy-dom)
 
   shared/
     tests/
@@ -52,11 +52,11 @@ apps/
 
 ## Runners Por Workspace
 
-| Workspace       | Runner                | Ambiente                                           |
-| --------------- | --------------------- | -------------------------------------------------- |
-| `apps/api`      | `bun test`            | Bun native                                         |
-| `apps/frontend` | `bun:test` + `vitest` | Bun native para lógica pura, jsdom para React/Vite |
-| `apps/shared`   | `bun:test`            | Bun native                                         |
+| Workspace       | Runner     | Ambiente                                          |
+| --------------- | ---------- | ------------------------------------------------- |
+| `apps/api`      | `bun test` | Bun native                                        |
+| `apps/frontend` | `bun test` | Bun native para lógica pura, happy-dom para React |
+| `apps/shared`   | `bun:test` | Bun native                                        |
 
 ## Scripts Da Raiz
 
@@ -69,22 +69,40 @@ bun run test:e2e:setup     # instala Playwright Chromium + dependências do SO
 bun run test --e2e          # auth smoke suite em Playwright Chromium (opt-in)
 bun run test --coverage     # coleta de cobertura nos workspaces aplicáveis
 bun run test --all          # todas as lanes, incluindo e2e
+bun run test --changed      # só os testes afetados desde merge-base HEAD origin/main
+bun run test --changed --base <ref>  # ... desde merge-base HEAD <ref>
 bun run verify              # gate CI local completo: check → test --coverage → build --all
 ```
+
+`--changed` é um loop local rápido, não um gate. Ele compara o merge-base com a
+working tree (arquivos commitados, staged, unstaged e untracked) e passa
+`bun test --changed=<merge-base>` para cada lane, que mantém só os arquivos de
+teste cujo grafo de imports alcança um arquivo alterado. A varredura do Bun
+para no symlink de workspace — no 1.4.2 uma edição em `apps/shared` não
+seleciona nenhum teste da api ou do frontend — e nunca vê um arquivo que é lido
+em vez de importado. Por isso uma lane roda inteira quando mudou um workspace
+que ela importa pelo nome do pacote (`CHANGED_LANE_DEPENDENCIES` em
+`scripts/lib/test.ts`, fixado contra os manifests), quando mudou um arquivo
+dela que não é módulo, ou, na lane da raiz, quando mudou qualquer arquivo que
+não é módulo. A lane do protocolo só roda quando a superfície do protocolo
+mudou. O runner imprime o modo e o motivo de cada lane antes de começar. Ele
+recusa `--coverage`, porque os pisos precisam da suíte inteira; `--e2e` continua
+rodando inteiro. Um teste que lê código como texto em vez de importá-lo é
+invisível para o `--changed`, então o CI continua rodando tudo.
 
 ### Taxonomia de lanes
 
 | Lane        | Nome da task       | Workspaces            | Runner              | Cache Turbo |
 | ----------- | ------------------ | --------------------- | ------------------- | ----------- |
-| unit        | `test:unit`        | api, frontend, shared | bun test / vitest   | sim         |
-| integration | `test:integration` | api, frontend         | bun test / vitest   | não         |
-| coverage    | `test:coverage`    | api, frontend, shared | bun test / vitest   | não         |
+| unit        | `test:unit`        | api, frontend, shared | bun test            | sim         |
+| integration | `test:integration` | api, frontend         | bun test            | não         |
+| coverage    | `test:coverage`    | api, frontend, shared | bun test            | não         |
 | e2e         | —                  | root (browser-smoke)  | Playwright Chromium | —           |
 | scripts     | `//#test:scripts`  | root                  | bun test            | sim         |
 
 ## Browser Smoke
 
-Suíte Playwright Chromium em `tests/browser-smoke/`. Cobre o fluxo completo de auth contra uma stack real rodando com API em `:3001` e frontend em `:5173`.
+Suíte Playwright Chromium em `tests/browser-smoke/`. Cobre o fluxo completo de auth contra uma stack real em `:3001` — um único servidor entregando a API e o frontend.
 
 ```bash
 bun run test:e2e:setup
@@ -96,6 +114,12 @@ Rode `bun run test:e2e:setup` uma vez em uma máquina nova ou quando o Playwrigh
 O job de browser-smoke em CI roda em `ubuntu-24.04` porque o Playwright 1.60 ainda não consegue instalar dependências do Chromium no Ubuntu 26.04. Se você usa Ubuntu 26.04 localmente, rode a lane e2e em um container ou VM Ubuntu 24.04/22.04 até o suporte upstream chegar.
 
 `playwright.config.ts` na raiz do repositório inicia ambos os servidores via `webServer` antes de rodar os testes. Em CI, força `workers: 1` e faz upload de traces e screenshots em caso de falha.
+
+A suíte é hermética. O `playwright.config.ts` cria um diretório novo `<tmpdir>/mangostudio-smoke-<aleatório>` por execução e inicia o hub com `HOME` (e `USERPROFILE`) apontando para ele; assim o banco, uploads, checkpoints, `run/`, `logs/` e o `config.toml` e `.env` que o hub lê ficam em `<tmpdir>/mangostudio-smoke-<aleatório>/.mango` — nada é lido nem escrito no seu `~/.mango` real. `MANGO_HOME` sozinho não resolveria, porque move apenas o home do runtime. As variáveis de armazenamento do hub (`DATABASE_PATH`, `UPLOADS_DIR`, `MANGO_HOME` e as demais) também são fixadas no home temporário, então uma delas exportada no seu shell não redireciona a suíte de volta aos dados reais, e os tokens de conectores vão para um secret store em arquivo dentro dele, não para o keychain do SO. O hub escuta apenas em `127.0.0.1` (`API_HOST`), porque um home novo não tem `config.toml` para restringir o bind padrão em todas as interfaces e a suíte depende de cadastro aberto. `CARGO_HOME` e `RUSTUP_HOME` mantêm os valores reais para que o `cargo build` do servidor de dev ainda encontre seu toolchain. O diretório é removido quando a execução termina.
+
+A suíte nunca se conecta a um hub que já está rodando, porque o home desse hub é aquele com que ele foi iniciado. Um hub de dev em `:3001` faz a execução falhar com "already used"; pare-o antes. O servidor web também recebe `SIGTERM` ao encerrar, então a cadeia `bun run dev` → turbo → `bun run --watch` não deixa um hub escutando em `:3001` depois. `scripts/tests/browser-smoke-hermetic.unit.test.ts` falha, citando o caminho resolvido e o formato esperado `<tmpdir>/mangostudio-smoke-<aleatório>`, se o config algum dia resolver o home do hub para outro lugar. Para inspecionar os dados de uma execução, exporte `MANGO_SMOKE_HOME=<tmpdir>/mangostudio-smoke-<nome>` antes de rodar: esse diretório é usado como está e não é apagado.
+
+O servidor web é `bun run dev --api`, que executa `cargo build -p mangostudio-runtime --locked` antes de o hub iniciar, porque o hub inicia o Local como esse binário. O CI baixa o binário compilado uma vez por run, e `MANGOSTUDIO_RUNTIME_BINARY` faz o `bun run dev` pular o próprio build (veja [Binário do runtime no CI](#binário-do-runtime-no-ci)).
 
 Cenários em `tests/browser-smoke/auth-flow.spec.ts`:
 
@@ -109,6 +133,39 @@ Cenários em `tests/browser-smoke/auth-flow.spec.ts`:
 | --------------- | ----------------------- | -------------------- |
 | `browser-smoke` | `playwright` (Chromium) | browser real + stack |
 
+## Binary Smoke
+
+`scripts/test-build.ts` compila o binário standalone para uma plataforma alvo, valida o
+layout do pacote e sobe o binário em runners de CI compatíveis para exercitar rotas HTTP
+centrais, a recusa da descontinuação do Cursor e a validação do conector ChatGPT.
+
+```bash
+PLATFORM=linux-x64 bun run scripts/test-build.ts
+```
+
+Em hosts Windows, use `PLATFORM=windows-x64`. O workflow de CI `Smoke — Binary` executa
+esse script nas seis plataformas nativas.
+
+A etapa de runtime cria um usuário descartável, envia um conector Cursor com chave fake e
+garante que o binário o recusa com `410` — o Cursor é um provider descontinuado, e a recusa
+precisa valer no executável distribuído, não apenas onde um seletor escondeu a opção. A
+resposta e o stderr do servidor continuam sendo verificados contra falhas de resolução de
+módulo como `Cannot find module` ou `./642.js`. Ele também conclui um login OAuth loopback
+do ChatGPT contra o servidor fake de auth/backend e valida o conector e o catálogo de
+modelos. O smoke permanece hermético ao apontar `MANGO_CHATGPT_AUTH_BASE_URL` /
+`MANGO_CHATGPT_BASE_URL` para o servidor fake do ChatGPT. Os tokens fake do ChatGPT usam
+`MANGO_SECRET_STORE_UNSAFE_FILE_FALLBACK_DIR` dentro do home temporário do smoke, então o
+binário nunca grava esses tokens no OS secret store do usuário. Nenhuma chamada real é feita
+às APIs do Cursor ou ChatGPT.
+
+O smoke do ChatGPT precisa da porta de callback `1455`. Quando a porta já está ocupada, o
+script imprime uma mensagem de skip para essa etapa e mantém o restante do smoke binário
+ativo.
+
+| Lane           | Runner          | Ambiente                            |
+| -------------- | --------------- | ----------------------------------- |
+| `smoke-binary` | `test-build.ts` | binário compilado no OS/arch nativo |
+
 ## Scripts Por Workspace
 
 ### API
@@ -117,6 +174,85 @@ Cenários em `tests/browser-smoke/auth-flow.spec.ts`:
 bun run --filter @mangostudio/api test:unit
 bun run --filter @mangostudio/api test:integration
 ```
+
+> **O Local precisa do binário do runtime.** O hub inicia o Local como o
+> `mangostudio-runtime` em Rust, então todo teste da API que alcança o Local o inicia.
+> Compile-o antes com `cargo build -p mangostudio-runtime` ou aponte
+> `MANGOSTUDIO_RUNTIME_BINARY` para um binário; sem nenhum dos dois, esses testes falham
+> com `RuntimeBinaryNotFoundError` e o comando de build — não há fallback para
+> TypeScript. `tests/integration/services/local-rust-runtime.integration.test.ts`
+> qualifica o próprio Local pelo conector real: o slot `host`, a atestação de dono
+> único, a revogação de terminais, o encerramento do processo filho ao desconectar e um
+> home escrito pelo runtime TypeScript. Nenhum teste da API importa o runtime TypeScript
+> nem o inicia pelo caminho; `runtime-module-allow-list.test.ts` falha a lane se algum o
+> fizer.
+>
+> **O Local é um processo filho.** `createLocalRuntimeConnector` inicia o binário
+> `mangostudio-runtime` a cada conexão, então uma suíte que conecta o Local por teste
+> inicia e faz o handshake de um runtime por teste. Conecte uma vez por arquivo
+> (`tests/support/fixtures/local-runtime-user.ts`); as suítes de checkpoint são o exemplo.
+> Fechar a conexão aguarda o processo filho encerrar.
+
+> **A lane unit com cache usa o conteúdo do binário na chave.** `test:unit` é uma task do
+> Turbo com cache. O Turbo calcula o hash do *caminho* que `MANGOSTUDIO_RUNTIME_BINARY`
+> informa (a task permite `MANGOSTUDIO_*`), nunca do arquivo, e um build padrão em
+> `target/debug` nem entra na chave; por isso um runtime recompilado ou substituído
+> reaproveitava o resultado gravado com o binário antigo. O `bun run test` agora calcula
+> uma vez, antes de o Turbo iniciar, o SHA-256 do binário que os testes iniciam e o exporta
+> como `MANGOSTUDIO_RUNTIME_BINARY_SHA256`: substituir os bytes é um cache miss, um binário
+> inalterado é um hit, e nem o caminho nem o mtime contam. O binário é o que
+> `MANGOSTUDIO_RUNTIME_BINARY` informa (caminho relativo a partir de `apps/api`, onde os
+> testes rodam) ou, sem ele, o mais recente entre `target/debug` e `target/release` em
+> `CARGO_TARGET_DIR`, com `debug` vencendo o empate — a mesma resolução de
+> `resolveRustRuntimeBinary` e do hub, fixada por
+> `scripts/tests/runtime-binary-digest.unit.test.ts`. Sem binário, a variável é omitida e
+> os testes são ignorados ou falham com a própria mensagem. O hub nunca lê a variável, então
+> `apps/api/src/lib/config.ts` não muda. A lista permitida é compartilhada por toda task
+> `test:unit` da mesma execução do Turbo, então um novo build do runtime também reexecuta os
+> testes unitários do frontend e do shared. O `bun run test` é a entrada suportada: um
+> `turbo run test:unit` direto pula o `scripts/test.ts` e não recebe o digest, sem ficar
+> pior do que antes.
+
+#### Home descartável
+
+As lanes unit e integration da API rodam em um home descartável. O código sob teste deriva
+`~/.mango`, `~/.claude`, `~/.ssh` e seus perfis de shell de `homedir()`, e o Bun respeita
+`HOME` apenas quando um processo **inicia** — uma atribuição em runtime a `process.env.HOME`
+é ignorada, então um preload ou um teste não consegue redirecioná-lo. Por isso os scripts
+`test:unit`, `test:integration` e `test:coverage:*` de `apps/api` iniciam o `bun test` por
+`scripts/with-test-home.ts`, que cria um `<tmpdir>/mangostudio-test-home-<aleatório>` novo,
+inicia os testes com `HOME` (e `USERPROFILE`) apontando para ele e o remove quando a execução
+termina. Essa única mudança cobre `bun run test`, os shards de CI atrás do watchdog, o
+orquestrador de cobertura e um `bun run test:unit` direto em `apps/api`; o workflow noturno de
+ordem aleatória encapsula o seu `bun test` da mesma forma.
+
+O que o launcher define, além do home:
+
+- `CARGO_HOME`, `RUSTUP_HOME`, `BUN_INSTALL` e `BUN_INSTALL_CACHE_DIR` mantêm seus valores
+  reais (um valor exportado vence), então mover o home não esconde o toolchain nem faz o Bun
+  baixar o cache de novo. `MANGOSTUDIO_RUNTIME_BINARY` e toda outra variável herdada passam
+  intactas.
+- `GIT_CONFIG_GLOBAL` nomeia uma configuração global do Git que não existe, então a política
+  de assinatura, a identidade e o `core.hooksPath` de quem desenvolve nunca chegam aos
+  repositórios de fixture que os testes montam. Uma fixture que monta o próprio `env` para o
+  `git` deve repassá-la (`tests/support/git-fixture-env.ts`); do contrário o Git volta ao
+  `~/.gitconfig` real.
+- `MANGOSTUDIO_REAL_HOME` carrega o home original do launcher. O preload da API aborta a lane
+  com os valores recebido e esperado quando `homedir()` ainda é igual a ele, que é como um
+  launcher cujo `HOME` não teve efeito é pego antes do primeiro teste.
+
+Um `bun test` direto em `apps/api` ignora o launcher e roda no seu home real — use os scripts
+do pacote. `scripts/tests/api-lanes-hermetic.unit.test.ts` falha, nomeando o `homedir()`
+resolvido e o formato esperado `<tmpdir>/mangostudio-test-home-<aleatório>`, se um script de
+lane da API deixar de passar por ele. O launcher reutiliza a criação, verificação de formato
+e remoção protegidas de `scripts/lib/temp-home.ts`, sobre as quais o home do browser-smoke é
+construído: ele só remove um filho direto do diretório temporário do SO com o nome esperado e
+recusa segmentos `..`. Uma execução encerrada com `SIGKILL` não consegue limpar e deixa o
+diretório no diretório temporário do SO.
+
+As lanes de frontend, shared, protocol e scripts da raiz foram verificadas com um spy de
+`node:fs` e não leem nem escrevem o home real (apenas percursos `lstat` dos ancestrais do
+próprio home nos testes de contenção de caminho), então não ficam atrás do launcher.
 
 O suporte da API vive em `apps/api/tests/support/`:
 
@@ -133,7 +269,7 @@ bun run --filter @mangostudio/frontend test:coverage
 
 O suporte do frontend vive em `apps/frontend/tests/support/`:
 
-- `setup/vitest.setup.ts` — bootstrap de runtime apenas
+- `setup/dom-setup.ts` + `setup/bun.setup.ts` — registro do happy-dom e bootstrap de runtime (preloads do bunfig, nessa ordem)
 - `harness/render.tsx` — superfície mínima de render com providers
 - `mocks/create-fetch-scenario.ts` — registry de fetch por método/path **apenas para testes de hooks React**
 
@@ -151,8 +287,8 @@ bun run --filter @mangostudio/shared test:unit
 
 ```typescript
 import { describe, expect, it } from 'bun:test';
-import { Value } from '@sinclair/typebox/value';
-import { Type } from '@sinclair/typebox';
+import Type from 'typebox';
+import Value from 'typebox/value';
 import { settingsRoutes } from '../../../src/routes/settings';
 import { createApiTestApp } from '../../support/harness/create-api-test-app';
 
@@ -200,7 +336,7 @@ describe('createGeminiSecretService', () => {
 
 ### Integração No Frontend — testes de hooks React com fetch mock
 
-`create-fetch-scenario.ts` é limitado a **testes de hooks React** em jsdom. Não use isso para testes de contrato da API.
+`create-fetch-scenario.ts` é limitado a **testes de hooks React** em happy-dom. Não use isso para testes de contrato da API.
 
 ```tsx
 import { render, screen } from '../../support/harness/render';
@@ -275,13 +411,118 @@ Cada teste de stream por provedor deve cobrir:
 
 ## Cobertura
 
-Os relatórios de cobertura são escritos em `.mango/artifacts/coverage/`. O Vitest do frontend
-escreve o relatório React/Vite em `.mango/artifacts/coverage/frontend/vitest/`, e `bun:test`
-escreve LCOV da lógica pura em `.mango/artifacts/coverage/frontend/bun/`:
+Os relatórios de cobertura são escritos em `.mango/artifacts/coverage/`, um
+diretório por workspace; o LCOV do frontend fica em
+`.mango/artifacts/coverage/frontend/lcov.info`:
 
 ```bash
 bun run --filter @mangostudio/frontend test:coverage
 ```
+
+**O frontend tem pisos de cobertura total** — lines 81 / functions 76 /
+statements 81 / branches 53, medidos em 2026-08-21 sobre a suíte completa e
+arredondados para baixo com ~1pt de folga. Os pisos vivem em
+`scripts/lib/test-lanes.ts` e são aplicados por
+`scripts/qa-gate/enforce-coverage-thresholds.ts`, encadeado dentro do próprio
+`test:coverage` — um estouro falha a mesma invocação que o CI observa. O
+`coverageThreshold` do `bunfig.toml` não serve para isso: no Bun 1.4.2 ele
+ainda é aplicado por *arquivo* e um estouro não imprime nada
+([oven-sh/bun#17028](https://github.com/oven-sh/bun/issues/17028), ainda
+aberta). No 1.4.0 ele também ficava silenciosamente inerte com
+`coverageReporter = ["lcov"]` sem `"text"`; no 1.4.2 isso não se reproduz.
+
+## Erros Não Tratados Com Contagens Verdes
+
+Uma execução do frontend pode imprimir todos os arquivos e todos os testes como
+passed, depois um bloco `# Unhandled error between tests`, e ainda assim sair
+com código 1. Isso não é flake. Não rode de novo. O CI já falhou corretamente. As
+contagens verdes é que fazem parecer ruído.
+
+O mecanismo é sempre o mesmo. Algo sobrevive ao teste que o iniciou — um
+timer, um chunk `lazy()`, um `fetch` sem resposta — e aterrissa depois que o
+ambiente dele se foi, atribuído a qualquer arquivo que estivesse rodando. Só
+reproduz quando a suíte está carregada o bastante para o callback cair nesse
+intervalo, então não aparece num teste local de um arquivo só, e reexecutar o
+job no CI é cara ou coroa.
+
+### Onde olhar
+
+A stack no log do job nomeia a biblioteca que vazou. O arquivo "originated in"
+é onde a execução estava quando o timer disparou, não onde o timer foi
+agendado. Tratar esse caminho como o dono do bug é metade do custo dessa
+classe.
+
+### Como achar o dono
+
+Faça log dentro do hook ou módulo suspeito e rode a suíte inteira. O arquivo
+que reporta o erro quase nunca é o que agendou o timer.
+
+### A regra
+
+Um componente que agenda um timer limpa esse timer no unmount. Um teste nunca
+monta um cliente de terceiro cujo teardown é adiado.
+
+### Instâncias conhecidas
+
+- `4d936696`. `ToastProvider` agendava um `setTimeout` de 4s por toast e nunca
+  o limpava. O arquivo originated-in foi
+  `tests/unit/components/git-panel.test.tsx`.
+- `b96e319a`. `useRealtimeInvalidation` lê a sessão do Better Auth, então
+  todo componente que sincroniza qualquer coisa subscrevia o atom de sessão.
+  O nanostores derruba um atom 1s depois do último listener sair, e esse
+  disposer remove um listener de `window`. 18 arquivos de teste montavam o
+  cliente real. O arquivo originated-in foi
+  `tests/unit/features/library/backup-list.test.tsx`.
+
+O relatório de QA e o step summary do job Test começam por esses headlines
+quando a suíte falhou, e apontam para cá.
+
+## Binário Do Runtime No CI
+
+Toda lane que inicia um hub precisa do binário `mangostudio-runtime` que o Local executa.
+`.github/workflows/local-runtime.yml` o compila uma vez por run de CI (um build debug para
+Linux, com o cache do cargo) e o envia como `local-runtime-linux-x64`. A action composta
+`.github/actions/local-runtime` baixa esse artefato — ou compila o binário ela mesma quando
+nenhum artefato é informado —, pede `--version` a ele e exporta `MANGOSTUDIO_RUNTIME_BINARY`
+para o resto do job. Um binário ausente ou quebrado falha esse passo pelo nome, em vez de
+aparecer como falhas de conexão do Local espalhadas. O artefato também leva o exemplo
+`fake_cursor_agent`, compilado em uma invocação própria do cargo e exportado como
+`MANGOSTUDIO_FAKE_CURSOR_AGENT`, para que as suítes de qualificação de agentes externos rodem
+nos shards comuns em vez de serem puladas.
+
+- `test.yml` recebe o nome do artefato no input obrigatório `runtime_artifact`, e todo
+  shard roda a action antes dos testes. A lane do frontend não precisa dele.
+- `browser-smoke.yml` recebe o mesmo input; um dispatch manual não tem artefato e compila
+  no próprio job.
+- `randomized-order-nightly.yml` o compila nas lanes da api.
+- `real-binary-qualification` do `cargo-shim.yml` compila o próprio e roda, no macOS e no
+  Windows, todo arquivo de teste da api que importa
+  `tests/support/rust-runtime-binary.ts`, direta ou indiretamente por outro módulo de suporte,
+  exceto o smoke ao vivo opcional listado em `OPT_IN_TESTS`.
+  `scripts/lib/rust-lanes.ts` descobre esses arquivos e define os caminhos que tornam a lane
+  relevante, então um novo teste com Rust não exige editar o workflow;
+  `scripts/tests/rust-lanes.unit.test.ts` falha se algum ficar de fora.
+  O Ubuntu roda esses arquivos nos shards comuns do CI com o mesmo runtime debug e
+  agente de teste. `scripts/tests/qualification-shards.unit.test.ts` verifica que todo
+  arquivo de qualificação descoberto pertence a uma lane de cobertura com shards e que
+  cada shard recebe os dois binários de `local-runtime.yml` antes dos testes. Se faltar
+  um arquivo ou o handoff do artefato, a verificação falha pelo nome.
+
+## Retenção De Artefatos No CI
+
+Os artefatos de CI se dividem em quatro classes de retenção; mantenha novos uploads alinhados a elas:
+
+| Classe                    | Exemplos                                                                                                                            | Política                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Handoff entre jobs        | fragmento `qa-test-metrics` e artefato `qa-rust-coverage` (→ qa-metrics), `local-runtime-linux-x64` (build → shards, browser smoke) | 1 dia — consumido dentro do mesmo run                                  |
+| Diagnóstico de falha      | saída bruta de cobertura, traces e relatório HTML do Playwright                                                                     | 7–14 dias, enviados apenas com `if: failure()`                         |
+| Assets de release         | binários e pacotes preparados no pipeline de release                                                                                | 30 dias                                                                |
+| Baselines de push na main | envelopes `qa-metrics` de runs verdes de CI na `main`                                                                               | 90 dias — baselines por SHA exato para relatórios de QA de PRs futuros |
+
+Runs verdes resumem seu resultado no step summary (`$GITHUB_STEP_SUMMARY`) em vez
+de enviar artefatos que só existem em caso de sucesso. O workflow de browser-smoke
+mantém um input de `workflow_dispatch` (`always_upload_report`) para enviar o
+relatório HTML de um run verde quando necessário.
 
 ## Checklist De Verificação
 

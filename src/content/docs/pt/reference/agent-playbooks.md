@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Referência"
 order: 50
 sourcePath: "docs/pt-br/reference/agent-playbooks.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/agent-playbooks.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/reference/agent-playbooks.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Playbooks De Agentes
@@ -25,9 +25,18 @@ Abra estes arquivos primeiro:
 - `apps/api/src/auth.ts`
 - `apps/api/src/routes/auth.ts`
 - `apps/api/src/plugins/auth-middleware.ts`
+- `apps/api/src/plugins/api-key-guard.ts`
+- `apps/api/src/plugins/rate-limit-policy.ts`
+- `apps/api/src/modules/api-keys/application/api-key-service.ts`
+- `apps/api/src/modules/api-keys/http/api-key-routes.ts`
+- `apps/shared/src/api-keys/schemas.ts`
+- `apps/frontend/src/features/settings/external-api/` (Configurações → API externa)
+- `apps/frontend/src/routes/_authenticated/settings/external-api.tsx`
 - `apps/frontend/src/lib/auth-client.ts`
 - `apps/frontend/src/routes/login.tsx`
 - `apps/frontend/src/routes/signup.tsx`
+- `apps/frontend/src/routes/_authenticated.tsx` (guard de rota no cliente)
+- `docs/pt-br/reference/external-api.md` (chaves de API para automação HTTP)
 - `tests/browser-smoke/auth-flow.spec.ts`
 
 ## Rotas De API E Contratos
@@ -39,6 +48,23 @@ Abra estes arquivos primeiro:
 - `apps/shared/src/contracts/index.ts`
 - o hook, serviço ou rota correspondente no frontend
 - os testes relevantes da API e do frontend
+
+## Invalidação Em Tempo Real
+
+Leia primeiro [`../architecture/realtime.md`](/docs/architecture/realtime/).
+Depois, abra:
+
+- `apps/shared/src/realtime/`
+- `apps/api/src/modules/realtime/http/realtime-routes.ts`
+- `apps/api/src/services/realtime/realtime-bus.ts`
+- o fluxo de mutação da aplicação que publica o evento
+- `apps/api/src/modules/chats/domain/chat-ownership.ts` para tópicos de chat
+- `apps/api/tests/integration/routes/realtime-routes.integration.test.ts`
+
+Mantenha o canal somente para invalidação. Novos tópicos de recursos precisam
+de gramática TypeBox compartilhada, autorização de ownership na rota, cobertura
+com servidor real para mesmo usuário e usuários diferentes, e um mapeamento no
+frontend que busque os dados novamente por HTTP.
 
 ## Chat, Streaming E Geração
 
@@ -61,6 +87,7 @@ Abra estes arquivos primeiro:
 - `apps/api/src/services/providers/anthropic/stream.ts`
 - `apps/api/src/services/providers/deepseek/agent-stream.ts`
 - `apps/api/src/services/providers/deepseek/client.ts`
+- `apps/api/src/services/providers/chatgpt/`
 - `apps/api/src/modules/generation/http/respond-routes.ts`
 - `apps/api/src/modules/chats/http/chat-routes.ts`
 - `apps/api/src/modules/messages/http/message-routes.ts`
@@ -77,8 +104,10 @@ Abra estes arquivos primeiro:
 Abra estes arquivos primeiro:
 
 - `apps/api/src/modules/connectors/http/connectors-routes.ts`
+- `apps/api/src/modules/connectors/http/chatgpt-oauth-routes.ts`
 - `apps/api/src/modules/connectors/http/gemini-aliases-routes.ts`
 - `apps/api/src/modules/connectors/application/`
+- `apps/api/src/modules/connectors/infrastructure/chatgpt/`
 - `apps/api/src/services/providers/`
 - `apps/api/src/services/secret-store/`
 - `apps/api/src/modules/provider-settings/http/provider-settings-routes.ts`
@@ -91,6 +120,7 @@ Abra estes arquivos primeiro:
 
 Abra estes arquivos primeiro:
 
+- `apps/api/src/services/tools/registry.ts` (registro + lookup)
 - `apps/api/src/services/tools/`
 - `apps/api/src/services/tools/builtin/generate-image.ts`
 - `apps/api/src/services/tools/builtin/get-current-datetime.ts`
@@ -100,7 +130,20 @@ Abra estes arquivos primeiro:
 - `apps/api/src/services/providers/core/tool-mapper.ts`
 - `apps/shared/src/types/index.ts`
 - `apps/frontend/src/features/generation/hooks/use-text-generation.ts`
+- `apps/frontend/src/features/chat/components/ToolCallVisuals.tsx` (renderização por tool call)
 - `apps/frontend/src/features/settings/tools/`
+
+Duas convenções que toda definição de ferramenta segue, ambas verificadas por
+`tests/unit/services/providers/tool-mapper-strict.test.ts`:
+
+- **Argumentos opcionais são opcionais.** Escreva JSON Schema comum: um único `type`, a chave
+  ausente de `required` e `minLength`/`maxLength` reais. O limite do Responses deriva o
+  dialeto strict (`toStrictSchema`); os helpers em `services/tools/arg-parsing.ts` ainda
+  leem `null` como ausente. Espera-se que toda ferramenta embutida alcance `strict: true`
+  depois da transformação.
+- **Argumentos malformados são rejeitados, não substituídos.** Um argumento com o tipo errado
+  gera `ToolArgumentError`; apenas configurações armazenadas são coagidas a um padrão
+  (`clampIntegerSetting`, `getStringSetting`). Veja `docs/features/tools.md` para o porquê.
 
 ## Attachments
 
@@ -113,6 +156,18 @@ Abra estes arquivos primeiro:
 - `apps/api/src/services/providers/core/attachment-content.ts`
 - `apps/frontend/src/features/chat/components/MessageParts.tsx`
 
+## Workdir, Git E Contexto Do GitHub
+
+Abra estes arquivos primeiro:
+
+- `apps/api/src/modules/workspaces/`
+- `apps/api/src/modules/git/`
+- `apps/api/src/modules/github/`
+- `apps/shared/src/workspaces/`
+- `apps/shared/src/git/`
+- `apps/shared/src/github/`
+- `apps/frontend/src/features/workspace/`
+
 ## Prompt Rules
 
 Abra estes arquivos primeiro:
@@ -120,7 +175,8 @@ Abra estes arquivos primeiro:
 - `apps/api/src/modules/prompt-rules/application/prompt-composer.ts`
 - `apps/api/src/modules/prompt-rules/application/rule-file-resolver.ts`
 - `apps/api/src/modules/prompt-rules/http/rule-file-routes.ts`
-- `apps/frontend/src/features/settings/prompts/`
+- `apps/frontend/src/components/settings/PromptSettings.tsx`
+- `apps/frontend/src/components/settings/RuleFileCard.tsx`
 
 ## Settings (App, Provider, Tool)
 
@@ -131,9 +187,24 @@ Abra estes arquivos primeiro:
 - `apps/api/src/modules/provider-settings/http/provider-settings-routes.ts`
 - `apps/api/src/modules/tool-settings/http/tool-settings-routes.ts`
 - `apps/api/src/services/tools/settings-policy.ts`
+- `apps/frontend/src/routes/_authenticated/settings/` (árvore de rotas de settings)
+- `apps/frontend/src/components/settings/` (painéis compartilhados + `settings-nav.ts`, a lista agrupada de páginas que a barra lateral e a paleta de comandos leem)
 - `apps/frontend/src/features/settings/app/`
 - `apps/frontend/src/features/settings/providers/`
 - `apps/frontend/src/features/settings/tools/`
+
+## Configuração Inicial
+
+Abra estes primeiro:
+
+- `apps/shared/src/onboarding/` (ids dos passos, o registro persistido e as regras puras de retomada)
+- `apps/shared/src/app-settings/patch.ts` (o contrato de patch das configurações e seus três construtores)
+- `apps/frontend/src/routes/welcome.tsx` (irmã de `_authenticated`, deliberadamente — veja o arquivo)
+- `apps/frontend/src/routes/_authenticated.tsx` (`beforeLoad` é o portão; `errorComponent` é a nova tentativa)
+- `apps/frontend/src/features/onboarding/` (`use-onboarding-progress` lembra, `use-onboarding-facts` lê a máquina)
+- `apps/frontend/src/features/external-agents/send-with-consent.ts` (uma regra de consentimento, dois caminhos de envio)
+- `apps/api/src/cli/commands/setup.ts` (o gêmeo em terminal)
+- `docs/pt-br/guides/first-run.md`
 
 ## Geração De Imagem
 
@@ -147,13 +218,42 @@ Abra estes arquivos primeiro:
 - `apps/frontend/src/features/gallery/GalleryPage.tsx`
 - `apps/frontend/src/features/generation/hooks/use-image-generation.ts`
 
+## Feed De Atividade
+
+O log da conta com "o que mudou desde a sua última sessão". A emissão é
+fan-in: sete módulos escrevem, um módulo lê.
+
+Abra estes arquivos primeiro:
+
+- `apps/shared/src/activity/schemas.ts` (a união fechada de `kind` e os payloads por tipo)
+- `apps/api/src/modules/activity/application/record-activity.ts` (o único escritor)
+- `apps/api/src/modules/activity/application/list-activity.ts`
+- `apps/api/src/modules/activity/infrastructure/activity-repository.ts` (paginação keyset + retenção)
+- `apps/frontend/src/features/activity/`
+
+Regras que sustentam o desenho:
+
+- A emissão é fire-and-forget. `recordActivity` nunca rejeita, e todo ponto de
+  emissão chama `void recordActivity(...)`. Uma anotação que falha jamais pode
+  derrubar o trabalho que ela descreve. Um ponto de emissão que produz várias
+  linhas de uma vez — a aplicação de propagação — chama
+  `recordActivities(userId, entries)`, para que o lote custe uma única
+  instrução, um único quadro de realtime e uma única passagem de retenção.
+- `kind` é gravado como texto e a rota de listagem **descarta** qualquer linha
+  que não consiga revalidar. Uma união fechada na resposta mais uma linha
+  ilegível derrubaria o feed inteiro, e um downgrade não pode perder linhas que
+  uma versão mais nova gravou.
+- Adicionar um tipo exige: a união compartilhada, um schema de payload, um ponto
+  de emissão, um teste de emissão que verifique a linha, e um caso em
+  `describeActivity` — o `switch` é exaustivo, então o frontend falha no `check`
+  até você adicionar.
+
 ## Persistência E Banco De Dados
 
 Abra estes arquivos primeiro:
 
 - `apps/api/src/db/database.ts`
 - `apps/api/src/db/types.ts`
-- `apps/api/src/db/row-types.ts`
 - `apps/api/src/db/serializers.ts`
 - `apps/api/src/db/migrations/`
 - o serviço ou rota dono da funcionalidade
@@ -187,7 +287,67 @@ Abra estes arquivos primeiro:
 Abra estes arquivos primeiro:
 
 - `apps/api/src/lib/config.ts`
+- `apps/api/src/lib/runtime-paths.ts`
 - `apps/api/src/index.ts`
 - `.mango/config.toml.example`
 - `.mango/.env.example`
 - `scripts/build.ts`
+- `scripts/build-runtime.ts`, `scripts/lib/runtime-build.ts` (runtime cargo por alvo)
+- `.github/workflows/runtime-build.yml` (builds do runtime por alvo para a distribuição)
+- `scripts/test-build.ts` (binary smoke)
+
+O build produz dois binários por plataforma: `mangostudio`, compilado com Bun a partir
+de `apps/api`, e o host de execução `mangostudio-runtime`, o binário cargo de
+`crates/mangostudio-runtime` (construído por alvo pelo `runtime-build.yml`, ou para o
+alvo do host via `cargo build`; veja `docs/reference/releasing.md`). Os dois reportam a
+mesma versão de release e são distribuídos juntos em todos os canais. O Local é esse mesmo
+binário, iniciado pelo hub via stdio (`openLocalRuntime` em `runtime-connection-manager.ts`);
+um checkout do código-fonte inicia o build mais recente de `target/debug` ou
+`target/release`, e `bun run dev` o compila antes. Não há fallback para TypeScript.
+
+## CLI E Ciclo De Vida Do Servidor
+
+Cobre `serve`, `status`, `stop`, `restart`, `killserver`, `service`, `logs`,
+`open` e `doctor`.
+
+Abra estes arquivos primeiro:
+
+- `apps/api/src/index.ts` (entrada da CLI)
+- `apps/api/src/cli/` (parsing de argumentos, dispatch, comandos, checagens do doctor)
+- `apps/api/src/cli/log-tail.ts` (tail, log mais recente e o loop de `-f`)
+- `apps/api/src/cli/restart-handshake.ts` (`MANGO_RESTART_WAIT_PID`)
+- `apps/api/src/server/start-server.ts`
+- `apps/api/src/server/shutdown-request.ts` (soltar a porta a partir de um request)
+- `apps/api/src/lib/server-state.ts` (PID, porta e a unidade que iniciou o processo)
+- `apps/api/src/lib/mango-paths.ts`
+- Referência: `cli.md`
+
+A máquina do próprio hub — processo, unidade de serviço, doctor, tail de log e as
+duas ações mutantes — vive em um módulo só, compartilhado pela CLI e pela API:
+
+- `apps/api/src/modules/machine/domain/` (nomes de unidade por plataforma, o que a
+  unidade roda, regras de disponibilidade, guarda de loopback)
+- `apps/api/src/modules/machine/application/` (definição da unidade e allowlist de
+  ambiente, checagens do doctor, o serviço)
+- `apps/api/src/modules/machine/http/machine-routes.ts`
+- `apps/shared/src/machine/user-service.ts` (`@mangostudio/shared/machine/service`: a abstração
+  de supervisor do hub — systemd, launchd e Tarefa Agendada) e
+  `crates/mangostudio-runtime/src/cli/user_service.rs` (as mesmas três para o runtime)
+- `apps/shared/src/machine/schemas.ts` (fonte única de verdade dos formatos)
+
+## Changelog E Release
+
+Abra estes arquivos primeiro:
+
+- `cliff.toml` (configuração do git-cliff; `CHANGELOG.md` é gerado, nunca editado à mão)
+- `scripts/changelog.ts`
+- `scripts/lib/changelog.ts`
+- `scripts/lib/release-version.ts`
+- `scripts/lib/prepare-release.ts`
+- `scripts/release/prepare-release.ts`
+- `scripts/release/pack-npm.ts`
+- `scripts/check-versions.ts`
+- `packages/cli/`
+- `crates/mangostudio-launcher/`
+- `.github/workflows/pr-qa-report.yml`, `.github/workflows/release.yml`, `.github/workflows/cargo-shim.yml`
+- Referência: `releasing.md`

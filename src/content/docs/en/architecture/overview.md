@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Architecture"
 order: 10
 sourcePath: "docs/architecture/overview.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/overview.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/overview.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Architecture Overview
@@ -18,11 +18,31 @@ MangoStudio follows a modular DDD-inspired architecture across three workspaces.
 
 ## Workspace Map
 
-| Workspace       | Role                         | Stack                                                    |
-| --------------- | ---------------------------- | -------------------------------------------------------- |
-| `apps/api`      | Backend API server           | Elysia, Better Auth, Kysely + SQLite                     |
-| `apps/frontend` | Browser SPA                  | React 19, Vite 8, TanStack Router/Query, Tailwind CSS v4 |
-| `apps/shared`   | Framework-agnostic contracts | TypeScript types, TypeBox schemas, i18n dictionaries     |
+| Workspace       | Role                                      | Stack                                                                                              |
+| --------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `apps/api`      | Backend API hub                           | Elysia, Better Auth, Kysely + SQLite                                                               |
+| `apps/frontend` | Browser SPA                               | React 19, TanStack Router/Query, Tailwind CSS v4, `Bun.build()` bundle                             |
+| `apps/shared`   | Contracts, and the code both machines run | TypeScript types, TypeBox schemas, i18n dictionaries; host-only code behind its own export subpath |
+
+### Published alongside the application
+
+The repository also hosts the **Mango Protocol** — the wire contract the hub and the runtime
+speak — on its own version line and its own `protocol-v*` release train. It is not one of the
+three application workspaces and does not follow their lifecycle.
+
+| Path                           | Ships as                                  | Stack                                               |
+| ------------------------------ | ----------------------------------------- | --------------------------------------------------- |
+| `spec/`                        | The normative spec, schemas and fixtures  | Markdown, JSON Schema 2020-12                       |
+| `packages/protocol/`           | `@mangostudio/protocol` on npm            | TypeScript, TypeBox                                 |
+| `crates/mango-protocol/`       | `mango-protocol` on crates.io             | Rust, serde, tokio                                  |
+| `crates/mangostudio-launcher/` | `mangostudio` on crates.io (the launcher) | Rust, application version and shared workspace MSRV |
+
+Both stable Rust crates belong to the root Cargo workspace and share its lockfile, edition,
+development toolchain, and lint policy. The protocol and application versions remain independent.
+`crates/mango-protocol/fuzz` is an excluded nightly-only workspace with its own lockfile.
+
+`packages/protocol/AGENTS.md` is the contributor guide for that tree, including the
+contract-change procedure every wire change follows. `docs/protocol/` holds the adoption guides.
 
 ## API Module Architecture
 
@@ -66,6 +86,8 @@ modules/<domain>/
 | `tool-settings`     | A/H/I   | Per-tool enable/disable and parameter overrides                 |
 | `prompt-rules`      | A/H     | System prompt composition, rule file resolution                 |
 | `attachments`       | A/I     | File upload, validation, storage, provider delivery             |
+| `realtime`          | H       | Cookie-authenticated, user-scoped cache invalidation            |
+| `activity`          | A/D/H/I | Account-wide "what changed" log; many modules write, one reads  |
 
 A = Application, D = Domain, H = HTTP, I = Infrastructure
 
@@ -75,7 +97,9 @@ Simple modules skip layers that would add ceremony without value:
 
 - **No `domain/`** — when business rules are self-evident (e.g., app-settings is a simple CRUD wrapper with normalization).
 - **No `http/`** — when the module is purely infrastructural (e.g., `generated-images/` only has a repository).
-- **No `application/`** — never; all modules have at least one service.
+- **No `application/`** — only for bridge modules whose policy and data work is delegated to
+  existing services (for example, `realtime` delegates fan-out to the realtime bus and
+  ownership checks to `chats`).
 
 ## Data Flow
 
@@ -120,6 +144,27 @@ stream-text-turn.ts (orchestrator)
   └─ Persist turn → yield SSE events
 ```
 
+### Hub/Runtime Execution
+
+Filesystem tools, shell commands, freshness tracking, and checkpoint effects execute through
+the versioned runtime protocol. The API remains the hub for workdir policy, orchestration,
+and durable checkpoint state. See [`hub-runtime.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md) for the ownership
+table, protocol lifecycle, and transport roadmap.
+
+Every runtime, Local included, is the cargo-built `mangostudio-runtime` from
+`crates/mangostudio-runtime`. The hub spawns Local on its own machine over stdio: the sibling
+binary beside a standalone hub, or in a source checkout the newest `target/debug` or
+`target/release` build, which `bun run dev` builds first. `MANGOSTUDIO_RUNTIME_BINARY`
+overrides both, and a missing binary fails the connect with `cargo build -p
+mangostudio-runtime` rather than falling back to anything.
+
+### Realtime Invalidation
+
+`/api/ws` is an invalidation-only bridge from the user-scoped in-process bus to
+authenticated browser tabs. Entity data continues to travel over HTTP. See
+[`realtime.md`](/en/docs/architecture/realtime/) for the protocol, security boundaries, limits,
+degradation model, and topic-extension workflow.
+
 ### Subagent Delegation Enforcement
 
 Subagent delegation is executed through the `delegate_to_agent` tool. The orchestrator enforces a response contract so the parent agent always receives a usable final result, even when a provider ends a subagent run after tool calls without emitting assistant text.
@@ -134,18 +179,34 @@ Subagent delegation is executed through the `delegate_to_agent` tool. The orches
 
 ### Auth
 
-Better Auth handles sessions via cookie-based authentication. The `auth-middleware.ts` plugin decorates routes with `requireAuth`, which validates the session and injects the user context.
-
-### Error Handling
-
-- API errors use `ApiErrorResponse` from `@mangostudio/shared/contracts`: `{ error: string, code?: string, details?: Record<string, string> }`. The HTTP status is carried by the response, not the body.
-- Streaming errors use `SSEErrorEvent` from `@mangostudio/shared/streaming`: `{ type: 'error', error, done: true }`.
-- Domain errors extend `Error` with typed codes (e.g., `ChatNotFoundError`, `ToolParameterError`).
-- The centralized `error-handler.ts` plugin maps thrown errors to HTTP responses.
+Better Auth handles sessions via cookie-based authentication. The
+`auth-middleware.ts` plugin decorates routes with `requireAuth`, which validates
+the session and injects the user context. External automation uses scoped API
+keys: callers send `x-api-key`, `apiKeyGuard` enforces the per-user toggle and
+scope, and Better Auth resolves the key into the same session path so
+`requireAuth` stays unchanged. See [`reference/external-api.md`](/en/docs/reference/external-api/).
 
 ### Rate Limiting
 
-In-memory rate limiter (`rate-limit.ts`) that counts requests per (bucket, client IP). A `classify` function (`rate-limit-policy.ts`) sorts each request path into a named bucket — `health` and `auth` get their own, more generous buckets so they are never gated by the general API limit, while everything else shares the baseline `general` bucket. Limited requests return a `429` `ApiErrorResponse` (`code: RATE_LIMITED`) with a `Retry-After` header. Lazy cleanup of expired counters. Can be trusted-proxy-aware for deployment behind reverse proxies.
+In-memory rate limiter (`rate-limit.ts`) that counts requests per (bucket,
+client id). A `classify` function (`rate-limit-policy.ts`) sorts each request
+into a named bucket — `health`, `auth`, `general` (cookie traffic), and
+`api-key` (requests with `x-api-key`) use independent counters so automation
+cannot starve browser sessions on the same IP. `general` is the widest of them:
+the narrower buckets each bound one expensive operation, while `general` bounds
+ordinary page loads, and one page load is many requests. Client id is the caller
+IP for every bucket today (per-key ids need a verified key id after
+`apiKeyGuard`; see issue #737). Limited requests return a `429` `ApiErrorResponse`
+(`code: RATE_LIMITED`) with a `Retry-After` header. Expired counters are cleaned
+up lazily. Proxy headers affect the client id only when `trustProxy` is
+explicitly enabled behind a trusted reverse proxy.
+
+### Error Handling
+
+- API errors use `ApiErrorResponse` from `@mangostudio/shared/errors`: `{ error: string, code?: string, details?: Record<string, string> }`. The HTTP status is carried by the response, not the body.
+- Streaming errors use `SSEErrorEvent` from `@mangostudio/shared/streaming`: `{ type: 'error', error, done: true }`.
+- Domain errors extend `Error` with typed codes (e.g., `ChatNotFoundError`, `ToolParameterError`).
+- The centralized `error-handler.ts` plugin maps thrown errors to HTTP responses.
 
 ### Validation
 
@@ -153,14 +214,24 @@ In-memory rate limiter (`rate-limit.ts`) that counts requests per (bucket, clien
 - Response shapes validated in integration tests via `Value.Check`.
 - Attachment uploads validated for MIME type, magic bytes, size, and UTF-8 correctness.
 
+### Environment Installs
+
+Environment installation is a guarded local-only execution surface built from code-owned recipes,
+bounded downloads and output, user-scoped audit records, and raw SSE logs. See
+[`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/environment-installs.md) for its threat model and opt-in controls.
+
 ## Provider Architecture
 
-Providers implement the `AIProvider` interface. The provider registry maps provider types to implementations. Key abstraction layers:
+Providers implement the `AIProvider` interface. The provider registry maps provider types to implementations. The bundled providers are **Gemini, OpenAI, OpenAI-compatible, Anthropic, DeepSeek and ChatGPT**.
+
+**Cursor is registered but deprecated.** It advertises no models and refuses execution; the supported path is the external-agent adapter, where Cursor's own CLI owns the model, the tools and the approvals. `resolve-model.ts` is where that refusal is raised, before provider resolution, so every path to a provider passes through it. See [`../providers/cursor.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+
+Key abstraction layers:
 
 ```
 stream-text-turn.ts (orchestrator)
   │
-  ├─ resolve-model.ts → selects provider + model
+  ├─ resolve-model.ts → selects provider + model, refuses deprecated ones
   ├─ continuation-runtime.ts → decides strategy
   │
   ▼
@@ -183,11 +254,18 @@ routes/                → TanStack Router file-based pages
     gallery.tsx         → Image gallery
     settings.tsx        → Settings layout
     studio.tsx          → Image workspace
+    environments.tsx    → Environments umbrella layout
+    environments/       → Toolchains, agents, health
+      library.tsx       → Library section layout (second-level tabs)
+      library/          → Coverage matrix, backups, resource detail
+    library/            → Redirect stubs for pre-move /library/* bookmarks
 
 features/              → Domain feature modules
   chat/                → Chat UI, components, hooks, services
+  environments/        → Environment cards, health, install actions
   gallery/             → Gallery page + queries
   generation/          → Text/image generation hooks + types
+  library/             → Coverage matrix, divergence, propagation wizards
   settings/            → Settings sub-modules (app, connectors, providers, tools, prompts)
   sidebar/             → Sidebar + context ring
 
@@ -217,6 +295,10 @@ The shared package is framework-agnostic and importable by both API and frontend
 shared/src/
   contracts/           → Barrel export of all contract types
   <module>/            → Per-module contracts + TypeBox schemas
+  realtime/            → WebSocket invalidation messages, topics, and close codes
+  runtime-contract/    → Hub/runtime methods, capabilities, events, manifest, errors
+    methods/           → One schema module per method family (fs, mcp, library, …)
+    generated/         → Emitted catalog + schemas a non-TypeScript runtime is built from
   streaming/           → SSE event types + schemas
   types/               → Domain types (provider, agent-events, gallery)
   i18n/                → Portuguese/English dictionaries + type system
@@ -237,4 +319,6 @@ Columns use `camelCase`, tables use `snake_case`. Kysely type aliases: `<Entity>
 
 ## Standalone Build
 
-`bun run build --binary` compiles the API into platform-specific binaries via `bun build --compile`. Frontend assets are embedded as sidecar files. Supports 8 platforms (linux/windows/darwin × x64/arm64 + glibc/musl). Database defaults to `~/.mango/database.sqlite`.
+`bun run build --binary` compiles the API into platform-specific binaries via `bun build --compile`, with the frontend embedded, and stages the cargo-built `mangostudio-runtime` beside each. Distribution builds all 8 platforms (linux/windows/darwin × x64/arm64 + glibc/musl) from per-target runtimes (`--runtime-dir`); a local build covers the host's own platform (`--platform <host>`) — see [releasing.md](/en/docs/reference/releasing/#how-the-runtime-binary-is-built). Database defaults to `~/.mango/database.sqlite`.
+
+Each runtime is a native binary built with fat LTO and `panic = "unwind"` (handler panic isolation depends on it): gnu Linux targets link at the glibc 2.17 floor, musl targets are static, Windows links the MSVC C runtime statically, and every binary reports the release version it was stamped with. Release assets, runtime binaries included, are listed in an attested `SHA256SUMS`; [runtime-metrics.md](/en/docs/reference/runtime-metrics/) records their sizes.

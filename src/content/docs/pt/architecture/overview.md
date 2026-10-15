@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Arquitetura"
 order: 10
 sourcePath: "docs/pt-br/architecture/overview.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/overview.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/architecture/overview.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Visão Geral Da Arquitetura
@@ -18,11 +18,11 @@ O MangoStudio segue uma arquitetura modular inspirada em DDD distribuída em tr�
 
 ## Mapa Dos Workspaces
 
-| Workspace       | Papel                            | Stack                                                    |
-| --------------- | -------------------------------- | -------------------------------------------------------- |
-| `apps/api`      | Servidor de API backend          | Elysia, Better Auth, Kysely + SQLite                     |
-| `apps/frontend` | SPA do navegador                 | React 19, Vite 8, TanStack Router/Query, Tailwind CSS v4 |
-| `apps/shared`   | Contratos agnósticos a framework | Tipos TypeScript, schemas TypeBox, dicionários i18n      |
+| Workspace       | Papel                            | Stack                                                                      |
+| --------------- | -------------------------------- | -------------------------------------------------------------------------- |
+| `apps/api`      | Servidor de API backend          | Elysia, Better Auth, Kysely + SQLite                                       |
+| `apps/frontend` | SPA do navegador                 | React 19, TanStack Router/Query, Tailwind CSS v4, bundle via `Bun.build()` |
+| `apps/shared`   | Contratos agnósticos a framework | Tipos TypeScript, schemas TypeBox, dicionários i18n                        |
 
 ## Arquitetura Dos Módulos Da API
 
@@ -66,6 +66,8 @@ modules/<domain>/
 | `tool-settings`     | A/H/I   | Enable/disable de tools e overrides de parâmetros                                  |
 | `prompt-rules`      | A/H     | Composição de prompts de sistema e resolução de arquivos de regra                  |
 | `attachments`       | A/I     | Upload de arquivos, validação, storage e entrega ao provedor                       |
+| `realtime`          | H       | Invalidação de cache por cookie e limitada ao usuário                              |
+| `activity`          | A/D/H/I | O log de "o que mudou" da conta; sete módulos escrevem, um lê                      |
 
 A = Application, D = Domain, H = HTTP, I = Infrastructure
 
@@ -75,7 +77,9 @@ Módulos simples pulam camadas que só adicionariam cerimônia sem gerar valor:
 
 - **Sem `domain/`** — quando as regras de negócio são autoevidentes (por exemplo, `app-settings` é um wrapper CRUD simples com normalização).
 - **Sem `http/`** — quando o módulo é puramente infraestrutural (por exemplo, `generated-images/` só possui repositório).
-- **Sem `application/`** — nunca; todos os módulos têm pelo menos um serviço.
+- **Sem `application/`** — apenas para módulos de ponte cujo trabalho de política e dados é
+  delegado a serviços existentes (por exemplo, `realtime` delega o fan-out ao barramento
+  realtime e as verificações de ownership a `chats`).
 
 ## Fluxo De Dados
 
@@ -119,22 +123,57 @@ stream-text-turn.ts (orquestrador)
   └─ persiste o turno → produz eventos SSE
 ```
 
+### Execução Hub/Runtime
+
+Todo runtime, inclusive o Local, é o `mangostudio-runtime` construído com cargo a partir de
+`crates/mangostudio-runtime`. O hub inicia o Local na própria máquina via stdio: o binário
+irmão ao lado de um hub standalone ou, num checkout do código-fonte, o build mais recente de
+`target/debug` ou `target/release`, que o `bun run dev` compila antes. `MANGOSTUDIO_RUNTIME_BINARY`
+sobrepõe os dois, e um binário ausente faz a conexão falhar indicando `cargo build -p
+mangostudio-runtime` em vez de recorrer a outro runtime. Veja
+[`hub-runtime.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md).
+
+### Invalidação Em Tempo Real
+
+`/api/ws` é uma ponte somente de invalidação entre o bus no processo, limitado
+ao usuário, e as abas autenticadas do navegador. Os dados de entidades
+continuam trafegando por HTTP. Veja [`realtime.md`](/docs/architecture/realtime/) para o
+protocolo, os limites de segurança, as restrições, o modelo de degradação e o
+fluxo de extensão de tópicos.
+
 ## Preocupações Transversais
 
 ### Auth
 
-O Better Auth gerencia sessões via autenticação baseada em cookies. O plugin `auth-middleware.ts` decora rotas com `requireAuth`, que valida a sessão e injeta o contexto do usuário.
+O Better Auth gerencia sessões via autenticação baseada em cookies. O plugin
+`auth-middleware.ts` decora rotas com `requireAuth`, que valida a sessão e injeta
+o contexto do usuário. Automação externa usa chaves de API com escopo: o cliente
+envia `x-api-key`, `apiKeyGuard` aplica o toggle por usuário e o escopo, e o
+Better Auth resolve a chave no mesmo caminho de sessão para `requireAuth`
+continuar igual. Veja [`reference/external-api.md`](/docs/reference/external-api/).
 
 ### Tratamento De Erros
 
-- Erros de API usam `ApiErrorResponse` de `@mangostudio/shared/contracts`: `{ error: string, code?: string, details?: Record<string, string> }`. O HTTP status é carregado pela resposta, não pelo body.
+- Erros de API usam `ApiErrorResponse` de `@mangostudio/shared/errors`: `{ error: string, code?: string, details?: Record<string, string> }`. O HTTP status é carregado pela resposta, não pelo body.
 - Erros de streaming usam `SSEErrorEvent` de `@mangostudio/shared/streaming`: `{ type: 'error', error, done: true }`.
 - Erros de domínio estendem `Error` com códigos tipados, como `ChatNotFoundError` e `ToolParameterError`.
 - O plugin centralizado `error-handler.ts` mapeia exceções lançadas para respostas HTTP.
 
 ### Rate Limiting
 
-Há um rate limiter em memória (`rate-limit.ts`) que conta requests por (bucket, IP do cliente). Uma função `classify` (`rate-limit-policy.ts`) classifica cada path em um bucket nomeado — `health` e `auth` têm buckets próprios e mais generosos, então não ficam sujeitos ao limite geral da API, enquanto os demais endpoints compartilham o bucket `general` de base. Requests bloqueados retornam `429` no formato `ApiErrorResponse` (`code: RATE_LIMITED`) com header `Retry-After`. A limpeza de contadores expirados é lazy. Pode operar de forma proxy-aware quando a aplicação está atrás de reverse proxies.
+Há um rate limiter em memória (`rate-limit.ts`) que conta requests por (bucket,
+id do cliente). A função `classify` (`rate-limit-policy.ts`) classifica cada
+request em um bucket — `health`, `auth`, `general` (sessão no navegador) e
+`api-key` (requests com `x-api-key`) usam contadores independentes para
+automação não afetar sessões no mesmo IP. O `general` é o mais amplo deles: os
+buckets mais estreitos limitam uma operação cara cada um, enquanto o `general`
+limita carregamentos de página comuns, e um carregamento são muitos requests. O
+id do cliente é o IP em todos os buckets hoje (ids por chave exigem o id
+verificado após `apiKeyGuard`; ver
+issue #737). Requests bloqueados retornam `429` como `ApiErrorResponse`
+(`code: RATE_LIMITED`) com header `Retry-After`. Os contadores expirados são
+limpos sob demanda. Headers de proxy só afetam o id do cliente quando
+`trustProxy` está habilitado explicitamente atrás de um proxy confiável.
 
 ### Validação
 
@@ -206,6 +245,10 @@ O pacote shared é agnóstico a framework e pode ser importado tanto pela API qu
 shared/src/
   contracts/           → barrel export de todos os tipos de contrato
   <module>/            → contratos por módulo + schemas TypeBox
+  realtime/            → mensagens de invalidação WebSocket, tópicos e códigos de fechamento
+  runtime-contract/    → métodos, capabilities, eventos, manifest e erros do hub/runtime
+    methods/           → Um módulo de schema por família de método (fs, mcp, library, …)
+    generated/         → Catálogo e schemas emitidos, base de um runtime fora do TypeScript
   streaming/           → tipos e schemas de eventos SSE
   types/               → tipos de domínio (provider, agent-events, gallery)
   i18n/                → dicionários em Português/Inglês + sistema de tipos
@@ -226,4 +269,6 @@ Colunas usam `camelCase`; tabelas usam `snake_case`. Aliases tipados do Kysely s
 
 ## Build Standalone
 
-`bun run build --binary` compila a API em binários específicos por plataforma via `bun build --compile`. Os assets do frontend são embarcados como arquivos sidecar. Há suporte a 8 plataformas (linux/windows/darwin × x64/arm64 + glibc/musl). O banco de dados usa `~/.mango/database.sqlite` por padrão.
+`bun run build --binary` compila a API em binários específicos por plataforma via `bun build --compile`, com o frontend embarcado, e coloca o `mangostudio-runtime` construído com cargo ao lado de cada um. A distribuição gera as 8 plataformas (linux/windows/darwin × x64/arm64 + glibc/musl) a partir de runtimes por alvo (`--runtime-dir`); um build local cobre a plataforma do host (`--platform <host>`) — veja [releasing.md](/docs/reference/releasing/#como-o-binário-do-runtime-é-construído). O banco de dados usa `~/.mango/database.sqlite` por padrão.
+
+Cada runtime é um binário nativo construído com LTO fat e `panic = "unwind"` (o isolamento de panics dos handlers depende disso): alvos Linux gnu linkam no piso glibc 2.17, alvos musl são estáticos, o Windows linka o runtime C do MSVC estaticamente, e todo binário informa a versão da release gravada nele. Os assets da release, inclusive os binários do runtime, estão num `SHA256SUMS` com attestation; [runtime-metrics.md](/docs/reference/runtime-metrics/) registra os tamanhos.

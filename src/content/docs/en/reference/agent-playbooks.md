@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 50
 sourcePath: "docs/reference/agent-playbooks.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/agent-playbooks.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/agent-playbooks.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Agent Playbooks
@@ -26,9 +26,18 @@ Open these first:
 - `apps/api/src/auth.ts`
 - `apps/api/src/routes/auth.ts`
 - `apps/api/src/plugins/auth-middleware.ts`
+- `apps/api/src/plugins/api-key-guard.ts`
+- `apps/api/src/plugins/rate-limit-policy.ts`
+- `apps/api/src/modules/api-keys/application/api-key-service.ts`
+- `apps/api/src/modules/api-keys/http/api-key-routes.ts`
+- `apps/shared/src/api-keys/schemas.ts`
+- `apps/frontend/src/features/settings/external-api/` (Settings → External API UI)
+- `apps/frontend/src/routes/_authenticated/settings/external-api.tsx`
 - `apps/frontend/src/lib/auth-client.ts`
 - `apps/frontend/src/routes/login.tsx`
 - `apps/frontend/src/routes/signup.tsx`
+- `apps/frontend/src/routes/_authenticated.tsx` (client-side route guard)
+- `docs/reference/external-api.md` (automation-facing HTTP API keys)
 - `tests/browser-smoke/auth-flow.spec.ts`
 
 ## API Routes And Contracts
@@ -40,6 +49,24 @@ Open these first:
 - `apps/shared/src/contracts/index.ts`
 - the matching frontend hook, service, or route
 - the relevant API and frontend tests
+
+## Realtime Invalidation
+
+Read [`../architecture/realtime.md`](/en/docs/architecture/realtime/) first. Then
+open:
+
+- `apps/shared/src/realtime/`
+- `apps/api/src/modules/realtime/http/realtime-routes.ts`
+- `apps/api/src/services/realtime/realtime-bus.ts`
+- `apps/frontend/src/lib/realtime/realtime-client.ts` (one socket per tab)
+- `apps/frontend/src/lib/realtime/use-realtime-invalidation.ts` (consumer entry point)
+- the producer's application mutation path
+- `apps/api/src/modules/chats/domain/chat-ownership.ts` for chat-scoped topics
+- `apps/api/tests/integration/routes/realtime-routes.integration.test.ts`
+
+Keep the channel invalidation-only. New resource topics need a shared TypeBox
+grammar, route-side ownership authorization, same-user and cross-user
+real-server coverage, and a frontend mapping that refetches data over HTTP.
 
 ## Chat, Streaming, And Generation
 
@@ -63,12 +90,19 @@ Open these first:
 - `apps/api/src/services/providers/anthropic/stream.ts`
 - `apps/api/src/services/providers/deepseek/agent-stream.ts`
 - `apps/api/src/services/providers/deepseek/client.ts`
+- `apps/api/src/services/providers/chatgpt/`
 - `apps/api/src/modules/generation/http/respond-routes.ts` (non-streaming fallback)
 - `apps/api/src/modules/chats/http/chat-routes.ts`
 - `apps/api/src/modules/messages/http/message-routes.ts`
 - `apps/shared/src/streaming/events.ts`
 - `apps/shared/src/streaming/schemas.ts`
 - `apps/frontend/src/features/chat/ChatPage.tsx`
+- `apps/frontend/src/features/chat/components/InputBar.tsx` (the composer, including the `/`
+  palette's caret and keyboard)
+- `apps/frontend/src/features/chat/lib/slash-commands.ts` (what opens the palette, how it ranks,
+  and what a completion replaces — pure, and the place to start for any `/` question)
+- `apps/frontend/src/features/chat/hooks/use-slash-commands.ts` (the three sources behind it:
+  the session's announced catalog, the library scan, the chat's effective skills)
 - `apps/frontend/src/features/generation/hooks/use-text-generation.ts`
 - `apps/frontend/src/features/chat/hooks/use-chat-stream.ts`
 - `apps/frontend/src/services/generation-service.ts`
@@ -79,8 +113,10 @@ Open these first:
 Open these first:
 
 - `apps/api/src/modules/connectors/http/connectors-routes.ts`
+- `apps/api/src/modules/connectors/http/chatgpt-oauth-routes.ts`
 - `apps/api/src/modules/connectors/http/gemini-aliases-routes.ts`
 - `apps/api/src/modules/connectors/application/`
+- `apps/api/src/modules/connectors/infrastructure/chatgpt/`
 - `apps/api/src/services/providers/`
 - `apps/api/src/services/secret-store/`
 - `apps/api/src/modules/provider-settings/http/provider-settings-routes.ts`
@@ -93,9 +129,27 @@ Open these first:
 
 Open these first:
 
+- `apps/api/src/services/tools/registry.ts` (registration + lookup)
 - `apps/api/src/services/tools/`
+- `apps/api/src/services/tools/builtin/create-file.ts`
+- `apps/api/src/services/tools/builtin/edit-file.ts`
+- `apps/api/src/services/tools/builtin/replace-range.ts`
+- `apps/api/src/services/tools/builtin/apply-patch.ts`
+- `apps/api/src/services/tools/builtin/_v4a-patch.ts`
+- `apps/api/src/services/tools/builtin/delete-file.ts`
+- `apps/api/src/services/tools/builtin/move-file.ts`
 - `apps/api/src/services/tools/builtin/generate-image.ts`
 - `apps/api/src/services/tools/builtin/get-current-datetime.ts`
+- `apps/api/src/services/tools/builtin/ask-user-question.ts` (interactive question cards)
+- `apps/api/src/services/tools/builtin/todo.ts` (per-chat task list; prompt-injected via `apps/api/src/modules/todos/`)
+- `apps/api/src/modules/todos/http/todo-routes.ts` (`GET /api/chats/:id/todos` current-state endpoint)
+- `apps/shared/src/questions/` (question schemas + answer formatting)
+- `apps/shared/src/todos/` (todo schemas, helpers, prompt-section renderer)
+- `apps/frontend/src/features/chat/components/ToolCallVisuals.tsx` (per-tool call rendering)
+- `apps/frontend/src/features/chat/components/QuestionCard.tsx`
+- `apps/frontend/src/features/chat/components/TodoListPart.tsx` (inline feed snapshot; shares `TodoItemRow.tsx`)
+- `apps/frontend/src/features/chat/components/PinnedTodoPanel.tsx` (live panel above the input bar)
+- `apps/frontend/src/features/chat/hooks/use-chat-todos.ts` (todo query + `todo_update` cache writer)
 - `apps/api/src/modules/tool-settings/http/tool-settings-routes.ts`
 - `apps/api/src/modules/generation/application/stream-text-turn.ts`
 - `apps/api/src/services/providers/core/continuation-envelope.ts`
@@ -103,6 +157,404 @@ Open these first:
 - `apps/shared/src/types/index.ts`
 - `apps/frontend/src/features/generation/hooks/use-text-generation.ts`
 - `apps/frontend/src/features/settings/tools/`
+
+Two conventions every tool definition follows, both enforced by
+`tests/unit/services/providers/tool-mapper-strict.test.ts`:
+
+- **Optional arguments are optional.** Author plain JSON Schema: a single `type`, the key
+  absent from `required`, and real `minLength`/`maxLength`. The Responses boundary derives
+  the strict dialect (`toStrictSchema`); the helpers in `services/tools/arg-parsing.ts`
+  still read `null` as absent. Every built-in is expected to reach `strict: true` after
+  the transform.
+- **Malformed arguments are rejected, not substituted.** A wrong-typed argument raises
+  `ToolArgumentError`; only stored settings coerce to a default (`clampIntegerSetting`,
+  `getStringSetting`). See `docs/features/tools.md` for why.
+
+Per-message **file checkpoints** cover the built-in filesystem mutation tools above, including the ones a subagent (`delegate_to_agent`) runs — those inherit the delegating turn's `assistantMessageId`, so their mutations join the same manifest. Revert is whole-turn (`POST /api/chats/:id/checkpoints/:messageId/revert`) and compares on-disk hashes before restoring. **Not checkpointed:** shell tools and MCP file writes — only explicit builtin mutators participate.
+
+That boundary is now reported rather than left implicit. A tool declares `uncheckpointedWriteSource` in its settings metadata (`buildShellTool` sets `'shell'`), and `executeTool` records it against the turn's message in `message_uncheckpointed_sources` before running the executor. That is the only place a builtin runs, so declaring the field is all a tool has to do — no dispatcher has to remember it, and the subagent loop is covered by the same seam as the main turn. MCP tools never become a `RegisteredTool`, so the two dispatchers name `'mcp'` themselves, and every MCP call counts because the hub cannot know whether a foreign tool writes. Both `GET /api/chats/:id/checkpoints` and the revert response carry `uncheckpointedSources`, and the confirmation dialog and result toast name the classes the revert will not undo. Extending *coverage* instead of reporting it — a post-hoc workdir diff for shell, declared writes for MCP — is a separate design question and is not attempted here.
+
+Two invariants the checkpoint path depends on:
+
+- A mutation and its manifest row run under one per-path lock (`withMutationPersistence` in `apps/api/src/services/tools/file-mutation-snapshot.ts`). Every executor passes it the full set of paths its call can touch, so nothing on those paths can start a second mutation before the row exists. The lock does not roll the filesystem back if blob or database I/O then fails: the file stays changed, no row is written, and the tool reports failure. That is accepted. Closing it needs a two-phase capture-then-mutate protocol or a runtime rollback, neither of which this path does.
+- Revert sends both the state the turn left behind (`afterHash`) and the state a completed revert produces (`revertedHash`). A retry after a revert whose bookkeeping write failed therefore recognises its own finished work instead of reporting the file as changed by someone else. A set that is half in each state is still a conflict — `already_reverted` in `crates/mangostudio-runtime/src/filesystem/snapshot.rs` refuses it, because resuming it is unsafe.
+- Cancelling a turn never abandons a mutation that has started. Every runtime method takes the call's cancellation token and refuses only where there is nothing to undo — each handler in `crates/mangostudio-runtime/src/filesystem/` places its own last cancellation point and [hub-runtime.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md) explains the rule. Adding a mutation means choosing its cancellation point, not threading a parameter.
+
+`delete_file` gates on `read_fresh` (`crates/mangostudio-runtime/src/filesystem/service.rs`, over the ledger in `filesystem/freshness.rs`): the chat must have read a file's current bytes before it can destroy them. `move_file` does not. A rename does not require the source to have been read. Freshness and containment are separate. Containment is the compiled path policy (`crates/mangostudio-runtime/src/filesystem/policy.rs`) refusing any move whose source or destination resolves outside a chat's `pathPolicy.containmentRoot` before `move_file` touches either path. That is not a stronger form of the read-first gate. A contained chat can still relocate unread bytes inside the root. What it prevents is using a rename to park a file outside the root, read or not. The remaining gap: a chat with no containment root (the default, empty `allowedPaths`/`deniedPaths`) can relocate a file anywhere without reading it first, which is functionally an unguarded delete. That gap is accepted, not closed; see #632.
+
+## Skills
+
+Open these first:
+
+- `apps/api/src/modules/skills/application/skill-discovery.ts` (source scan, precedence, memo)
+- `apps/api/src/modules/skills/application/skill-content.ts` (body + sandboxed file reads)
+- `apps/api/src/modules/skills/application/skills-prompt-section.ts` (`<available-skills>`)
+- `apps/api/src/modules/skills/application/skill-settings-service.ts`
+- `apps/api/src/modules/skills/http/skill-routes.ts`
+- `apps/api/src/services/tools/builtin/skill.ts` (lazy-load tool)
+- `apps/shared/src/skills/`
+- `apps/frontend/src/features/settings/skills/`
+- Reference: `docs/reference/skills.md`
+
+## Library (Coverage, Divergence, Propagation)
+
+Open these first:
+
+- `apps/shared/src/library/registry.ts` via `@mangostudio/shared/library/host`
+  (locations, targets, per-kind read precedence; path resolution is pure over
+  `PathEnv`)
+- `crates/mangostudio-runtime/src/library/` (scan + contained read + settings source
+  reads + byte caps, and write engines under `mutation/` — `library.scan` / `library.read` /
+  `library.read-tree` / `library.locations` / `library.settings-sources` /
+  `library.apply` / `library.remove` / `library.undo` / `library.backups` /
+  `library.gc`; the FS engines that used to live under
+  `apps/api/.../infrastructure`)
+- `apps/api/src/modules/library/application/library-discovery.ts` (groups a scan
+  result; coverage and divergence stay hub-side)
+- `apps/api/src/modules/library/application/environment-library-service.ts`
+  (per-environment cache keyed by connection; hub calls the runtime with an
+  explicit `timeoutMs`)
+- `apps/api/src/modules/library/application/coverage-resolver.ts` (present /
+  absent / shadowed — pure over scan results)
+- `apps/api/src/modules/library/application/propagation-preview.ts` (source
+  groups, outcomes; one snapshot per machine in scope, and a machine that could
+  not be scanned still contributes destinations, blocked with a reason)
+- `apps/api/src/modules/library/application/propagation-apply.ts` (token,
+  planning, adapters, acknowledgements — FS writes go through runtime
+  `library.apply` / `library.undo` with an explicit `backupRoot`; one batch per
+  destination machine, one backup handle each; injected FS deps keep unit tests
+  in-process)
+- `apps/api/src/modules/library/infrastructure/backup-roots.ts` (where each
+  machine's store lives: Local honours `library.backup_dir`, a remote store
+  resolves `~/.mango/library-backups` through the connection's `TargetPaths`)
+- `apps/api/src/modules/library/application/backup-inventory.ts` +
+  `infrastructure/backup-index-repository.ts` (the backups page: the hub index
+  keeps an offline machine's rows visible, the machine itself wins whenever it
+  can be asked, and the manifest on the machine stays the only restore source)
+- `apps/api/src/modules/library/application/removal-preview.ts` (per-machine
+  snapshots, shared with propagation; the last-copy guard counts copies on every
+  machine in scope, which is the whole reason removal needs the dimension)
+- `apps/api/src/modules/library/application/removal-apply.ts` (token, planning,
+  last-copy acknowledgement — FS removals go through `library.remove`, one batch
+  per machine, one backup handle each)
+- `apps/api/src/modules/library/application/adapters/` (format conversion
+  strategies)
+- `apps/api/src/modules/library/application/settings-inspection.ts` (pure: turns
+  the runtime's source bytes into per-target snapshots — one parser for every
+  machine)
+- `apps/api/src/modules/library/http/library-routes.ts`, `propagation-routes.ts`,
+  `settings-routes.ts` (read routes take optional `environmentId`, default
+  `local`; `library-error.ts` is the one error mapping they share)
+- `apps/shared/src/library/schemas.ts` (single source of truth for every shape)
+- `apps/frontend/src/features/library/` (`format.ts` holds the cell-state rules,
+  `propagation.ts` mirrors the apply contract's validation)
+- `apps/frontend/src/routes/_authenticated/environments/library/` (the pages;
+  `environments/library.tsx` is the section layout and its tab strip; matrix and
+  detail share the environment selector from the umbrella)
+- `apps/frontend/src/routes/_authenticated/library/` (redirect stubs only —
+  every file forwards a pre-move `/library/*` bookmark and renders nothing)
+
+The library is a section of the environments umbrella, not a top-level surface:
+its URLs live under `/environments/library`, and the sidebar reaches it through
+the Environments entry.
+
+A location is only scanned while it is switched on. Enablement lives in app
+settings (`profileSettings.<profile>.libraryLocations.home`), the scanner reads
+it through `enabledLibraryLocations`, and the Locations tab
+(`apps/frontend/src/features/library/hooks/use-location-settings.ts`) is where a user changes it.
+It is one setting for every machine, while the health beside each row is the
+selected machine's. MangoStudio's own directories are forced on by the
+normalizer and render locked. A tab that comes back empty is worth checking
+against that switch before it is read as "there is nothing on disk".
+
+There is no canonical copy of a resource: every location on every environment is
+a peer. When versions diverge, only a human picks the winner. The API refuses an
+apply that does not name one, and the UI is built so a user cannot reach that
+error. Two environments that happen to share one physical home are tolerated
+(same hashes show no divergence); de-duplication is out of scope.
+
+Discovery is a runtime capability (`features.library`). A disconnected
+environment never reuses another machine's matrix as if it were fresh —
+staleness here would corrupt later write decisions. Every read tab is scoped the
+same way, settings comparison included: the tab strip carries `environmentId`
+across tabs, so any page that answered about the hub while the URL named another
+machine would be lying about which settings a user is about to change. The
+skill-discovery adapter that feeds chat prompts stays pinned to the hub machine
+(`local`) on purpose.
+
+Containment for `library.read` is resolved on the runtime from the location id
+the hub names, never from a root the hub supplies: a root derived from the
+instance path contains that path by construction. A `single-file` location
+resolves to the file itself, so its boundary is the agent home around it —
+otherwise a symlinked `CLAUDE.md` passes containment against its own target.
+`library.settings-sources` opens settings paths with `O_NOFOLLOW` for the same
+reason, and never touches a target's credential files.
+
+**Checkpoint contrast:** checkpoints stream bytes to hub-owned blobs; library
+backups stay on the machine that owned the file. The runtime holds durable
+backup data under a hub-supplied `backupRoot` — the exception to "runtime holds
+no durable user data". Retention policy is hub config; the path is a method
+parameter, never hardcoded on the runtime.
+
+Four rules hold the write boundary, and each exists because the alternative
+fails silently:
+
+- **The runtime refuses a destination the preview did not describe.** Both
+  engines compare what the hub said the location resolves to against what it
+  resolves to here. The hub's `destinationRoot` is where the user was told the
+  bytes were going; the runtime's own `PathEnv` is where they would actually
+  land. Those agree for Local, on the hub's own machine, and are allowed to disagree between
+  machines.
+  The hub sends its MangoStudio directory pins (`SKILLS_DIR`/`AGENTS_DIR`) to
+  Local only — for writes, remote source reads and undo exactly as for scans
+  (`libraryWritePathEnv`) — so a remote machine resolves its own.
+- **The manifest is untrusted input.** `library.undo` drives `rm -rf` and
+  overwriting copies from a JSON file under a caller-supplied root, so every
+  entry has to resolve inside the registry location it names and every backup
+  path under the backup root. A corrupt or forged set refuses whole. Retention
+  on the Rust host also never evicts a set without a readable manifest — one
+  still being written, possibly by another runtime sharing the store, or one a
+  failed commit left as the only copy; an explicit purge still can.
+- **Cancellation is cooperative and honoured.** The hub sets an explicit
+  `timeoutMs` on every write RPC; the engines check the abort between
+  operations and fall into their existing compensation path, so the disk agrees
+  with the failure the hub already reported. Writes serialize per `backupRoot`
+  on the runtime as well as on the hub — the hub releases its lock when the
+  deadline fires, while the work here is still rolling back.
+- **The Hub never writes library resources itself.** Apply, removal, and undo
+  always go over the protocol; the only seam is `runtimeApply`/`runtimeRemove`/
+  `runtimeUndo`, which stands in for the client. Hub tests that write run
+  against the compiled Rust runtime (`rust-runtime-library-propagation` and
+  `rust-runtime-library-removal`, via `tests/support/rust-library-boxes.ts`),
+  and fault cases rewrite one operation of the Hub's real batch with
+  `tamperingApply`/`tamperingRemove`. Hub tests that must be refused before any
+  write pass `refuseLibraryApply`/`refuseLibraryRemove`.
+
+Propagated file bytes travel once per distinct payload in a `contents` map
+keyed by content hash, because fanning one resource across destinations used to
+put one base64 copy per destination in a single frame. An apply whose content
+still will not fit is refused hub-side with a 422 rather than left to throw in
+the codec, which only validates outside production.
+
+Two discovery caches coexist: the matrix reads through
+`environmentLibraryService`, while `discoverLibraryResourcesFromSettings` still
+serves the hub-local skill adapter and the propagation/removal previews.
+`resetSkillsCache()` drops both.
+
+Every location carries a `scope`, and every one of them is `home` today. The
+`workspace` scope is reserved: nothing resolves under a repository root yet, and
+`apps/api/tests/unit/modules/library/scope-seam.test.ts` fails if a workspace
+location is added without the settings toggles and cross-scope read precedence
+that have to come with it. Precedence between a workspace copy and a home copy
+is a per-target fact and belongs in `TargetDefinition.reads`, never in a
+resolver.
+
+## Environments (Toolchains, Version Managers, Agent CLIs, Library)
+
+Open these first:
+
+- `apps/shared/src/environments/detection/` (the pure domain: PATH scan, duplicate
+  analysis, runtime and agent definitions, auth signals, nvm, the Node release policy)
+- `crates/mangostudio-runtime/src/probing/` (the same domain bound to a real host —
+  `methods.rs` is the three `probing.*` methods, `host.rs` the environment snapshot,
+  `detection/` the ported domain)
+- `apps/api/src/modules/environments/application/probing-service.ts` (per-environment
+  cache, force/dedupe, and the policy the hub sends down)
+- `apps/api/src/modules/environments/application/install-service.ts` (guards, prepare, run)
+- `apps/api/src/modules/environments/domain/install-recipes.ts` (the recipe table: platforms,
+  downloads, argv builders, accepted exit codes, copy-only entries)
+- `apps/api/src/modules/environments/application/toolchain-service.ts` and
+  `crates/mangostudio-runtime/src/commands/toolchain.rs` (which Node and Bun a spawned process runs with;
+  see `docs/features/environments.md`)
+- `apps/api/src/modules/environments/domain/prerequisite-findings.ts` (hub-side
+  `prerequisite-missing` findings from the recipe table)
+- `apps/frontend/src/features/environments/setup-checklist.ts` (the Overview's Setup rows)
+- `crates/mangostudio-runtime/src/install/` (the spawn+capture loop, and only that)
+- `apps/api/src/modules/environments/http/environment-routes.ts`, `install-routes.ts`
+- `apps/shared/src/environments/schemas.ts` (single source of truth for every shape)
+- `apps/frontend/src/features/environments/` (`format.ts` holds the presentation rules;
+  `use-environment-scope.ts` is which machine a tab is describing)
+- `apps/frontend/src/routes/_authenticated/environments/`
+
+Detection runs on the runtime and describes *that* machine. Toolchains, Agents and
+Health carry an `environmentId` search param (absent means the hub's own), and the
+Health tab's compare mode puts two of them side by side.
+
+The umbrella covers everything about the user's tooling, so its tabs are
+Overview, Toolchains, Agents, Health, Library, and This machine — Library nests
+the whole library surface above. "Toolchains" is an i18n label: the route is
+still `/environments/runtimes` and `RuntimeIdSchema` is unchanged.
+
+"This machine" is the odd one out: every other tab describes whichever machine
+the `environmentId` search param names, and this one only ever describes the hub's
+own host. It lives at `/environments/machine` with its feature directory at
+`apps/frontend/src/features/environments/machine/`, and it reads the machine
+routes (`GET /api/machine/status`, `doctor`, `logs`; `POST /api/machine/restart`,
+`service`) rather than the probing endpoints the other tabs use. Its restart and
+service buttons are loopback-only on the API side, so the page has to render the
+CLI command the response names whenever the hub refuses.
+
+### Overview (the landing page)
+
+- `apps/frontend/src/routes/_authenticated/environments/index.tsx` (prefetches,
+  never `ensure`s — sections render their own pending state)
+- `apps/frontend/src/features/environments/components/OverviewPage.tsx`
+  (composition plus the agents grid and toolchains strip)
+- `OverviewSection.tsx` (heading, link to the summarized tab, per-section
+  loading and error states)
+- `OverviewAgentCard.tsx`, `OverviewToolchainCard.tsx`,
+  `OverviewHealthRollup.tsx`, `OverviewLibrarySnapshot.tsx`
+
+The overview **adds no endpoint**: every section reads the queries its tab
+already owns, so any number on it can be verified by opening that tab. A number
+that is not already served is dropped, never fetched from something new here.
+
+Sections are independent by design — one failing query costs its own block and
+nothing else — and they are siblings, so a new one is an addition rather than a
+rewrite. Rollups read the reported `health`, not the finding list, which is what
+keeps a tool installed off PATH counted as needing attention here exactly as its
+own card says.
+
+### Cards
+
+`components/ToolCard.tsx` is the anatomy every tool card shares: identity header
+(avatar, effective name, the rename/reset menu), body, actions footer. Cards
+differ in body, never in shell, and the id hook each one is found by
+(`data-runtime-id`, `data-target-id`) is passed through it rather than derived —
+tests key on those attributes. Presentation rules stay in `format.ts` where they
+can be asserted without a rendered tree: which binary is effective, which recipe
+performs an action, which finding a summary leads with, and the health rollup.
+
+### Tool identity (names and avatars)
+
+- `apps/shared/src/tool-identity/` (subject-key grammar and the stored shape)
+- `apps/api/src/modules/tool-identity/` (list, upsert, reset, image upload and
+  serve; publishes the `tool-identity` settings invalidation scope)
+- `apps/frontend/src/features/environments/identity/` (`resolve.ts` is the
+  fallback chain; `use-tool-identities.ts` is what every surface calls)
+- `apps/frontend/src/components/ui/ToolAvatar.tsx` and
+  `tool-avatar-palette.ts` (literal colour pairs per theme, asserted for
+  contrast)
+
+A subject key is `<kind>:<id>` over ids that already exist elsewhere
+(`agent:claude`, `runtime:bun`, `version-manager:nvm`, `mcp:<slug>`). The
+registry is **display-only**: an override changes what a human reads and
+nothing else, so no wire id, provider-facing tool name, or API path may be
+derived from it. Consumers live in environments cards, `library/CoverageMatrix`,
+`settings/mcp`, and the chat capability inspector.
+
+#### Avatar images
+
+- `application/tool-image-validation.ts` decides the type from the bytes for
+  both an upload and a cached remote image. PNG, JPEG, and WebP only; **SVG is
+  refused by name and must stay refused** — it is markup that can carry script,
+  and these bytes are served back from our own origin.
+- `infrastructure/tool-image-storage.ts` owns the files, under
+  `toolImages.dir` (`~/.mango/tool-images/<userId>/`, parsed only in
+  `lib/config.ts`). A file is keyed by its identity row and deleted with it, so
+  there is no orphan sweep.
+- Serving pins the type recorded at write time and sends `nosniff`. Never infer
+  the type from the file at serve time.
+- Caching a URL fetches it through `lib/safe-fetch.ts`; that path, not the
+  storage layer, is where the SSRF guard lives.
+- The frontend never renders a stored image without a fallback:
+  `ToolAvatar` drops back to the monogram on a load error, and an uncached
+  address is loaded with no referrer and no cookies.
+
+There is no CSP on the app today, so a hotlinked `https:` image loads without
+one. If a policy is ever added, `img-src` has to permit `https:` or every
+uncached avatar silently becomes a monogram.
+
+## External Agents (Codex, Cursor, Claude Code)
+
+Open these first:
+
+- `docs/architecture/external-agents.md` (ownership, the invariant, permissions, credentials)
+- `apps/shared/src/external-agents/schemas.ts` (identity, capabilities, the neutral event
+  contract, the discovery response — schema-first, browser-safe)
+- `apps/shared/src/external-agents/vendor-text.ts` (the code-point bounds applied to anything a
+  vendor emitted, at the runtime boundary)
+- `apps/shared/src/external-agents/permissions.ts` (reading a persisted choice back, restrictively)
+- `apps/shared/src/external-agents/presets.ts` (the three named permission choices and the
+  per-vendor candidate resolution behind them — a *different* responsibility from reading one back)
+- `apps/shared/src/external-agents/remedies.ts` (reason → what would fix it, `satisfies`-guarded so
+  a new reason cannot ship without one)
+- `crates/mangostudio-runtime/src/external_agents/` (the runtime host over the External Agents
+  SDK — `service.rs` for the `external-agent.*` handlers, `supervisor.rs` for session lifecycle,
+  `port.rs` for the owned agent operations, `turns.rs` for receipts and event relay,
+  `isolation.rs` for the attestation, and private `adapter/` for SDK construction, mapping
+  and guarded process launch)
+- The vendor adapters, their pins and the recorded vendor contracts live in the SDK repository,
+  [juliopolycarpo/mango-external-agents](https://github.com/juliopolycarpo/mango-external-agents)
+  (`mango-agent-claude`, `mango-agent-codex`, `mango-agent-acp`)
+- `apps/api/src/services/runtime-client/runtime-client.ts` (typed method facade and session-filtered
+  event subscription)
+- `apps/api/src/modules/external-agents/application/external-agent-discovery.ts` (the cheap pass,
+  the authoritative pass, the budget between them)
+- `apps/api/src/modules/external-agents/domain/adapter-descriptors.ts` (names, order, sign-in
+  commands — never capabilities)
+- `apps/api/src/modules/external-agents/domain/cli-status-mapping.ts` (what the environment
+  scanner can honestly say)
+- `apps/api/src/modules/external-agents/http/external-agent-routes.ts`
+  (`GET /api/external-agents?environmentId=…`)
+- `apps/api/src/modules/external-agents/application/external-native-sessions.ts` and
+  `http/external-session-routes.ts` (adopting a session started in a terminal: the listing, the
+  re-read before a chat exists, and the lease that keeps two chats out of one vendor transcript)
+- `apps/api/src/modules/external-agents/infrastructure/external-session-adoption-lease-repository.ts`
+  (the lease, keyed by the session rather than by the chat)
+- `apps/api/src/modules/external-agents/application/external-turn-stream.ts` and
+  `http/external-agent-turn-routes.ts` (the send stream's preflight, and the review action that
+  reuses all of it — `POST /api/chats/:id/external-agent/review`, whose Git precondition is asked
+  through the selected runtime rather than of the hub's own filesystem)
+- `apps/frontend/src/features/external-agents/ExternalReviewAction.tsx` (the repository panel's
+  "Review my changes", kept away from the permissions dropdown's differently-scoped "Auto-review")
+- `apps/frontend/src/features/external-agents/command-catalog.ts` (the per-chat slash-command
+  catalog the stream files; live-only, with no route behind the key)
+- `apps/shared/src/environments/detection/agent-cli-definitions.ts` (what the scanner looks for)
+- `apps/api/tests/unit/modules/external-agents/`, `apps/shared/tests/unit/external-agents.test.ts`
+
+The rule that decides most questions here: **external agents never own MangoStudio tools**. Tool
+activity is observational — it is rendered and persisted, and it never reaches the tool registry,
+the executor, the permission engine or budget accounting. Capabilities come from the adapter that
+would run the turn, never from a table in the hub.
+
+Two Codex-specific traps, both of which cost a debugging session if met unprepared:
+
+- `thread/start` takes `sandbox`, a kebab-case **string**; `turn/start` takes `sandboxPolicy`, a
+  camelCase **tagged object**. The SDK's Codex adapter owns both encodings.
+- `item/tool/call` is a server→client request asking MangoStudio to run a tool, and `initialize`
+  offers no capability to decline it. It is answered with a JSON-RPC error unconditionally.
+- `thread/list` returns `Thread`s whose `id` is the thread and whose `sessionId` is a *different*
+  required field naming the thread tree. Adoption maps `id`; `sessionId` is the one that looks
+  right and resumes nothing. Timestamps there are Unix **seconds** (Cursor's are ISO-8601), and
+  `sourceKinds` must be an explicit allowlist or the listing includes Codex's own subagent, review
+  and compaction threads.
+
+The recorded vendor contracts are regenerated and drift-checked in the SDK repository, whose CI
+runs the vendor contract drift workflow; `docs/architecture/external-agents.md` says where the pins
+live.
+
+## MCP Servers
+
+Open these first:
+
+- `crates/mangostudio-runtime/src/mcp/` (`sdk.rs` is the only `rmcp` boundary; transports and the session registry —
+  the server runs on the environment's runtime, not in the hub)
+- `apps/api/src/services/mcp/runtime-session.ts` (hub handle over the protocol,
+  secret delivery, elicitation hop)
+- `apps/api/src/services/mcp/connection-manager.ts` (per-user sessions, reconnect)
+- `apps/api/src/services/mcp/tool-bridge.ts` (namespacing + per-turn resolution,
+  scoped to the chat's environment)
+- `apps/api/src/services/mcp/tool-naming.ts`, `header-secrets.ts`,
+  `secret-transport-guard.ts`
+- `apps/api/src/modules/mcp-servers/http/mcp-server-routes.ts`
+- `apps/shared/src/mcp/`
+- `apps/frontend/src/features/settings/mcp/`
+- Reference: `docs/reference/mcp.md`
+
+A server's card shows its tool identity name, not its stored `name`, whenever
+the user set one — see the Environments playbook. Tool namespacing is unaffected:
+`tool-naming.ts` still builds every name from the slug.
 
 ## Attachments
 
@@ -115,6 +567,104 @@ Open these first:
 - `apps/api/src/services/providers/core/attachment-content.ts`
 - `apps/frontend/src/features/chat/components/MessageParts.tsx`
 
+## Workdir, Git, And GitHub Context
+
+Open these first:
+
+- `apps/api/src/modules/workspaces/`
+- `apps/api/src/modules/git/`
+- `apps/api/src/modules/github/`
+- `apps/shared/src/workspaces/`
+- `apps/shared/src/git/`
+- `apps/shared/src/github/`
+- `apps/frontend/src/features/workspace/`
+
+### API layering
+
+Workspace filesystem browsing and workdir validation run in the runtime via
+`workspace.browse` / `workspace.validate`. Hub modules under
+`application/directory-browser.ts` and `application/workdir-validation.ts` are
+thin RuntimeClient facades that preserve HTTP error types. Link-resolved path
+containment runs in the runtime; workdir-policy decisions stay in the hub.
+
+Every git route lives in `http/git-routes.ts` behind `routeWorkdir()` (chat ownership
+plus workdir resolution) and `gitWriteError()` (typed failures), and declares the same
+`403/404/409/422/500: ApiErrorResponseSchema` set.
+
+- Reads: `application/git-status-service.ts` and `application/git-navigation-service.ts`
+  (history, commit details, diffs, `getHeadMessage` for the amend prefill).
+- Writes: `application/git-write-service.ts`. Every mutation runs inside
+  `runRepoMutation` — which resolves the repo root, takes `withMutationLock` keyed by
+  `(environmentId, repoRoot)` (Local uses `local`), and funnels failures through
+  `mapWriteFailure` — so two chats rooted in the same repository never touch one
+  `.git/index` concurrently.
+- Git spawn is owned by the runtime via argv-array-only `git.exec`; the hub
+  `infrastructure/git-cli.ts` is a thin RuntimeClient facade that maps
+  `git_execution` failures to `GitCliError`. Parsers, mutation locks, and routes stay
+  in the hub.
+- Failure mapping is per operation: `mapCommitFailure`, `mapBranchSwitchFailure`,
+  `mapBranchDeleteFailure` (`not fully merged` → `BRANCH_NOT_MERGED`) and
+  `mapRemoteFailure` (auth, non-fast-forward, diverged history).
+- `/push` takes `GitPushBodySchema`, whose `force` is the literal `'with-lease'`. A plain
+  `--force` is not expressible on the wire and is never constructed.
+
+### Frontend panel
+
+`GitPanel.tsx` is organized around the commit box: branch row → tabs → commit box →
+change groups, with the GitHub card collapsed at the bottom.
+
+- `CommitForm.tsx` owns the message state and amend mode; `CommitActions.tsx` owns
+  `useCommitActions`, which chains the mutations behind each menu entry and aborts on the
+  first failure. Add a new commit variant there, not in the form.
+- Unstaged and untracked changes render as one group. `GitDiscardSelection[]` is the unit
+  of a discard because a mixed bulk discard needs one call per mode.
+- Secondary controls live in menus: the panel header overflow (stash sheet, prune
+  preference, refresh), the commit split button, per-group overflow, and per-branch rows.
+  All four use `components/ui/Menu.tsx`; the commit button uses
+  `components/ui/SplitButton.tsx`. There is no popover library — extend these.
+- `git-panel-prefs.ts` persists panel preferences in localStorage, mirroring
+  `rail/rail-state.ts`.
+- `hooks/use-git-state.ts` is the only place that talks to the API. Every write must add
+  an entry to `gitWriteScopes`; the guard test in
+  `apps/frontend/tests/unit/hooks/use-git-state.test.ts` fails otherwise.
+
+### Tests
+
+- `apps/api/tests/integration/routes/git-{state,write,navigation}.integration.test.ts`
+  drive real temp repositories and skip when git is absent. Their fixtures pin
+  `core.hooksPath` so a global `commit-msg` hook cannot rewrite fixture messages.
+- `apps/frontend/tests/unit/components/git-panel.test.tsx` mocks the hook module
+  wholesale, so a new hook must be added to that mock before the panel can render.
+
+## Live Terminal
+
+Open these first:
+
+- `apps/shared/src/terminal/` — session shape, limits, and the binary socket codec
+- `crates/mangostudio-runtime/src/terminal/` — `pty.rs` (the PTY port), `flow.rs` (the bounded
+  buffers and credit window) and `service.rs` (the sessions behind `terminal.*`)
+- `apps/api/src/modules/terminals/` — session registry, HTTP routes, and the socket relay
+- `apps/frontend/src/features/terminal/` — xterm.js view, socket hook, rail panel, pop-out
+
+Rules that are easy to get wrong:
+
+- The runtime never emits `terminal.output` before `terminal.attach`, and it emits at most
+  `TERMINAL_INFLIGHT_WINDOW_BYTES` unacknowledged. Change a limit in
+  `apps/shared/src/terminal/schemas.ts`, never in one hop; the shared test pins that every
+  hop's limit fits the next.
+- The relay never lets the socket throttle: it stops sending under
+  `TERMINAL_SOCKET_SEND_HIGH_WATER_BYTES`, resumes on `drain`, and drops with a notice past
+  `TERMINAL_HUB_QUEUE_MAX_BYTES`. Bun would otherwise close the socket at 64 KiB.
+- Local sessions need the `single-user-host` attestation on the connection entry; a second
+  user ends them through the same `onClose` path a dropped runtime does.
+- The panel id `terminal` is in `WORKSPACE_PANEL_IDS`; the exhaustive titles record in
+  `WorkspaceRail.tsx` is the compile-time guard, and the settings normaliser backfills it
+  for existing users.
+
+Tests: `crates/mangostudio-runtime/src/terminal/service/tests.rs` (fake PTY plus Unix-only real-PTY cases), `apps/api/tests/unit/modules/terminals/` and
+`apps/api/tests/integration/routes/terminal*.integration.test.ts`,
+`apps/frontend/tests/unit/features/terminal/`, and `tests/browser-smoke/terminal.spec.ts`.
+
 ## Prompt Rules
 
 Open these first:
@@ -122,7 +672,8 @@ Open these first:
 - `apps/api/src/modules/prompt-rules/application/prompt-composer.ts`
 - `apps/api/src/modules/prompt-rules/application/rule-file-resolver.ts`
 - `apps/api/src/modules/prompt-rules/http/rule-file-routes.ts`
-- `apps/frontend/src/features/settings/prompts/`
+- `apps/frontend/src/components/settings/PromptSettings.tsx`
+- `apps/frontend/src/components/settings/RuleFileCard.tsx`
 
 ## Settings (App, Provider, Tool)
 
@@ -133,9 +684,25 @@ Open these first:
 - `apps/api/src/modules/provider-settings/http/provider-settings-routes.ts`
 - `apps/api/src/modules/tool-settings/http/tool-settings-routes.ts`
 - `apps/api/src/services/tools/settings-policy.ts`
+- `apps/frontend/src/routes/_authenticated/settings/` (settings route tree)
+- `apps/frontend/src/components/settings/` (shared panels + `settings-nav.ts`, the grouped page list both the sidebar and the command palette read)
 - `apps/frontend/src/features/settings/app/`
+- `apps/frontend/src/features/settings/external-api/`
 - `apps/frontend/src/features/settings/providers/`
 - `apps/frontend/src/features/settings/tools/`
+
+## First-Run Setup
+
+Open these first:
+
+- `apps/shared/src/onboarding/` (step ids, the persisted record, and the pure resume rules)
+- `apps/shared/src/app-settings/patch.ts` (the settings patch contract and its three builders)
+- `apps/frontend/src/routes/welcome.tsx` (a sibling of `_authenticated`, deliberately — see the file)
+- `apps/frontend/src/routes/_authenticated.tsx` (`beforeLoad` is the gate; `errorComponent` is the retry)
+- `apps/frontend/src/features/onboarding/` (`use-onboarding-progress` remembers, `use-onboarding-facts` reads the machine)
+- `apps/frontend/src/features/external-agents/send-with-consent.ts` (one consent-retry rule, two send paths)
+- `apps/api/src/cli/commands/setup.ts` (the terminal twin)
+- `docs/guides/first-run.md`
 
 ## Image Generation
 
@@ -149,13 +716,49 @@ Open these first:
 - `apps/frontend/src/features/gallery/GalleryPage.tsx`
 - `apps/frontend/src/features/generation/hooks/use-image-generation.ts`
 
+## Activity Feed
+
+The account-wide "what changed since your last session" log. Emission is
+fan-in: seven modules append, one module reads.
+
+Open these first:
+
+- `apps/shared/src/activity/schemas.ts` (the closed `kind` union and its per-kind payloads)
+- `apps/api/src/modules/activity/application/record-activity.ts` (the only writer)
+- `apps/api/src/modules/activity/application/list-activity.ts`
+- `apps/api/src/modules/activity/infrastructure/activity-repository.ts` (keyset paging + retention)
+- `apps/frontend/src/features/activity/`
+
+Rules that are load-bearing:
+
+- Emission is fire-and-forget. `recordActivity` never rejects, and every seam
+  calls it as `void recordActivity(...)`. A failed note must never fail the work
+  it describes. A seam that produces several rows at once — the propagation
+  apply — calls `recordActivities(userId, entries)` instead, so the batch costs
+  one statement, one realtime frame, and one retention pass.
+- `kind` is stored as text and the list route **drops** any row it cannot
+  re-validate. A closed response union plus one unreadable row would otherwise
+  take the whole feed down, and a downgrade must not lose rows a newer build
+  wrote.
+- Adding a kind means: the shared union, a payload schema, one seam, an
+  emission test asserting the row, and a `describeActivity` branch — the switch
+  is exhaustive, so the frontend fails `check` until you add it.
+
+Seams (one line each, all fire-and-forget):
+`chats/application/create-chat.ts`,
+`chats/application/record-turn-activity.ts` (called by the local runner's
+`finalizeSuccessfulTurn` and the external runner's `finish`),
+`git/application/git-write-service.ts` (`commitChanges`, `pushBranch`),
+`library/application/propagation-apply.ts`,
+`external-agents/application/external-account-limits.ts`,
+`services/runtime-client/runtime-connection-manager.ts`.
+
 ## Persistence And Database
 
 Open these first:
 
 - `apps/api/src/db/database.ts`
 - `apps/api/src/db/types.ts`
-- `apps/api/src/db/row-types.ts`
 - `apps/api/src/db/serializers.ts`
 - `apps/api/src/db/migrations/`
 - the owning service or route
@@ -171,6 +774,22 @@ Open these first:
 - `apps/frontend/src/hooks/`
 - `apps/frontend/src/services/`
 - `apps/frontend/src/index.css`
+
+## Frontend Build, Dev Server, And Test Harness
+
+Open these first:
+
+- `docs/architecture/frontend-build.md` (how the bundle is built, served, and embedded)
+- `apps/frontend/build.ts` and `apps/frontend/bunfig.toml`
+- `apps/api/src/server/frontend-static.ts` (static assets + SPA fallback)
+- `apps/api/src/server/embedded-frontend.ts`
+- `scripts/lib/embed-frontend.ts` (binary embedding) and `scripts/test-build.ts`
+- `scripts/ci/frontend-bundle-report.ts` (per-chunk size diff against a saved baseline)
+- `scripts/lib/test-lanes.ts` (the lane registry, not just `package.json`)
+
+`docs/architecture/frontend-build.md` carries the measured traps for this section (bundler,
+dev server, embedding) and `docs/reference/testing.md`'s Frontend section carries the ones
+for the test harness. Read both before editing anything here.
 
 ## Shared Contracts, Types, And i18n
 
@@ -189,7 +808,268 @@ Open these first:
 Open these first:
 
 - `apps/api/src/lib/config.ts`
+- `apps/api/src/lib/runtime-paths.ts`
 - `apps/api/src/index.ts`
 - `.mango/config.toml.example`
 - `.mango/.env.example`
 - `scripts/build.ts`
+- `scripts/build-runtime.ts`, `scripts/lib/runtime-build.ts` (cargo runtime per target)
+- `.github/workflows/runtime-build.yml` (per-target runtime builds for distribution)
+- `scripts/test-build.ts` (binary smoke)
+
+The build produces two binaries per platform: `mangostudio`, Bun-compiled from
+`apps/api`, and the `mangostudio-runtime` execution host, the cargo binary from
+`crates/mangostudio-runtime` (built per target by `runtime-build.yml`, or for the host
+target by `cargo build`; see `docs/reference/releasing.md`). Both report the same release
+version and ship together in every channel — archives, npm platform packages, and the
+Docker images — because the hub resolves the runtime as a sibling of its own executable
+and the protocol handshake refuses a version mismatch. Local is that same binary, spawned by
+the hub over stdio (`openLocalRuntime` in `runtime-connection-manager.ts`); a source checkout
+launches the newest `target/debug` or `target/release` build instead, and `bun run dev`
+builds it first. There is no TypeScript fallback.
+
+## Mango Protocol (spec, TypeScript SDK, Rust crate)
+
+The wire contract the hub and the runtime speak, published as `@mangostudio/protocol` (npm) and
+`mango-protocol` (crates.io) on their own `protocol-v*` release train. Read
+`packages/protocol/AGENTS.md` before changing anything here — a wire change touches every layer in
+a fixed order and is reviewed as one.
+
+- Normative text: `spec/mango-protocol-1.md`, `spec/transports/*.md`, `spec/versioning.md`
+- Normative schemas: `spec/schema/1/{protocol,catalog}.json`
+- Conformance corpus both SDKs read: `spec/fixtures/1/`
+- TypeScript SDK: `packages/protocol/src/` (entries `index`, `stdio`, `ipc`, `in-process`, `ws`, `spawn`, `testing`)
+- Rust crate: `crates/mango-protocol/src/`; fuzz targets in `crates/mango-protocol/fuzz/`
+- Lanes: `scripts/protocol/{check,test,fix}.ts`, driven by `bun run protocol:check` / `protocol:test`; which tasks run is `tasks.ts`, and `run-tasks.ts` fails the check unless every feature-powerset partition ran and passed
+- Packing and publishing: `scripts/protocol/{pack,verify-package,release-prepare}.ts`
+- CI: `.github/workflows/protocol-{ci,release,fuzz}.yml`, path-filtered on the directories above
+- Where the repository records all of this once: `scripts/lib/protocol.ts`
+
+The hub's own catalog is generated against this spec — see `scripts/runtime-contract/` and
+`apps/shared/src/runtime-contract/`. A non-TypeScript runtime embeds those generated artifacts
+rather than restating them: `crates/mangostudio-runtime-contract/`, its behavioural corpus at
+`generated/conformance-corpus.json`, and [runtime-contract.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/runtime-contract.md).
+`crates/mangostudio-runtime/` serves that embedded contract over a `mango-protocol` session — its
+typed dispatcher, fail-closed ports, and panic isolation are covered in
+[runtime-dispatcher.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/runtime-dispatcher.md). Its binary is the
+`mangostudio-runtime` every distribution channel ships beside the hub (the "Config, Runtime, And
+Standalone Build" section above), so the hub reaches it through the resolution in
+`apps/api/src/lib/runtime-paths.ts` (override, sibling, then a source checkout's cargo build). `scripts/lib/release-version.ts`'s
+`APP_VERSIONED_CRATES` version-locks the crate to the app release, and the build stamps the exact
+distribution version in at compile time, which is what `requireMatchingRelease`
+(`apps/api/src/services/runtime-client/spawn-runtime-child.ts`) checks it against.
+
+## Out-Of-Process Environments (stdio, WSL, paired WebSocket, Direct URL)
+
+Open these first:
+
+- `crates/mangostudio-runtime/src/cli.rs` (binary entry, `--stdio`)
+- `apps/api/src/services/runtime-client/spawn-runtime-child.ts` (spawn, handshake, teardown)
+- `apps/api/src/services/runtime-client/runtime-connection-manager.ts` (state machine, backoff)
+- `apps/api/src/services/runtime-client/target-paths.ts` (target path style, from the manifest)
+- `apps/api/src/lib/runtime-paths.ts` (`resolveRuntimeLaunchCommand`)
+- `apps/frontend/src/features/environments/components/AddEnvironmentDialog.tsx`
+- Reference: `docs/architecture/hub-runtime.md`
+
+Reconnection is a backoff deadline checked on the next use, not a scheduled timer;
+`#markUnavailable` is where a dead runtime becomes `disconnected`. The stdio child's
+stdout is protocol-only — anything written to it there desynchronises the stream and
+tears the connection down.
+
+Where a runtime lives and what it is allowed to do — `~/.mango/runtime/<slot>/`, the
+`allow` set, and the CLI that writes it:
+
+- `apps/shared/src/runtime-home/` (schemas, presets, path layout — the contract)
+- `crates/mangostudio-runtime/src/runtime_home.rs` (the half that touches disk), `src/setup.rs`, `src/health.rs`
+- `crates/mangostudio-runtime/src/slot_publish.rs` (the slot pointer per platform — POSIX `current`
+  link, Windows atomic `.cmd` shim — plus the version prune and the rename retry slot writes
+  go through), `src/slot_update_lock.rs` (one writer per slot, across processes)
+- `crates/mangostudio-runtime/src/cli/native_operation.rs` (`mangostudio-runtime install`: the same publication a
+  live update performs, minus the transfer), `src/update.rs` and `src/update_transfer.rs` (the transfer)
+- `crates/mangostudio-runtime/src/runtime_home/owner_only.rs` (`chmod 0600`, or `icacls` where there is no mode)
+- `crates/mangostudio-runtime/src/ports/authorization.rs`, `src/consent/` (dispatch refusal + per-call re-read)
+- `crates/mangostudio-runtime/src/audit/` (local NDJSON receipt; never on the wire)
+- `apps/api/src/modules/generation/application/resolve-capability-candidates.ts` (hub withholds
+  tools the connected manifest refuses)
+- `apps/frontend/src/features/environments/components/EnvironmentEntitiesOverview.tsx`
+  (permissions row on the environment card)
+- `apps/api/src/cli/runtime-slot-probe.ts` (what `mango doctor` reports per slot)
+- Reference: `docs/architecture/hub-runtime.md` — Enforcement, Audit log, and Protocol evolution
+
+WSL is a launcher over that same transport, not a protocol of its own:
+
+- `apps/api/src/modules/environments/domain/wsl-output.ts` (UTF-16LE + localized listing)
+- `apps/api/src/modules/environments/application/wsl-detection.ts` (detection service, win32 gate,
+  TTL memo)
+- `apps/api/src/modules/environments/http/environment-routes.ts` (`GET /environments/wsl`)
+- `apps/api/src/modules/environments/domain/wsl-runtime-release.ts` (argv, merged slot/platform/
+  version probe script, asset names)
+- `apps/api/src/modules/environments/infrastructure/wsl-provisioner.ts` (download, verify, install)
+- `apps/api/src/modules/environments/infrastructure/wsl-executable.ts` (resolves the real
+  `wsl.exe` — `MANGO_WSL_EXE`, Program Files, System32, PATH — instead of the System32 launcher
+  stub that a bare `wsl.exe` on PATH always finds)
+- Tests: `apps/api/tests/unit/modules/environments/wsl-executable.test.ts`,
+  `wsl-runtime-release.test.ts`, `wsl-provisioner.test.ts`, `wsl-detection.test.ts`;
+  `apps/api/tests/integration/modules/environments/wsl-runtime-scripts.integration.test.ts`
+  (the scripts against a real `sh`); `apps/api/tests/unit/services/runtime-connection-manager.test.ts`
+  (`connectWslRuntime`'s failure classification)
+
+SSH is a launcher too — the system `ssh` client, not a library — and shares one push path
+with WSL. Everything that puts runtime bytes on another machine goes through it:
+
+- `apps/shared/src/environments/ssh.ts` (forced options, destination, launch argv, the
+  quoting rules for the two shells that meet there)
+- `apps/api/src/services/runtime-client/connect-ssh-runtime.ts` (spawn + handshake)
+- `apps/api/src/modules/environments/infrastructure/ssh-command-runner.ts` (one-off command
+  spawns for push/probe/setup — never multiplexed onto the live protocol connection)
+- `apps/api/src/modules/environments/domain/runtime-push.ts` (**the only place that writes a
+  runtime into a slot**: stage-verify-publish, slot GC, removal, byte size. Every script is a
+  constant; versions and paths travel as argv)
+- `apps/api/src/modules/environments/domain/runtime-release-fetch.ts` (raw asset preferred,
+  archive fallback, checksum verified before any remote write, hub cache prune)
+- `apps/frontend/src/features/environments/components/SshPanel.tsx`
+
+Onboarding is sequencing over those pieces, not a layer of its own. A change here that
+touches push, setup, service or probing internals belongs in one of the files above:
+
+- `apps/api/src/modules/environments/domain/remote-bootstrap-commands.ts` (**the only two
+  ssh commands onboarding adds**: the bounded `connect` that stores hub URL and token, and
+  the `service install` that supplies the session-bus environment)
+- `apps/api/src/modules/environments/application/runtime-lifecycle-service.ts` →
+  `runPairedBootstrap` (push → setup → credential → service, over one channel; the ssh
+  config is request-scoped and never stored, and the pairing token leaves the hub only over
+  that ssh channel's stdin, never as a response or a command argument)
+- `apps/frontend/src/features/environments/onboarding/` (`steps.ts` is the flow shape and
+  the whole of resume — read it before any step component)
+- Reference: `docs/operations/remote-runtimes.md` — Onboard a new machine
+
+Containers are the third launcher, and the only one whose point is what the agent *cannot*
+do. Nothing is installed on the far side — the runtime is bind-mounted read-only — so none of
+the push path above applies:
+
+- `apps/shared/src/environments/container.ts` (launch/probe/pull/kill argv, the mount denylist
+  both the browser form and the connector run)
+- `apps/api/src/modules/environments/infrastructure/container-engine.ts` (engine detection,
+  image presence, pull, the platform probe cached by image id)
+- `apps/api/src/modules/environments/domain/container-runtime-source.ts` (**the only place
+  that resolves a mountable runtime path**; delegates which bytes to the channel-aware
+  resolver rather than fetching its own)
+- `apps/api/src/modules/environments/domain/container-failure.ts` (engine stderr → typed reason)
+- `apps/api/src/services/runtime-client/connect-container-runtime.ts` (spawn, pull phase,
+  kill backstop)
+- `apps/frontend/src/features/environments/container-form.ts` and
+  `components/ContainerConfigFields.tsx` / `ContainerPanel.tsx`
+- Engine behaviour is proven against a real engine, not asserted from argv:
+  `apps/api/tests/integration/services/connect-container-runtime.integration.test.ts`
+
+The card's install/upgrade/setup/removal surface sits on top of both:
+
+- `apps/api/src/modules/environments/domain/runtime-lifecycle-view.ts` (which actions a
+  transport gets, and the consent gate that hides all three push actions when a machine
+  refuses `allow.update`)
+- `apps/api/src/modules/environments/application/runtime-lifecycle-service.ts` (SSE run
+  streams, SSH push, setup-over-ssh)
+- `apps/frontend/src/features/environments/components/RuntimeLifecyclePanel.tsx`,
+  `RuntimeConsentDialog.tsx`
+- Shell behaviour is covered by running the scripts, not by asserting their text:
+  `apps/api/tests/unit/modules/environments/runtime-slot-scripts.test.ts`
+
+A paired WebSocket inverts the direction — the runtime dials the hub — so nothing
+in the spawn path applies and the manager is entered through `adopt()` rather than
+`connect()`:
+
+- `@mangostudio/protocol/ws` — `createWebSocketPort` (frames chunked across 16 KiB
+  messages, send queue, backpressure) and the `mango.v1` subprotocol; `CLOSE_CODES` says why
+  a socket ended and whether redialing can change it
+- `crates/mangostudio-runtime/src/transport/connect.rs` (dial loop, backoff, heartbeat), `crates/mangostudio-runtime/src/runtime_home.rs`
+- `apps/api/src/modules/environments/http/runtime-socket-routes.ts` (`/api/runtime`)
+- `apps/api/src/modules/environments/domain/pairing-token.ts` (selector + verifier, dial endpoint)
+- `apps/api/src/modules/environments/application/runtime-pairing-service.ts`
+- `apps/frontend/src/features/environments/components/RuntimePairingPanel.tsx`
+- Conformance: `itBehavesLikeAMangoTransport` from `@mangostudio/protocol/testing` — a new
+  transport supplies a fixture to the SDK's suite rather than writing one of its own.
+
+Direct URL inverts it again — the hub dials a listening runtime — so it is a connector
+on `connect()`, not `adopt()`, and is not in the dial-in transport set:
+
+- `crates/mangostudio-runtime/src/transport/serve.rs` (bearer upgrade, supersede, `/health`)
+- `apps/api/src/services/runtime-client/connect-http-runtime.ts` (hub dial-out)
+- `apps/api/src/services/runtime-client/runtime-token-secrets.ts` (OS secret store, hard-fail)
+- `apps/api/src/services/runtime-client/http-runtime-url.ts` (http→ws, allow private hosts)
+- `apps/frontend/src/features/environments/components/DirectUrlPanel.tsx`
+
+Paths inside a distribution are native Linux paths end to end — there is no
+translation layer and none is wanted. What the hub does is *resolve* in the
+target's style, from the manifest; see the Paths Across Hosts section of
+`hub-runtime.md` before adding anything that touches `~` or a relative path.
+
+## CLI And Server Lifecycle
+
+Covers `serve`, `status`, `stop`, `restart`, `killserver`, `service`, `logs`,
+`open`, and `doctor`.
+
+Open these first:
+
+- `apps/api/src/index.ts` (CLI entry)
+- `apps/api/src/cli/` (argument parsing, dispatch, commands, doctor checks)
+- `apps/api/src/cli/log-tail.ts` (tail, newest-log lookup, the `-f` follow loop)
+- `apps/api/src/cli/restart-handshake.ts` (`MANGO_RESTART_WAIT_PID`, the successor's wait)
+- `apps/api/src/server/start-server.ts`
+- `apps/api/src/server/shutdown-request.ts` (letting go of the port from inside a request)
+- `apps/api/src/lib/server-state.ts` (PID, port, and the supervisor unit that started it)
+- `apps/api/src/lib/mango-paths.ts`
+- Reference: `docs/reference/cli.md`
+
+The hub's own machine — process, service unit, doctor, log tail, and the two
+mutating actions — lives in one module, shared by the CLI and the API:
+
+- `apps/api/src/modules/machine/domain/` (`hub-process.ts` launch mode and status,
+  `hub-service-identity.ts` unit names per platform, `hub-executable.ts` what a unit
+  runs, `machine-actions.ts` availability rules, `machine-guard.ts` the loopback guard)
+- `apps/api/src/modules/machine/application/` (`hub-service.ts` unit definition and env
+  allowlist, `doctor-service.ts` the checks both surfaces render, `machine-service.ts`)
+- `apps/api/src/modules/machine/http/machine-routes.ts`
+- `apps/shared/src/machine/user-service.ts` (`@mangostudio/shared/machine/service`: the hub's
+  supervisor abstraction — systemd user units, launchd agents, per-user Scheduled Tasks) and
+  `crates/mangostudio-runtime/src/cli/user_service.rs` (the same three for the runtime)
+- `apps/shared/src/machine/schemas.ts` (single source of truth for every shape)
+
+Self-update — who installed the binary, whether a newer release exists, and
+`mangostudio upgrade` — is its own module; the machine module and the CLI only
+render what it decides:
+
+- `scripts/install/install.sh`, `scripts/install/install.ps1` (the only writers of the
+  install layout: `<root>/<version>/`, `current`, the bin link or `.cmd` shim,
+  `install-origin.json`; `--local`, `--use`, `--rollback`, `--prune`, `--uninstall`)
+- `apps/api/src/modules/updates/domain/` (`install-origin.ts` launcher marker → origin
+  record → path heuristics, `upgrade-plan.ts` the per-owner table: self, delegate or
+  refuse, `resolve-target.ts` channel × platform → archive or npm tarball,
+  `platform-id.ts` the baked `BUILD_PLATFORM_ID`)
+- `apps/api/src/modules/updates/infrastructure/` (`embedded-installers.ts` the text-imported
+  scripts, `release-index.ts`, `npm-registry.ts`, `release-download.ts` download + digest)
+- `apps/api/src/modules/updates/application/` (`install-status.ts` the one derivation of
+  origin → channel → plan → command, `update-check.ts` the 24 h cached check and its
+  opt-outs, `upgrade-service.ts` stage → verify → run the embedded script → restart)
+- `apps/api/src/cli/commands/upgrade.ts`, `apps/api/src/cli/commands/installer.ts`
+- `GET /api/machine/update`, `POST /api/machine/upgrade` in `machine-routes.ts`;
+  `apps/frontend/src/features/environments/machine/components/UpdateBanner.tsx`
+- `apps/shared/src/updates/schemas.ts` (single source of truth for every shape)
+- Reference: `docs/reference/cli.md` (the `upgrade` command and origin table),
+  `docs/reference/releasing.md` ("How the binary upgrades itself")
+
+## Changelog And Release
+
+Open these first:
+
+- `cliff.toml` (git-cliff config; `CHANGELOG.md` is generated, never hand-edited)
+- `scripts/changelog.ts`
+- `scripts/lib/changelog.ts`
+- `scripts/lib/release-version.ts`
+- `scripts/lib/prepare-release.ts`
+- `scripts/release/prepare-release.ts`
+- `scripts/release/pack-npm.ts`
+- `scripts/check-versions.ts`
+- `packages/cli/`
+- `crates/mangostudio-launcher/`
+- `.github/workflows/pr-qa-report.yml`, `.github/workflows/release.yml`, `.github/workflows/cargo-shim.yml`
+- Reference: `docs/reference/releasing.md`

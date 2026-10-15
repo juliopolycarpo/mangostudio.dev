@@ -8,18 +8,28 @@ groupId: "guides"
 groupTitle: "Guides"
 order: 10
 sourcePath: ".github/CONTRIBUTING.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/CONTRIBUTING.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.github/CONTRIBUTING.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Contributing to MangoStudio
 
 Thank you for your interest in contributing to MangoStudio!
 
+## Code of Conduct
+
+This project follows the [Contributor Covenant Code of Conduct](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.github/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to `julio@polycarpo.dev`.
+
 ## Prerequisites
 
-- [Bun](https://bun.sh/) v1.3.14 or later
+- [Bun](https://bun.sh/) 1.4.3 or newer — `bun upgrade`, or
+  `curl -fsSL https://bun.sh/install | bash` for a first install
+- Rust 1.99.0 or newer via [rustup](https://rustup.rs/) — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. The hub launches
+  Local as the cargo-built `mangostudio-runtime`; `bun run dev` builds it first, and
+  `rust-toolchain.toml` pins the version
 - Git with GPG signing configured (see [Commit Guidelines](#commit-guidelines))
+
+The repo pins Bun 1.4.3. The pin moved to the 1.4.x line at 1.4.0, the release that made the post-rewrite runtime generally available; it tracked the `canary` channel until then. `.bun-version` is what CI installs, and `packageManager` must name the same version — see [`docs/reference/tooling.md`](/en/docs/reference/tooling/#bun).
 
 ## Environment Setup
 
@@ -41,7 +51,7 @@ cp .mango/.env.example ~/.mango/.env
 ## Development Workflow
 
 ```bash
-# Start all dev servers (API on :3001, frontend on :5173)
+# Start the dev server (API and frontend together on :3001)
 bun run dev
 
 # Or start each workspace individually
@@ -51,21 +61,24 @@ bun run dev --frontend
 
 ## Documentation Map
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — entry point to the documentation tree
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — entry point to the documentation tree
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — shortest contributor onboarding path
 - [`docs/reference/testing.md`](/en/docs/reference/testing/) — testing taxonomy, runners, and support rules
 - [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) — feature-by-feature file map for targeted work
 
 ## Code Standards
 
-Refer to [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) for the full coding style, naming conventions, i18n rules, and testing guidelines. Key points:
+Refer to [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) for the full coding style, naming conventions, i18n rules, and testing guidelines. Key points:
 
 - TypeScript throughout — no plain JS files
 - 2-space indentation, single quotes, semicolons
 - All UI strings must come from `@mangostudio/shared/i18n` — never hardcode user-visible text
 - Hooks that contain JSX must use `.tsx` extension
 - `CLAUDE.md` files with `@imports`
-- AI related Agents: Use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) as a source of agentic stuff
+- AI related Agents: Use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) as a source of agentic stuff
+- Cursor-only extras (including Cursor Cloud VM notes) live in
+  [`.cursor/rules/`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.cursor/rules/). Do not duplicate `AGENTS.md` there; Cursor loads it
+  automatically.
 
 ### Module Architecture
 
@@ -116,7 +129,7 @@ This runs Biome, dprint, circular dependency checks, and TypeScript type-checkin
 bun run build
 ```
 
-This builds the frontend with Vite by default. Use `bun run build --binary` for standalone binaries.
+This builds the frontend with `Bun.build()` (`apps/frontend/build.ts`) by default. Use `bun run build --binary` for standalone binaries.
 
 ## Commit Guidelines
 
@@ -145,9 +158,10 @@ This is a one-time local setup. The template is at `.gitmessage` in the repo roo
 ## Changelog
 
 `CHANGELOG.md` is generated from Conventional Commits with git-cliff — never edit
-it by hand. The PR QA workflow posts bot comments on every PR — a commit
-summary, a **Changelog Preview** showing the entries the PR would add, and a QA
-metrics report. Preview the changelog locally with `bun run changelog --preview`. See
+it by hand. The PR QA workflow posts two bot comments on every PR — a QA
+metrics report, and a commit summary with a **Changelog Preview** showing the
+entries the PR would add (each list folds once it has more than five items).
+Preview the changelog locally with `bun run changelog --preview`. See
 [`docs/reference/releasing.md`](/en/docs/reference/releasing/) for the release flow.
 
 ## Pull Request Process
@@ -167,8 +181,10 @@ metrics report. Preview the changelog locally with `bun run changelog --preview`
 
 Every PR also runs the repository security gates:
 
-- **CodeQL** (`.github/workflows/codeql.yml`) uses GitHub code scanning advanced setup for JavaScript/TypeScript, no-build extraction, and the `security-extended` query suite. Review both the `CodeQL / Analyze (javascript-typescript)` workflow check and the follow-up `Code scanning results / CodeQL` check. New high, critical, or error-level alerts must be fixed or intentionally triaged before merge.
+- **CodeQL** (`.github/workflows/codeql.yml`) uses GitHub code scanning advanced setup for JavaScript/TypeScript and Rust, no-build extraction, and the `security-extended` query suite. Review the `CodeQL / Analyze (javascript-typescript)`, `CodeQL / Analyze (rust)`, and `CodeQL / Analyze (rust, windows)` workflow checks and the follow-up `Code scanning results / CodeQL` check. New high, critical, or error-level alerts must be fixed or intentionally triaged before merge.
 - **Dependency Review** (`.github/workflows/dependency-review.yml`) runs when manifests or lockfiles change and fails on new moderate-or-worse vulnerable dependencies. It does not enforce license policy.
+- **Dependency Audit** (`.github/workflows/dependency-audit.yml`) runs `bun audit --audit-level=moderate` over the whole `bun.lock` daily and on PRs that change a manifest or the lockfile, so it also catches advisories published against versions already on `main`. Fix findings with `bun audit fix`.
+- `bun run check` includes `bun dedupe --check`: a lockfile that holds two versions of a package one version satisfies fails. Run `bun dedupe` and commit the lockfile.
 - The first PR that adds or changes code scanning may get a generic `github-advanced-security[bot]` setup comment. Treat that as an enablement notice; the actionable status is in the checks above and the repository Security tab.
 
 ## Database Migrations

@@ -8,31 +8,190 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 60
 sourcePath: "docs/reference/releasing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/releasing.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/releasing.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Releasing
 
 MangoStudio ships as standalone binaries (GitHub Releases), as a Docker image on
 GHCR, as an npm CLI (`mangostudio`), via a Homebrew tap, via a Scoop bucket
-(Windows), and as a crates.io launcher crate (`cargo install mangostudio`). The
-changelog is generated from Conventional Commits with [git-cliff](https://git-cliff.org);
-nothing here is hand-edited.
+(Windows), and through crates.io (`cargo binstall mangostudio` or
+`cargo install mangostudio`). The changelog is generated from Conventional
+Commits with [git-cliff](https://git-cliff.org) at release preparation and
+enforced at tag time; nothing here is hand-edited.
+
+## Two trains, one repository
+
+This page is the **application's** release train: bare `v*` tags,
+`.github/workflows/release.yml`, and the root `CHANGELOG.md`.
+
+The Mango Protocol releases separately from the same repository — `protocol-v*` tags,
+`.github/workflows/protocol-release.yml`, the `protocol-release` environment, and
+`packages/protocol/CHANGELOG.md`. The two never move together, and nothing below applies to it.
+See `packages/protocol/AGENTS.md`. The tag prefixes are what keep the workflows apart:
+`release.yml` triggers on an anchored `v*.*.*`, which `protocol-v0.2.1` cannot match.
+
+One consequence worth knowing: the protocol arrived through a merge of an unrelated root with its
+original SHAs, so this repository has two disjoint histories. `bun run changelog` scopes its
+full-history modes past the import boundary (`PROTOCOL_IMPORT_TIP` in `scripts/lib/protocol.ts`),
+because a path rule cannot separate them — the imported commits carry the upstream tree's
+root-relative paths.
+
+## Rust support and releases
+
+Rust source builds and new Rust crate releases use a single minimum of Rust 1.99.0. This
+intentionally replaces the workspace's stable-minus-two floor of 1.97.0 and the launcher's
+1.96.0 exception. Every stable crate inherits the root workspace's `rust-version`, and the
+development pin is also 1.99.0. It applies to the published `mangostudio` launcher and
+`mango-protocol` Rust SDK as well as the unpublished runtime crates. The external-agent SDK
+keeps its own minimum and release policy.
+
+Users building the launcher with Rust 1.96 or 1.97 must update their compiler before installing
+a release that contains this policy change:
+
+```bash
+rustup toolchain install 1.99.0 --profile minimal
+cargo +1.99.0 install mangostudio --locked
+```
+
+Source contributors can let rustup install `rust-toolchain.toml`'s compiler. Remove or update an
+older `RUSTUP_TOOLCHAIN` override or explicit `cargo +1.96.0`/`cargo +1.97.0` selection. Downstream
+Rust SDK consumers must also update their CI and local compiler before adopting a release with
+the new minimum. Previously published crate metadata stays unchanged; a consumer that needs an
+older compiler can keep a published version whose `rust-version` supports it. The TypeScript SDK
+and users of prebuilt app binaries acquire no local Rust compiler requirement. `cargo binstall`
+does not compile when it finds a matching prebuilt archive, but compiling its fallback launcher
+requires Rust 1.99.0 or newer.
+
+The launcher keeps the application version and bare `v*` release train. The Rust SDK keeps the
+protocol package version and `protocol-v*` train; sharing a compiler minimum does not combine
+their versions. Treat this as an intentional source-compatibility change in the next application
+and protocol release notes that ship it. Generate each changelog through its normal release
+preparation and review that section for the Rust 1.99 requirement and migration. Select package
+versions under the existing release rules. This change bumps no package version and changes no
+wire version; generated changelogs are never edited by hand.
+
+## Trusted release signer
+
+Both application and protocol release workflows verify an annotated SSH-signed
+tag at the checked-out commit before any tagged code runs or channel can publish.
+The verifier, its Bun version and public policy come from protected `main`,
+independently of the tag being authenticated.
+The verifier runs in the trusted archive with automatic `.env` loading disabled,
+so a candidate's Bun configuration cannot execute a preload before authentication.
+The public policy in `.github/release-allowed-signers` trusts `julio@polycarpo.dev`, ED25519
+fingerprint `SHA256:2dqX4aQDayJuTK97HAXfcMlVrcfuPEsatwTAn4sxDSo`, for Git
+signatures. An unsigned tag, another signer, a missing policy or a tag pointing
+at another commit fails the gate. The signed tag name must match the release
+ref and requested version, so a signature cannot be reused under a different
+name. A manual app release must target exactly `v<version>` as a tag ref.
+Source verification bypasses cannot skip these checks.
+Key rotation requires a reviewed update to the public policy; no private key is
+stored in the repository. Existing ancestry checks and publication rerun
+idempotency still apply. Release dry runs test temporary trusted, unsigned and
+untrusted tags locally without publishing them.
 
 ## One-shot contract
 
-Setting the secrets below and pushing a signed semver tag (`v0.2.0`) is the entire
-release procedure. The workflow validates version lockstep, builds every artifact,
-publishes each channel independently, and lands `CHANGELOG.md` on `main` (direct
-push, or a `github-actions[bot]` pull request when the branch is protected).
+With the secrets below set, releasing is `bun run release:prepare <version>`, one
+commit, and a signed semver tag push (`v0.2.0`). The workflow validates version
+lockstep and the pre-tag changelog, builds every artifact, and publishes each
+channel independently. The tag ships its own `CHANGELOG.md` — nothing writes back
+to `main` after the release.
 
-| Secret                      | Used by                                                      | Scope                                                                                                                                        |
-| --------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NPM_TOKEN`                 | `npm-publish`, `npm-canary`                                  | Publish rights on `mangostudio` and `@mangostudio/cli-*`                                                                                     |
-| `DIST_REPOS_TOKEN`          | `homebrew`, `scoop`                                          | Fine-grained PAT with contents read/write on `juliopolycarpo/homebrew-tap` and `juliopolycarpo/scoop-bucket`                                 |
-| `CARGO_REGISTRY_TOKEN`      | `cargo-publish`, `crates-canary`                             | Temporary crates.io fallback until Trusted Publishing is registered and verified for the `mangostudio` crate                                 |
-| *(built-in `GITHUB_TOKEN`)* | `github-release`, `docker`, the canary channel, attestations | No extra setup — workflow grants `packages: write` for GHCR; `cargo-publish`/`crates-canary` grant `id-token: write` for crates.io OIDC auth |
+| Secret                      | Used by                                                      | Scope                                                                                                                |
+| --------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `NPM_TOKEN`                 | `npm-publish` (optional env), `npm-canary` (repo)            | Legacy npm token only when `workflow_dispatch` sets `allow_legacy_npm_token=true`; repository secret for canary      |
+| `DIST_REPOS_TOKEN`          | `homebrew`, `scoop`                                          | `release` environment secret — fine-grained PAT with contents read/write on the Homebrew tap and Scoop bucket        |
+| `CARGO_REGISTRY_TOKEN`      | `cargo-publish` (optional)                                   | Legacy crates.io token used only when `workflow_dispatch` sets `allow_legacy_cargo_token=true`                       |
+| *(built-in `GITHUB_TOKEN`)* | `github-release`, `docker`, the canary channel, attestations | No extra setup — tag releases grant `packages: write` for GHCR and `id-token: write` for crates.io and npm OIDC auth |
+
+### Pre-release tags
+
+A tag carrying a semver pre-release identifier — `v0.2.0-rc.1`, `v1.0.0-beta.3`,
+anything with a `-` — takes the same train and builds the same artifacts, but is
+never published as *the current version*. `prepare` resolves the classification
+once, and every channel reads that one output; nothing re-derives it.
+
+| Channel         | Stable tag (`v0.2.0`)                           | Pre-release tag (`v0.2.0-rc.1`)                         |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| GitHub Releases | published; becomes Latest                       | published, marked pre-release and **not** Latest        |
+| npm             | `latest` dist-tag                               | `next` dist-tag; `latest` stays on the last stable      |
+| GHCR            | `:<version>`, `:latest`, `:bookworm`, `:alpine` | version-pinned tags only; the floating tags do not move |
+| Homebrew tap    | formula updated                                 | skipped                                                 |
+| Scoop bucket    | manifest updated                                | skipped                                                 |
+| crates.io       | published                                       | published                                               |
+
+The two skips are not omissions. The tap holds one formula and the bucket one
+manifest, and neither `brew install mangostudio` nor `scoop install mangostudio`
+can ask for a channel, so publishing a release candidate there would hand it to
+every user of those channels. crates.io needs no gate at all: it excludes
+pre-release versions from `cargo install` resolution itself, so the version is
+published and only reachable by asking for it (`--version 0.2.0-rc.1`).
+
+Only the pre-release row sets the Latest marker explicitly. A stable release
+sends no `make_latest` at all, and the REST API defaults that to `true` for a
+newly published release — so **every stable tag takes the marker, in tag-push
+order, not in semver order**. `gh`'s own `--latest` help calls the default
+"automatic based on date and version"; that describes the `make_latest=legacy`
+value, which `gh release create` has no way to send (cli/cli#13828). The
+practical consequence is a backport: cutting `v1.2.4` after `v2.0.0` already
+shipped repoints `/releases/latest` at the older line. Nothing in this workflow
+guards that today — if the release train ever serves more than one line, the
+backport's `github-release` job needs `--latest=false` the way the pre-release
+row does.
+
+That marker is the one thing every stable consumer agrees on:
+`scripts/install/install.sh` and `scripts/install/install.ps1` both resolve a
+stable install through `/releases/latest`, and so does the hub's own update
+check (`resolveStableLatestVersion` in
+`apps/api/src/modules/updates/infrastructure/release-index.ts`). An `-rc` tag
+published as a full release would be what a plain `curl … | bash` installs and
+what every running hub is offered as an upgrade.
+
+The pre-release row still pins the marker to `false` alongside `--prerelease`,
+but as a restatement rather than the thing doing the work: `make_latest`'s own
+contract is that "drafts and prereleases cannot be set as latest", so the
+`prerelease` flag alone already keeps the release off `/releases/latest` — on
+the create POST and on the draft→publish PATCH alike. Spelling both out keeps
+the two questions — *how is this release labelled* and *what does
+`/releases/latest` resolve to* — visible at the one call site that answers them.
+
+Install a pre-release explicitly:
+
+```bash
+# The binary installer resolves /releases/latest only when no version is given.
+curl -fsSL https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh \
+  | bash -s -- --version 0.2.0-rc.1
+npm install -g mangostudio@next
+docker pull ghcr.io/juliopolycarpo/mangostudio:0.2.0-rc.1
+cargo install mangostudio --version 0.2.0-rc.1
+```
+
+`brew` and `scoop` have no pre-release form, by the same constraint that skips
+their jobs above.
+
+A pre-release is not the canary channel. Canary cuts a release from every green
+`main` commit and carries a curated asset subset; a pre-release tag is cut by
+hand and publishes the full stable artifact set.
+
+### `release` environment
+
+Stable publish credentials live in the GitHub Environment named `release`, not
+as free-floating repository secrets:
+
+- **Deployment branches and tags:** restricted to tags matching `v*.*.*`.
+- **Required reviewers:** none — a tag push still releases unattended.
+- **Jobs that declare it:** `github-release`, `docker`, `npm-publish`,
+  `homebrew`, `scoop`, and `cargo-publish`. Adding a new publish channel means
+  joining this environment, not adding a repository secret.
+- **Canary is excluded:** `.github/workflows/canary.yml` publishes on every
+  green push to `main`, which the tag rule would block. It keeps using the
+  repository-scoped `NPM_TOKEN`.
+- **Manual dispatch:** because the environment is tag-restricted, a
+  `workflow_dispatch` run of `release.yml` must target a `v*.*.*` tag ref
+  (`gh workflow run release.yml --ref v0.2.0`), not a branch.
 
 ### One-time setup checklist
 
@@ -40,33 +199,249 @@ Complete these once per fork or org before the first tag push:
 
 1. Create the shared Homebrew tap [`juliopolycarpo/homebrew-tap`](https://github.com/juliopolycarpo/homebrew-tap) with a `Formula/` directory.
 2. Create the shared Scoop bucket [`juliopolycarpo/scoop-bucket`](https://github.com/juliopolycarpo/scoop-bucket) with a `bucket/` directory.
-3. Reserve the `mangostudio` crate name on [crates.io](https://crates.io) and generate an API token for the initial publish.
-4. Configure crates.io Trusted Publishing for the existing `mangostudio` crate: crate **Settings -> Trusted Publishing -> Add -> GitHub**, repository owner `juliopolycarpo`, repository name `mangostudio`, workflow filename `release.yml`, and no environment unless the release job is later moved behind a GitHub environment.
-5. Add the repo secrets (`NPM_TOKEN`, `DIST_REPOS_TOKEN`, and the temporary `CARGO_REGISTRY_TOKEN` fallback) to this repository.
-6. After one release proves `cargo-publish` minted a Trusted Publishing token successfully, remove the `CARGO_REGISTRY_TOKEN` repo secret. Until then, the release job falls back to the secret if crates.io has not accepted the OIDC publisher yet.
-7. After the first GHCR push, set the `ghcr.io/juliopolycarpo/mangostudio` package visibility to **public** in GitHub package settings.
-8. No branch-protection tuning is required for the changelog: the `update-changelog` job pushes `CHANGELOG.md` to `main` directly when it can (`contents: write`), and falls back to a `github-actions[bot]` pull request when protection rejects the push (`pull-requests: write`). Enable repo auto-merge if you want that PR to merge itself once checks pass.
+3. Reserve the `mangostudio` crate name on [crates.io](https://crates.io) and generate an API token only if you need the temporary legacy fallback.
+4. Configure crates.io Trusted Publishing for the existing `mangostudio` crate: crate **Settings -> Trusted Publishing -> Add -> GitHub**, repository owner `juliopolycarpo`, repository name `mangostudio`, workflow filename `release.yml`, and leave the environment field empty. The `cargo-publish` job declares `environment: release`, but crates.io configs with no environment still match — do not set an environment on the crates.io side unless you intentionally want to require one.
+5. Create the `release` GitHub Environment (tag rule `v*.*.*`, no required reviewers) and add `DIST_REPOS_TOKEN` as an **environment** secret. Keep `NPM_TOKEN` in the environment only while the `allow_legacy_npm_token` dispatch escape hatch might still be needed. Keep a repository-scoped `NPM_TOKEN` for canary. Keep `CARGO_REGISTRY_TOKEN` only while you still need the explicit `allow_legacy_cargo_token` dispatch escape hatch. After a green release through the environment, delete the repository-level `DIST_REPOS_TOKEN`.
+6. After a release proves `cargo-publish` minted a Trusted Publishing token successfully, revoke and delete `CARGO_REGISTRY_TOKEN`. Do not leave a long-lived crates.io write token in the repository once OIDC is proven.
+7. Configure npm Trusted Publishing for `mangostudio` and each `@mangostudio/cli-*` platform package (npm package **Settings -> Trusted Publisher**): repository `juliopolycarpo/mangostudio`, workflow filename `release.yml`, GitHub Environment `release`, allowed action `npm publish`. npm allows up to 10 trusted publishers per package, so a second row could register canary's caller workflow, `ci.yml` (not `canary.yml`) — but `.github/workflows/canary.yml` always requires and uses the repository `NPM_TOKEN` today; registering that row does not remove the need for the token until the workflow itself is migrated to OIDC (out of scope here). Do not enable npm “disallow tokens” / require-2FA-only publishing while canary still needs that token.
+8. After the first green stable release through npm OIDC, remove the `release` environment `NPM_TOKEN` if you no longer need the legacy dispatch path.
+9. After the first GHCR push, set the `ghcr.io/juliopolycarpo/mangostudio` package visibility to **public** in GitHub package settings.
+10. No branch-protection tuning or extra token is required for the changelog: `CHANGELOG.md` lands on `main` in the release-prep commit (`bun run release:prepare`) **before** the tag is pushed, and the release workflow only verifies it is there.
 
 ## Release asset naming
 
-Every downstream channel (Homebrew, Scoop, Cargo launcher, shell installers)
-hardcodes these public asset names. Do not rename them without updating every
-template and installer in the same release.
+Every downstream channel (Homebrew, Scoop, Cargo launcher, the install scripts
+themselves) hardcodes these public asset names. Do not rename them without
+updating every template and installer in the same release.
 
-| Asset                                        | Notes                                                                                                                      |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `mangostudio-<version>-<platform>.tar.gz`    | Linux and macOS platforms (`linux-x64`, `linux-arm64`, `linux-x64-musl`, `linux-arm64-musl`, `darwin-x64`, `darwin-arm64`) |
-| `mangostudio-<version>-<platform>.zip`       | Windows platforms (`windows-x64`, `windows-arm64`)                                                                         |
-| `mangostudio-<version>-frontend-dist.tar.gz` | Frontend bundle only (`apps/frontend/dist`)                                                                                |
-| `install.sh` / `install.ps1`                 | Shell installers copied from `scripts/install/`                                                                            |
-| `SHA256SUMS`                                 | Checksums for every asset above                                                                                            |
+| Asset                                            | Notes                                                                                                                      |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `mangostudio-<version>-<platform>.tar.gz`        | Linux and macOS platforms (`linux-x64`, `linux-arm64`, `linux-x64-musl`, `linux-arm64-musl`, `darwin-x64`, `darwin-arm64`) |
+| `mangostudio-<version>-<platform>.zip`           | Windows platforms (`windows-x64`, `windows-arm64`)                                                                         |
+| `mangostudio-<version>-<platform>[.exe]`         | Raw hub binary (no archive) for direct download / one-liner installs                                                       |
+| `mangostudio-runtime-<version>-<platform>[.exe]` | Raw runtime binary for WSL/SSH provisioning and remote one-liners                                                          |
+| `mangostudio-<version>-frontend-dist.tar.gz`     | Frontend bundle only (`apps/frontend/dist`)                                                                                |
+| `install.sh` / `install.ps1`                     | Canonical installers, copied verbatim (see below)                                                                          |
+| `canary-manifest.json`                           | **Canary only.** Source commit, build time, and pair digests for that commit's release (see below)                         |
+| `SHA256SUMS`                                     | Checksums for every asset above                                                                                            |
 
 Each platform archive has a **flat root**: `mangostudio` (or `mangostudio.exe`),
-`public/`, and `README.md` — no nested platform directory. The binary resolves
-its frontend sidecar beside the real executable path.
+`mangostudio-runtime` (or `mangostudio-runtime.exe`), and `README.md` — no nested
+platform directory. The main binary embeds the frontend UI; no sibling asset
+directory is required at runtime.
+
+The raw binaries are the preferred source for pairing/install one-liners and for
+hub-driven provisioning (WSL/SSH). Archives remain the fallback for older
+releases and for installers that still consume the bundled layout:
+
+```bash
+curl -fsSL "https://github.com/juliopolycarpo/mangostudio/releases/download/v<version>/mangostudio-runtime-<version>-linux-x64" \
+  -o mangostudio-runtime
+echo "<sha256>  mangostudio-runtime" | sha256sum -c -
+chmod +x mangostudio-runtime
+```
+
+The two binaries are one unit. MangoStudio resolves `mangostudio-runtime` as a
+sibling of its own executable to run environments out of process, and the protocol
+handshake refuses a version mismatch, so every channel — archives, npm platform
+packages, and the Docker images — ships both from the same build. A channel that
+carries only the main binary silently loses out-of-process environments.
 
 `scripts/release/archive-assets.ts` assembles the full set; `scripts/lib/release-assets.ts`
 defines the naming contract and is covered by unit tests.
+
+`bun run build --binary` writes the standalone `README.md` last, only after every platform has
+compiled and its runtime passed verification, and the archive step reads its absence as an unfinished
+build: it stops naming the missing file and that build step rather than packaging what a failed
+build left behind. A build deletes the README from an earlier run as it starts, so a stale one never
+vouches for a build that failed.
+
+### How the runtime binary is built
+
+The hub is Bun-compiled; `mangostudio-runtime` is the cargo binary from
+`crates/mangostudio-runtime`. `distribution-build.yml` calls
+`.github/workflows/runtime-build.yml`, which builds each of the eight targets on
+a runner that can link it and uploads it as `runtime-<source-sha>-<platform-id>`.
+The packaging job downloads them into `.mango/runtime-prebuilt/` and runs
+`bun run build --binary --runtime-dir .mango/runtime-prebuilt`, which compiles
+only the hubs and copies each runtime beside its hub. Nothing downstream of
+`.mango/out/<platform>/` changed: archives, raw assets, `SHA256SUMS`, npm
+packages, Docker images and installers all see the same two files as before.
+
+| Platforms                            | Runner           | Rust target / toolchain                                             |
+| ------------------------------------ | ---------------- | ------------------------------------------------------------------- |
+| `linux-x64`, `linux-arm64`           | `ubuntu-latest`  | `<arch>-unknown-linux-gnu.2.17` via cargo-zigbuild (glibc floor)    |
+| `linux-x64-musl`, `linux-arm64-musl` | `ubuntu-latest`  | `<arch>-unknown-linux-musl` via cargo-zigbuild (static)             |
+| `darwin-x64`, `darwin-arm64`         | `macos-latest`   | `x86_64-apple-darwin` / `aarch64-apple-darwin`, Xcode               |
+| `windows-x64`, `windows-arm64`       | `windows-latest` | `x86_64-pc-windows-msvc` / `aarch64-pc-windows-msvc`, MSVC (+ LLVM) |
+
+- **glibc floor: 2.17.** The Bun-compiled hub already requires `GLIBC_2.17` (its
+  highest versioned symbol on both architectures), so linking the runtime at the
+  same floor adds no requirement to the pair. `GLIBC_FLOOR` in
+  `scripts/lib/runtime-build.ts` is the one place that names it; cargo-zigbuild
+  applies it through the `.2.17` target suffix.
+- **C and assembly dependencies.** `ring` (TLS, C + assembly) and
+  `rquickjs-sys` (QuickJS, C) are compiled per target; `aws-lc` is not in the
+  graph. zig is their C toolchain on Linux. `windows-arm64` is cross-compiled on
+  the x64 Windows image, which carries the ARM64 MSVC libraries and the clang
+  that `ring` needs for aarch64 Windows; a native `windows-11-arm` runner is the
+  fallback if that image ever drops them.
+- **Static CRT on Windows.** `.cargo/config.toml` links the MSVC C runtime
+  statically (`+crt-static`). A dynamic CRT imports `VCRUNTIME140.dll`, which
+  comes from the Visual C++ Redistributable rather than Windows, so the runtime
+  would fail to start on a machine without it (CI images have it, which hides
+  the gap). The Bun hub has no such import either. A `RUSTFLAGS` override
+  replaces that setting, so the staging check also rejects any Windows runtime
+  importing `VCRUNTIME*`/`MSVCP*` DLLs.
+- **Release profile.** The workspace `[profile.release]` builds the runtime with
+  `opt-level = 3`, fat LTO, one codegen unit, and `strip = true`; see
+  [runtime-metrics.md](/en/docs/reference/runtime-metrics/) for the size and build-time
+  trade-off. It keeps `panic = "unwind"` on purpose: handler panic isolation
+  catches unwinds, so the crate refuses to compile under `panic = "abort"`.
+  Pull-request runtime artifacts override only LTO and codegen units to thin
+  LTO and 16 units, including PRs that touch Rust. Main, tag releases, Canary,
+  scheduled distribution checks, and scheduled/manual release dry runs keep
+  fat LTO and one unit. The reusable artifact builder rejects `light` on every
+  event except `pull_request`, before checkout or cache access.
+  Main is the first shipping-profile build of a PR change. A shipping-profile
+  runtime or smoke failure on main blocks Canary through CI's mandatory Gate;
+  those bytes cannot publish. A defect unique to fat LTO can therefore turn
+  main red after a green PR. Light caches remain cold until their separate
+  cache-only main seeds pass write, lifecycle, and measured capacity admission.
+- **Toolchain pins.** Rust comes from `rust-toolchain.toml`; zig is downloaded
+  at a pinned version and SHA-256 (`ZIG_VERSION`/`ZIG_SHA256` in
+  `runtime-build.yml`); cargo-zigbuild is installed at a pinned version by
+  `taiki-e/install-action`, which verifies its own checksum.
+- **Version.** Every runtime is stamped with the release version through
+  `MANGOSTUDIO_RELEASE_VERSION` at compile time (canary and dry-run versions
+  differ from the committed manifest), and prints it bare from `--version`, the
+  line the hub's doctor and WSL/SSH provisioning compare verbatim.
+- **Checks.** `scripts/build-runtime.ts` and the `--runtime-dir` staging both
+  read each binary's header (`scripts/lib/executable-header.ts`): ELF, Mach-O,
+  or PE; x64 or arm64; the glibc loader for gnu, no interpreter for musl; no
+  `GLIBC_` symbol above the floor; and no Visual C++ Redistributable DLL in a PE's
+  import or delay-import table. A runtime this machine can execute must also
+  answer `--version` with the release version.
+
+Locally, `bun run build --binary --platform <host>` runs
+`cargo build --release --locked -p mangostudio-runtime --target <triple>` for the
+host's own target (linked against the host's glibc, so not a distribution
+artifact). Any other target needs a prebuilt runtime:
+`--runtime-dir <dir>` (or `RUNTIME_DIR`) must hold
+`<dir>/<platform-id>/mangostudio-runtime[.exe]`, for example from
+`bun run build:runtime --platform linux-arm64 --zig --out <dir>` with zig and
+cargo-zigbuild on `PATH`. A missing file is an error naming it; the build never
+substitutes another runtime.
+
+### What each channel publishes
+
+A stable release publishes everything, and so does a pre-release tag — the
+difference there is which pointers move, not which assets are built (see
+[Pre-release tags](#pre-release-tags)). Canary does not: it cuts a release from
+every green `main` commit, so each asset it carries is paid for many times a day.
+
+| Channel             | Platform archives | Raw hub + runtime pairs                    |
+| ------------------- | ----------------- | ------------------------------------------ |
+| Stable release      | all 8 platforms   | all 8 platforms                            |
+| Canary (per commit) | all 8 platforms   | `linux-x64`, `darwin-arm64`, `windows-x64` |
+
+Archives stay at the full matrix on both channels because the Cargo launcher
+resolves an archive for whatever host it was built for, so narrowing them would
+strand canary launchers. Raw pairs are curated: `linux-arm64` is deliberately
+absent from canary — ARM Linux users are on stable, and the pair costs roughly
+190 MB per green commit to serve nobody. Stable publishes the full matrix and is
+one `mangostudio upgrade` away.
+
+The canary set is chosen **by name** in `selectCanaryAssets`
+(`scripts/lib/release-assets.ts`) and staged by
+`scripts/release/stage-canary-assets.ts`, not by a shell glob. Adding a new asset
+type to the release plan therefore cannot widen a canary upload on its own; a
+unit test pins that. Widening the curated platform list is a one-line change to
+`CANARY_PAIR_PLATFORMS`.
+
+Narrowing it leaves nothing behind: each canary release carries only what that
+run staged, so a platform dropped from `CANARY_PAIR_PLATFORMS` simply stops
+appearing in the next release.
+
+### Per-commit identity and `canary-manifest.json`
+
+Canary cuts **one release per green commit**, tagged `v<version>` with the
+sha-stamped version the binaries report — `v0.1.0-canary.abc1234`, carrying
+`mangostudio-runtime-0.1.0-canary.abc1234-linux-x64`. Tag, file names and
+reported version all agree.
+
+It is not the rolling `v<root>-canary` pre-release it used to be, and cannot go
+back to being one: this repository has **immutable releases** enabled, so a
+published release's assets can never be replaced and a tag that carried one can
+never be reused. The rolling release published before 2026-09-16 is frozen in
+place; nothing republishes it, and hubs installed from it keep resolving it.
+
+Two consequences worth knowing:
+
+- **Nothing reconstructs a canary tag from a version.** `install.sh --canary`,
+  `install.ps1 -Canary` and the hub's own update check all resolve the newest
+  canary pre-release from the release list.
+- **Old canary releases are pruned**, tag included, to a keep-window
+  (`scripts/release/prune-canary-releases.ts`, 14 by default — roughly eight
+  days at the current merge rate, and ~15 GB of release storage at ~1.1 GB per
+  release). A hub older than the window can no longer download its own runtime
+  pair and has to upgrade first; it is told exactly that.
+
+  The window counts published releases only, so an interrupted upload never
+  evicts a build hubs can still use — and the leftover draft it left behind is
+  deleted outright, since a superseded run never returns to finish it and a
+  per-commit tag is never retried.
+
+  Deleting the tag is possible only because the `release tags` ruleset excludes
+  `refs/tags/v*-canary.*`. Every other `v*` tag stays undeletable and unmovable,
+  the frozen `v<root>-canary` one included — it carries no dot. The tag's *name*
+  is reserved forever once an immutable release has used it either way, so
+  pruning frees the ref, never the name.
+
+`canary-manifest.json` ships beside the assets, is listed in `SHA256SUMS` like
+everything else, and records the source commit, the build time, and the digest
+of both halves of every published pair. It is what names the *commit* behind a
+version: an install records it in the target's `runtime.json` next to the
+digest, and `runtime health` prints it. A release that publishes no manifest is
+tolerated, and so is one whose `schemaVersion` this hub does not know, which
+reads as no manifest rather than as a record it would be guessing at.
+
+The manifest's other job is now historical: the hub cross-checks it before
+installing from the **frozen rolling tag**, where the asset behind a name is
+whatever the last run put there. A per-commit release cannot move, so that check
+does not run for one.
+
+Install scripts are release assets on both channels, copied verbatim into
+`release-assets/` and listed in `SHA256SUMS` alongside the archives they
+install. The canonical URLs are
+`https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh`
+and `.../install.ps1`; both download the platform archives above and verify
+them against `SHA256SUMS`. The hub binary also embeds the same bytes
+(`apps/api/src/modules/updates/infrastructure/embedded-installers.ts`) and runs
+them locally for `--use`, `--prune`, and `--uninstall`.
+
+### How the binary upgrades itself
+
+`mangostudio upgrade` never reimplements the install layout and never downloads
+executable code. It resolves a target, downloads and verifies an archive, then
+runs the install script embedded in its own binary against that archive:
+
+| Channel          | Source                                                                        | Verified against                         |
+| ---------------- | ----------------------------------------------------------------------------- | ---------------------------------------- |
+| stable           | `mangostudio-<v>-<platform>.tar.gz\|.zip` from tag `v<v>`                     | that tag's `SHA256SUMS` (SHA-256)        |
+| canary, latest   | the newest canary release's archive; `canary-manifest.json` names the commit  | that release's `SHA256SUMS`              |
+| canary, `<sha7>` | the `@mangostudio/cli-<os>-<cpu>` npm tarball whose version ends in `.<sha7>` | the registry's `dist.integrity` (sha512) |
+
+The platform id is baked into the binary at build time
+(`BUILD_PLATFORM_ID`, `scripts/build.ts`), so a musl build never fetches a glibc
+archive. musl has no npm package, so `upgrade --canary <sha7>` cannot resolve a
+tarball there; plain `upgrade --canary` still works. Package-manager installs are not
+upgraded in place: `upgrade` prints (or, with `--yes`, runs) the manager's own
+command. `docs/reference/cli.md` has the per-origin table and exit codes.
+
+The embedded scripts are the same bytes the release ships: the dry run diffs
+`mangostudio __installer sh` against `scripts/install/install.sh` so the two
+cannot drift.
 
 ## Version source
 
@@ -82,43 +457,64 @@ lockstep:
 - `package.json`
 - `apps/api/package.json`, `apps/frontend/package.json`, `apps/shared/package.json`
 - `packages/cli/package.json`
-- `packages/cargo-shim/Cargo.toml` **and** `packages/cargo-shim/Cargo.lock` (the
-  lockfile records the crate's own version and the release publishes with
-  `--locked`, so both must move together)
+- `crates/mangostudio-launcher/Cargo.toml` and the launcher's `mangostudio`
+  entry in the root `Cargo.lock` (the release publishes with `--locked`, so
+  both must move together without changing the protocol version)
+- `crates/mangostudio-runtime/Cargo.toml` and its `Cargo.lock` entry (the
+  fallback version a plain `cargo build` of the runtime reports)
 
 `bun run check:versions` enforces this; it also runs as part of `bun run check`.
-Pass `--expect <version>` to additionally require the committed version to match a
-tag (the release workflow runs `bun run check:versions --expect <tag>`).
+Pass `--expect <version>` to additionally require the committed version to match
+a tag **and** `CHANGELOG.md` to carry the `<version>` release section (the
+release workflow runs `bun run check:versions --expect <tag>` before building
+any artifact). `bun run release:prepare <version>` stages all of the above in
+one command.
 
 ## Changelog
 
+The changelog is generated at release preparation — `bun run release:prepare`
+regenerates `CHANGELOG.md` alongside the version bump, so the section for a
+release lands on `main` **before** its tag is pushed. The release workflow only
+gates on it being there; no job writes the changelog back after the fact.
+
 `bun run changelog` wraps git-cliff (config: `cliff.toml`):
 
-| Command                                  | Effect                                                                  |
-| ---------------------------------------- | ----------------------------------------------------------------------- |
-| `bun run changelog --init [version]`     | Regenerate `CHANGELOG.md` from full history (default tag: root version) |
-| `bun run changelog --preview [--base r]` | Print this branch's entries (powers the PR preview bot)                 |
-| `bun run changelog --release <version>`  | Regenerate `CHANGELOG.md` including `<version>`                         |
+| Command                                             | Effect                                                                  |
+| --------------------------------------------------- | ----------------------------------------------------------------------- |
+| `bun run changelog --init [version]`                | Regenerate `CHANGELOG.md` from full history (default tag: root version) |
+| `bun run changelog --preview [--base r] [--head r]` | Print this branch's entries (powers the PR preview bot)                 |
+| `bun run changelog --release <version>`             | Regenerate `CHANGELOG.md` including `<version>`                         |
 
-Every PR gets a **Changelog Preview** bot comment showing the entries it would
-add. It is published by the PR QA workflow (`.github/workflows/pr-qa-gate.yml`)
-together with the commit summary and QA gate comments.
+Every PR gets a changelog preview in a managed bot comment, published by
+`.github/workflows/pr-qa-report.yml` together with the commit summary; the QA
+metrics comparison is a second, separate comment. The commit list and the
+changelog entries each fold once they exceed five items.
 
 ## Testing the release pipeline
 
-`.github/workflows/release-dry-run.yml` runs automatically for PRs that touch
-release workflows, release scripts, install scripts, binary build tooling, CLI
-packages, or Dockerfiles. It also runs weekly as a drift check and can be started
-manually with `workflow_dispatch`. (This is read-only and unrelated to the
-[Canary channel](#canary-channel), which actually publishes from `main`.)
+`.github/workflows/release-dry-run.yml` triggers on every PR, but a cheap
+`changes` job runs the actual dry-run lanes only for PRs that touch release
+workflows, release scripts, install scripts, binary build tooling, CLI packages,
+or Dockerfiles; its always-reporting `Release Dry Run / Gate` check makes the
+workflow safe to require in branch protection (see
+[`ci.md`](/en/docs/reference/ci/#branch-protection--required-checks)). It also runs weekly as a
+drift check and can be started manually with `workflow_dispatch`. (This is
+read-only and unrelated to the [Canary channel](#canary-channel), which actually
+publishes from `main`.)
 
 The dry-run is read-only: it verifies lockstep versions, builds one Linux binary
 with a synthetic prerelease version, assembles and validates the matching npm
 distribution, runs the npm publisher in `--dry-run` mode, archives the binary,
 verifies `SHA256SUMS`, installs the local tarball through `install.sh --local`,
-and renders Homebrew and Scoop manifests into the runner temp directory. PRs
-that touch `packages/cargo-shim/**` also run `cargo publish --dry-run --locked`;
-scheduled and manual dry-run runs include that cargo check as well.
+and exercises `--use` / `--prune` / `--uninstall` and the install layout
+(`current`, the bin link) against that install. It also diffs the hub binary's
+embedded installer scripts against the committed ones, then builds and archives
+a windows-x64 binary and hands it to a second job that runs the same
+`install.ps1 --local` / `-Use` / `-Prune` / `-Uninstall` sequence on a real
+Windows PowerShell 5.1 runner. Finally it renders Homebrew and Scoop manifests
+into the runner temp directory. PRs that touch `crates/mangostudio-launcher/**` also run
+`cargo publish --dry-run --locked`; scheduled and manual dry-run runs include
+that cargo check as well.
 
 Only a real signed tag exercises registry and repository side effects: npm
 publication, GHCR push, GitHub Release upload, Homebrew tap push, Scoop bucket
@@ -128,124 +524,323 @@ Those steps stay in `.github/workflows/release.yml`.
 ## Canary channel
 
 Every commit that lands green on `main` is published as a **canary**. The canary
-job in `.github/workflows/ci.yml` is gated on every other CI job passing and on a
-push to `main`, so the commit that just went green is the canary source — there is
-no separate trigger or SHA re-resolution. It calls the reusable
+job in `.github/workflows/ci.yml` is gated on the aggregate `CI / Gate` job — the
+single definition of a green commit, which fails on any mandatory job failure,
+cancellation, or unexpected skip — and on a push to `main`, so the commit that
+just went green is the canary source — there is no separate trigger or SHA
+re-resolution. It calls the reusable
 `.github/workflows/canary.yml`, whose jobs share the build and fan out per channel.
 
-Docker and npm use `<root-version>-canary.<sha7>` (e.g.
-`0.1.0-canary.1234abc`), where `<sha7>` is the 7-char short commit SHA. Cargo
-uses a fixed `<root-version>-canary` prerelease (e.g. `0.1.0-canary`) whose
-downloaded assets are refreshed by every green `main` commit. Consume any canary
-channel:
+Both channels use the same version, `<root-version>-canary.<sha7>` (e.g.
+`0.1.0-canary.1234abc`), where `<sha7>` is the 7-char short commit SHA: npm
+publishes it under the `canary` dist-tag, and GitHub Releases cuts a
+`v<root-version>-canary.<sha7>` pre-release carrying assets of the same name.
+Consume canary builds with npm or the GitHub pre-release archives:
 
 ```bash
-# Docker — rolling tag (newest green) or the immutable per-commit tag
-docker pull ghcr.io/juliopolycarpo/mangostudio:canary
-docker pull ghcr.io/juliopolycarpo/mangostudio:canary-1234abc
-
 # npm — the `canary` dist-tag; `latest` is never touched
 npm install -g mangostudio@canary
 
-# Cargo — fixed prerelease version backed by rolling GitHub release assets
-cargo install mangostudio --version 0.1.0-canary
+# GitHub Releases — the newest canary pre-release's archives and SHA256SUMS
+gh release download --repo juliopolycarpo/mangostudio \
+  "$(gh release list --repo juliopolycarpo/mangostudio --json tagName,isPrerelease \
+    --jq 'map(select(.isPrerelease and (.tagName | test("-canary")))) | .[0].tagName // empty')"
+
+# An installed hub — newest canary, or one commit
+mangostudio upgrade --canary
+mangostudio upgrade --canary 1234abc
 ```
 
-| Channel | Job             | What it publishes                                                                                                                       |
-| ------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Docker  | `docker-canary` | Debian Bookworm multi-arch (amd64 + arm64) under the rolling `canary` tag and the immutable `canary-<sha7>` tag. Alpine stays tag-only. |
-| npm     | `npm-canary`    | `mangostudio@<version>` under the `canary` dist-tag, so `npm i -g mangostudio` (latest) never resolves to a canary.                     |
-| crates  | `crates-canary` | `mangostudio <root>-canary`, backed by a rolling `v<root>-canary` GitHub pre-release whose assets are clobbered each green main commit. |
+| Channel         | Job                     | What it publishes                                                                                                           |
+| --------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| GitHub Releases | `github-release-canary` | A `v<version>` pre-release per green main commit, with its assets and `SHA256SUMS`. Older ones are pruned to a keep-window. |
+| npm             | `npm-canary`            | `mangostudio@<version>` under the `canary` dist-tag, so `npm i -g mangostudio` (latest) never resolves to a canary.         |
 
-Each channel is independent and idempotent, exactly like the tag release: a docker
-failure never blocks npm or crates, and **Re-run failed jobs** re-runs only the failed
-channel (the `canary-summary` job writes a per-channel ✅/❌ table naming
-the job to re-run). The `canary-publish` concurrency group cancels superseded
-in-flight runs so the rolling `canary` tag and dist-tag always track the newest
-green commit; per-commit versions are unique, so a cancelled run never leaves a
-conflicting half-publish.
+Each channel is independent and idempotent, exactly like the tag release: a
+GitHub release upload failure never blocks npm, and **Re-run failed jobs**
+re-runs only the failed channel (the `canary-summary` job writes a per-channel
+✅/❌ table naming the job to re-run). The `canary-publish` concurrency group
+cancels superseded in-flight runs so the npm dist-tag always tracks the newest
+green commit; per-commit npm versions are unique, so a
+cancelled run never leaves a conflicting half-publish.
+
+### Distribution bundle compression
+
+Distribution bundles never leave the workflow run: they are `upload-artifact`
+payloads a later job in the same run consumes. Nothing published depends on how
+they are compressed — `SHA256SUMS` is computed over the release archives, not
+over bundles — so the only question is what buys the most wall clock.
+
+The answer is not uniform, because the payloads are not alike. Measured against
+a real `linux-x64` asset set (`bun scripts/test-build.ts`):
+
+| Bundle                        | `tar -czf` (gzip 6) |                 gzip 1 |                stored |
+| ----------------------------- | ------------------: | ---------------------: | --------------------: |
+| target (manifest + 1 archive) |   3.06 s → 79.41 MB |      2.68 s → 79.51 MB | **0.15 s → 82.78 MB** |
+| `assets` (one target's worth) | 12.87 s → 159.17 MB | **6.62 s → 165.24 MB** |    0.45 s → 259.41 MB |
+
+A **target** bundle is the manifest, `SHA256SUMS`, and one platform archive that
+is already `.tar.gz` (or `.zip`). Gzip has nothing to find in the member holding
+99% of the bytes, so it is stored — 20× faster for 4% more bytes. A **scoped**
+bundle (`assets`, `npm`, `checksums`) carries uncompressed hub and runtime
+binaries, npm platform packages, or plain text, so gzip does real work, but not
+at level 6: level 1 nearly halves the CPU for 3.8% more bytes.
+
+Those bytes are cheap. The `assets` artifact measured 1173.8 MB uploaded in 10 s
+(~117 MB/s) on a real run, so trading size for CPU wins at this ratio.
+
+Measured on the lane itself, `main` @ `dffc218e` against the change:
+
+|                                                           |    before |     run 1 |    run 2 |
+| --------------------------------------------------------- | --------: | --------: | -------: |
+| `Create content-addressed bundles`                        |      83 s |      40 s | **39 s** |
+| upload steps, summed                                      |      44 s |      83 s |     46 s |
+| `Distribution / Build immutable distribution` (whole job) |     197 s |     185 s |    149 s |
+| `assets` artifact                                         | 1173.8 MB | 1218.2 MB |        — |
+| `npm` artifact                                            |  439.9 MB |  473.6 MB |        — |
+| one target artifact (`linux-x64`)                         |   78.6 MB |   78.8 MB |        — |
+
+Bundling halves, and uploads are unchanged — the extra bytes cost about 2 s.
+
+**Two runs, because one would have lied.** On run 1 the summed upload steps looked
+like a 39 s regression that would have cancelled the win. It was runner noise: two
+target uploads took 15 s and 19 s where the other six took 3 s, for payloads that
+differ from each other by less than a megabyte. Run 2 put every target back at
+2–3 s. Upload timings at this size need several runs before one is attributed to
+a change; the bundling step, at 83 s twice and ~39 s twice, does not.
+
+The target bundles grow **0.3%**, not the 4% a local run suggests. Local numbers
+overstate it because a development tree's `distribution-manifest.json` carries a
+`files` listing of whatever is lying around — 18,425 entries and 3.3 MB in one
+local case, against ~0.25 MB in CI — and that manifest, not the archive, is
+where target-bundle gzip found its bytes. The time saving is unaffected: it comes
+from not re-gzipping the 79 MB archive member.
+
+Two consequences worth keeping straight:
+
+- **The name states the compression.** Target bundles are `<target>.tar`, scoped
+  bundles are `<scope>.tar.gz`. The attestation `subject-path` and the
+  `download-distribution` glob each name both shapes; `*.tar` does not match
+  `*.tar.gz`, so neither is counted twice.
+- **Every upload stays at `compression-level: 0`.** `bundle-distribution.ts`
+  already made the one compression decision. Letting the artifact zip Deflate on
+  top costs a full single-threaded pass, and on a stored target bundle it would
+  simply relocate the gzip that storing it removed.
+
+Bundle creation stays on `tar` rather than `Bun.Archive` because bundles carry
+raw executables — see [`tooling.md`](/en/docs/reference/tooling/) for that rejection. Extraction
+is native either way, and preserves the executable bit through both bundle
+shapes; `scripts/tests/archive.unit.test.ts` pins that for a stored tar.
+
+### Distribution artifact trust
+
+`distribution-build.yml` attests bundles on every build except pull requests
+(attestation needs `id-token: write`, which fork PRs cannot use, and PR builds
+would pollute the attestation log). PR CI still downloads those bundles for
+binary smoke tests, but only within the run that produced them — checksum
+verification against `distribution-manifest.json` detects corruption, not
+substitution, because the manifest ships inside the same artifact.
+
+Release and canary publish jobs opt into `verify-attestation` on
+`download-distribution`, which runs `gh attestation verify` on the bundle
+**before** extraction. That makes build provenance load-bearing on every path
+that publishes to npm, GitHub Releases, Homebrew, or Scoop. Manifest checksum
+validation still runs after extract.
+
+The manifest also records the `runtimeProfile` the bundle's runtimes were built
+with (`shipping` or `light`). A light bundle has the same names, layout and
+manifest shape as a shipping one, so nothing else tells them apart. Release and
+canary pass `runtime-profile: shipping` to `download-distribution`, which makes
+`distribution-manifest.ts --validate` fail with
+`expected runtime profile: shipping | received: light` before anything is
+published; PR smoke consumers pass nothing and accept whichever profile the
+bundle records. `distribution-build.yml` passes its `runtime_profile` input to
+both the runtime builder and the manifest step's `RUNTIME_PROFILE`, so PR bundles
+record `light` and release bundles record `shipping`. The manifest schema is
+version 4: a bundle written by an older
+workflow is rejected rather than read as `shipping`, because manifests never
+outlive the run that wrote them.
+
+The public assets carry provenance too: `github-release` (stable) and
+`github-release-canary` attest `SHA256SUMS`, `install.sh` and `install.ps1`
+with `actions/attest-build-provenance` right before uploading them. `SHA256SUMS`
+names every archive and raw binary, so one record covers the asset set
+transitively. Anyone can check a download with
+`gh attestation verify SHA256SUMS --repo juliopolycarpo/mangostudio`; the hub's
+own `upgrade` verifies checksums today and does not yet verify the attestation.
 
 Caveats:
 
-- The crates.io canary deliberately does **not** publish
-  `…-canary.<sha7>` versions. crates.io versions are permanent (only yankable,
-  never deletable), so a compromised per-SHA canary crate could not be removed
-  without contacting the crates.io team.
-- crates.io has no npm-style mutable `canary` dist-tag for `cargo install`; Cargo
-  canary is a fixed prerelease for the current root version, while the GitHub
-  release assets behind that launcher are mutable.
+- `ghcr.io/juliopolycarpo/mangostudio:canary` and
+  `ghcr.io/juliopolycarpo/mangostudio:canary-<sha7>` are no longer updated.
+  Existing GHCR canary tags remain in the registry until manually cleaned up.
+  Docker users who need between-tag builds should switch to the npm canary
+  (`npm install -g mangostudio@canary`) or download the GitHub pre-release
+  archives. Tagged releases still publish the full Docker image set.
+- The workflow no longer publishes crates.io canaries. The currently published
+  `<root>-canary` launcher keeps working because it points at the frozen
+  `v<root>-canary` pre-release published before 2026-09-16 — immutable releases
+  mean those assets can never be replaced, so the launcher's URL keeps
+  resolving even though the release itself never publishes again. A future
+  root-version bump will not get a new `<root>-canary` crate unless Cargo
+  canary publishing is intentionally reintroduced.
 - Canary-like `v<version>-canary.<sha7>` tags remain excluded from the tag release
   trigger (`!v*-canary*`) as a guard for legacy or manual per-SHA tags.
+
+## Nightly distribution health
+
+`.github/workflows/nightly-distribution-health.yml` runs daily at 06:00 UTC (plus
+`workflow_dispatch`) and verifies the **published** channels — the bytes users
+actually install — instead of rebuilding source targets that per-PR CI already
+smokes on every pull request.
+
+A `resolve` job pins one immutable identity up front: the exact npm version
+behind the channel dist-tag, the matching GitHub release tag, the canary version
+recorded in that release's notes, and a snapshot of its `SHA256SUMS` (handed to
+the matrix as a run artifact). Every lane consumes that pin, so a canary publish
+landing mid-run can never make jobs disagree — it surfaces as an explicit
+checksum or version mismatch instead. If the npm canary and the newest canary
+pre-release diverge (one channel failed its last publish), the resolve job
+emits a warning naming both versions.
+
+| Lane                               | Unique signal                                                                                                                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm <os>` (Linux, macOS, Windows) | Fresh `npm install -g` of the exact resolved version, `--version` assert, hermetic `doctor` in a throwaway home; then upgrade from the pinned stable. |
+| `Archive <os>`                     | Download the release archive, verify it against the pinned `SHA256SUMS`, extract, and run `scripts/release/smoke-binary.sh`.                          |
+
+Dispatch inputs: `channel` (`canary` default, or `stable`), `version` (exact npm
+version override), and `deep_diagnostics` (runs `doctor --all`).
+
+Deliberate boundaries:
+
+- No build or dependency caches — the lanes test published bytes and installer
+  metadata, not source reproducibility.
+- Homebrew and Scoop have no canary channel; their stable manifests are rendered
+  and verified by the release pipeline (`update-homebrew.ts` / `update-scoop.ts`),
+  so the nightly does not reinstall them.
+- A migration/recovery lane against an older database is deferred until a
+  checked-in, non-secret fixture policy exists.
+
+Failures rely on the standard failed-scheduled-run notification (no auto-filed
+issues); npm debug logs are uploaded only on failure and retained for 14 days.
+Reproduce a lane locally:
+
+```bash
+# npm lane (any OS with node)
+npm install -g mangostudio@<exact-version>
+mangostudio --version && mangostudio doctor
+
+# archive lane (substitute the resolved tag/platform)
+gh release download v0.1.1-canary -p 'mangostudio-0.1.1-canary-linux-x64.tar.gz' -p SHA256SUMS
+bun ./scripts/release/verify-checksum.ts SHA256SUMS mangostudio-0.1.1-canary-linux-x64.tar.gz
+tar -xzf mangostudio-0.1.1-canary-linux-x64.tar.gz
+scripts/release/smoke-binary.sh ./mangostudio <canary-version-from-release-notes>
+```
+
+The workflow contract (pinned identity, no caches, failure-only diagnostics) is
+enforced by `scripts/tests/nightly-distribution-health.unit.test.ts`.
 
 ## Cutting a release
 
 Releases are tag-driven. From an up-to-date `main`:
 
-1. Bump the version to the same value in every lockstep `package.json` (root,
-   `apps/*`, and `packages/cli`; see [Version source](#version-source)) and in
-   `packages/cargo-shim/Cargo.toml`, then refresh the crate lockfile with
-   `cargo update --workspace` (run inside `packages/cargo-shim/`).
-2. Run `bun run check:versions` to confirm they agree, then commit the bump.
-3. Tag and push (the tag must match the committed version):
+1. Stage the release — one command bumps every lockstep manifest (see
+   [Version source](#version-source)), regenerates `CHANGELOG.md` with
+   git-cliff, and re-runs `check:versions --expect` as a self-check:
+
+   ```bash
+   bun run release:prepare 0.2.0
+   ```
+
+2. Commit the staged tree as the release-prep commit (`cliff.toml` skips
+   `chore(release)` commits, so it never re-enters a future changelog):
+
+   ```bash
+   git add -A && git commit -s -S -m "chore(release): v0.2.0"
+   ```
+
+3. Land that commit on `main` (via the normal PR flow), then tag it and push
+   (the tag must match the committed version):
 
    ```bash
    git tag -s v0.2.0 -m "v0.2.0"
    git push origin v0.2.0
    ```
 
+A tag whose commit lacks the changelog section or a lockstep version fails in
+the `prepare` job before any artifact is produced, naming the fix
+(`bun run release:prepare`). The same job refuses to release a commit that is
+not an ancestor of `origin/main` or whose aggregate **`CI / Gate`** check did not
+conclude `success`. It resolves the gate through `ci.yml`'s own main-push run for
+the commit rather than by check-run name, because `cargo-shim.yml` and
+`release-dry-run.yml` also expose a job called `Gate`. A tag push cannot skip that
+provenance gate, and a still-running gate blocks it too — wait for CI on main to
+go green before pushing the tag. **`workflow_dispatch`** may set
+`allow_unverified_source=true` only as a deliberate break-glass path (logged as a
+workflow warning); use it when the CI run has aged out of the API but the commit
+is still the intended release, and call out the bypass in the release notes.
+
 `.github/workflows/release.yml` is designed to converge when a networked release
 step flakes: **Re-run failed jobs** is always safe because channel jobs are
 independent — one failing never blocks the others. Published npm versions are
-skipped, release assets upload with clobber semantics, and the changelog push
-rebases before retrying (or opens a bot PR if `main` is protected). For extra
-durability: build artifacts retain for 30 days, the `docker` job retries each
-multi-arch push and falls back to downloading the published GitHub Release when
-its build artifact has expired (so it re-runs in isolation long after the run),
-and the always-run `release-summary` job writes a per-channel ✅/❌ table naming
-the exact job to re-run.
+skipped, and a re-run against an already-published GitHub Release verifies its
+assets rather than re-uploading them — immutable releases mean nothing can be
+clobbered onto one. For extra durability: build artifacts retain for 30 days, the `docker` job retries each
+multi-arch push against the verified distribution artifact, and the always-run
+`release-summary` job writes a per-channel ✅/❌ table naming the exact job to
+re-run, plus auth/provenance outcomes for npm and crates.io.
 
-It runs 14 jobs — the publish channels, the gates that verify them, and a final
+It runs 14 jobs — preparation, the publish channels, the gates that verify them, and a final
 summary, listed here in workflow order:
 
-| Job                | What it does                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build`            | Verifies versions are in lockstep with the tag, cross-compiles every platform binary (`build.ts`), assembles the npm distribution (`pack-npm.ts`), and uploads binary archives plus `SHA256SUMS`.                                                                                                                                                                            |
-| `verify-build`     | Smoke-tests the freshly built linux-x64 archive (`smoke-binary.sh`) before any channel publishes, so a broken binary fails the release early. Gates `github-release`, `docker`, and `npm-publish`.                                                                                                                                                                           |
-| `github-release`   | Creates the GitHub Release, or updates an existing one by refreshing notes and uploading assets with `--clobber`.                                                                                                                                                                                                                                                            |
-| `docker`           | Stages Linux glibc and musl archives into `docker-ctx/` (`stage-docker-ctx.ts`) and publishes Bookworm and Alpine images for amd64 and arm64. It uses only `GITHUB_TOKEN` with `packages: write`.                                                                                                                                                                            |
-| `verify-image`     | Pulls each published GHCR image (Bookworm and Alpine, amd64 and arm64) and boots it (`smoke-docker-image.sh`). Depends on `docker`; its matrix legs are non-blocking for the other channels.                                                                                                                                                                                 |
-| `npm-publish`      | Publishes the platform packages, then the `mangostudio` wrapper; already-published versions are skipped, transient failures are retried, and provenance falls back to a warning-only publish if npm rejects it.                                                                                                                                                              |
-| `homebrew`         | Renders `Formula/mangostudio.rb` from `SHA256SUMS` (`update-homebrew.ts`) and pushes it to `juliopolycarpo/homebrew-tap` (`push-dist-repo.ts`). No other job depends on it, so a tap failure never blocks npm or the Release.                                                                                                                                                |
-| `scoop`            | Renders `bucket/mangostudio.json` from `SHA256SUMS` (`update-scoop.ts`) and pushes it to `juliopolycarpo/scoop-bucket` (`push-dist-repo.ts`). No other job depends on it, so a bucket failure never blocks npm or the Release.                                                                                                                                               |
-| `cargo-publish`    | Publishes the `mangostudio` launcher crate (`packages/cargo-shim`) to crates.io using Trusted Publishing when crates.io has registered `.github/workflows/release.yml`, with `CARGO_REGISTRY_TOKEN` as a temporary fallback. Idempotent: already-published versions are skipped, publishes are retried, and an upload that lands despite an error is detected. Non-blocking. |
-| `verify-release`   | Installs `mangostudio@<version>` from npm on Ubuntu, macOS, and Windows; downloads the matching release tarball, verifies `SHA256SUMS`, and runs `mangostudio --version`. Windows arm64 is published but not verified.                                                                                                                                                       |
-| `verify-cargo`     | Installs `mangostudio` from crates.io, points the launcher at the GitHub Release assets, and checks `mangostudio --version`. Depends on `cargo-publish`.                                                                                                                                                                                                                     |
-| `verify-homebrew`  | Taps `juliopolycarpo/homebrew-tap`, `brew install`s the formula on macOS, and checks `mangostudio --version`. Depends on `homebrew`.                                                                                                                                                                                                                                         |
-| `update-changelog` | Regenerates `CHANGELOG.md` and lands it on `main` via `push-changelog.ts`: direct push (rebasing if another commit landed first), or a `github-actions[bot]` PR with squash auto-merge when branch protection rejects the push. A dedicated concurrency group serializes it across concurrent tag releases.                                                                  |
-| `release-summary`  | Always runs (even when a channel fails) and writes a per-channel ✅/❌ status table to the run summary (`publish-summary.sh`), naming the exact job to re-run. Because the fan-out isolates failures, a partial release is recovered by re-running only the failed job(s).                                                                                                   |
+| Job               | What it does                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prepare`         | Resolves the release version and source SHA, verifies versions are in lockstep with the tag and that `CHANGELOG.md` carries the release section (`check:versions --expect`), and requires the tagged commit to be a green ancestor of `origin/main` (the `Gate` job of `ci.yml`'s main-push run for that commit) unless dispatch sets `allow_unverified_source=true`.                             |
+| `build`           | Builds the cargo runtime per target (`runtime-build.yml`), cross-compiles every hub binary and stages the runtimes beside them (`build.ts`), assembles the npm distribution (`pack-npm.ts`), and uploads binary archives plus `SHA256SUMS`.                                                                                                                                                       |
+| `verify-build`    | Smoke-tests the freshly built linux-x64 archive (`smoke-binary.sh`) before any channel publishes, so a broken binary fails the release early. Gates `github-release`, `docker`, and `npm-publish`.                                                                                                                                                                                                |
+| `github-release`  | Creates the GitHub Release with its assets in one call (`publish_release`); a re-run against an already-published release verifies its assets instead of re-uploading them, since immutable releases cannot be clobbered.                                                                                                                                                                         |
+| `docker`          | Stages Linux glibc and musl archives into `docker-ctx/` (`stage-docker-ctx.ts`) and publishes Bookworm and Alpine images for amd64 and arm64. It uses only `GITHUB_TOKEN` with `packages: write`.                                                                                                                                                                                                 |
+| `verify-image`    | Pulls each published GHCR image (Bookworm and Alpine, amd64 and arm64) and boots it (`smoke-docker-image.sh`). Depends on `docker`; its matrix legs are non-blocking for the other channels.                                                                                                                                                                                                      |
+| `npm-publish`     | Publishes the platform packages, then the `mangostudio` wrapper via npm Trusted Publishing (OIDC) by default; already-published versions are skipped, transient failures are retried, and provenance is **required** (never silently dropped). A legacy `NPM_TOKEN` path exists only when `workflow_dispatch` sets `allow_legacy_npm_token=true` and is labeled `legacy-explicit` in the summary. |
+| `homebrew`        | Renders `Formula/mangostudio.rb` from `SHA256SUMS` (`update-homebrew.ts`) and pushes it to `juliopolycarpo/homebrew-tap` (`push-dist-repo.ts`). No other job depends on it, so a tap failure never blocks npm or the Release.                                                                                                                                                                     |
+| `scoop`           | Renders `bucket/mangostudio.json` from `SHA256SUMS` (`update-scoop.ts`) and pushes it to `juliopolycarpo/scoop-bucket` (`push-dist-repo.ts`). No other job depends on it, so a bucket failure never blocks npm or the Release.                                                                                                                                                                    |
+| `cargo-publish`   | Publishes the `mangostudio` launcher crate (`crates/mangostudio-launcher`) to crates.io using Trusted Publishing OIDC. Already-published versions are skipped before minting credentials. A legacy `CARGO_REGISTRY_TOKEN` path exists only when `workflow_dispatch` sets `allow_legacy_cargo_token=true` and is labeled `legacy-explicit` in the summary. Non-blocking for other channels.        |
+| `verify-release`  | Installs `mangostudio@<version>` from npm on Ubuntu, macOS, and Windows; downloads the matching release tarball, verifies `SHA256SUMS`, and runs `mangostudio --version`. Windows arm64 is published but not verified.                                                                                                                                                                            |
+| `verify-cargo`    | Installs `mangostudio` from crates.io, points the launcher at the GitHub Release assets, and checks `mangostudio --version`. Depends on `cargo-publish`.                                                                                                                                                                                                                                          |
+| `verify-homebrew` | Taps `juliopolycarpo/homebrew-tap`, `brew install`s the formula on macOS, and checks `mangostudio --version`. Depends on `homebrew`.                                                                                                                                                                                                                                                              |
+| `release-summary` | Always runs (even when a channel fails) and writes a per-channel ✅/❌ status table plus auth/provenance rows to the run summary (`publish-summary.sh`), naming the exact job to re-run. Because the fan-out isolates failures, a partial release is recovered by re-running only the failed job(s).                                                                                              |
 
 `workflow_dispatch` accepts an explicit `version` input for a manual run; it is
-validated against the committed version the same way.
+validated against the committed version the same way. Optional boolean inputs:
+`allow_unverified_source` (skip main ancestry and `CI / Gate` provenance —
+break-glass only), `allow_legacy_cargo_token` (legacy crates.io token when OIDC
+mint fails), and `allow_legacy_npm_token` (legacy npm token when Trusted
+Publishing fails). Point the dispatch at a
+`v*.*.*` tag ref (`gh workflow run release.yml --ref v0.2.0`) — the publish jobs
+run in the tag-restricted [`release` environment](#release-environment), so a
+dispatch from a branch is rejected before any channel publishes.
 
 ## npm distribution
 
 `mangostudio` is a thin wrapper: its `bin/mangostudio.js` shim resolves the
 `@mangostudio/cli-<os>-<cpu>` optional dependency npm installed for the host and
 execs the prebuilt binary (esbuild-style). Each platform package carries the
-binary plus its `public/` frontend sidecar. Builders live in
+binary (frontend embedded at build time). Builders live in
 `scripts/lib/npm-pack.ts`; staging in `scripts/release/pack-npm.ts`.
 
 `scripts/release/publish-npm.ts` owns npm publication. It checks
 `npm view <name>@<version> version` before publishing, uses `npm publish --access
-public --provenance` for new versions, retries transient network/5xx failures,
-and never retries a 403/version-conflict without first re-checking whether the
-version became visible. `--dry-run` prints the same decisions without publishing,
-and `--tag <dist-tag>` publishes under a non-default dist-tag (the
+public --provenance` for new versions under `--provenance-policy required`
+(stable and canary), retries transient network/5xx failures, and never retries a
+403/version-conflict without first re-checking whether the version became
+visible. Provenance rejection is fatal under `required` — there is no silent
+downgrade. `--dry-run` prints the same decisions without publishing, and
+`--tag <dist-tag>` publishes under a non-default dist-tag (the
 [Canary channel](#canary-channel) uses `--tag canary` so `latest` never moves):
 
 ```bash
 bun ./scripts/release/publish-npm.ts dist-npm --dry-run
-bun ./scripts/release/publish-npm.ts dist-npm --tag canary
+bun ./scripts/release/publish-npm.ts dist-npm --tag canary --provenance-policy required
 ```
 
 Release archives are accompanied by `SHA256SUMS`; the verification job checks the
@@ -278,9 +873,10 @@ state. No extra registry secret is required because the release job grants
 GHCR package public in the repository package settings if public pulls are
 desired.
 
-Between tags, the [Canary channel](#canary-channel) publishes the same image under
-the `canary` (rolling) and `canary-<sha7>` (immutable) tags — Bookworm multi-arch
-only.
+The [Canary channel](#canary-channel) no longer updates Docker images. Existing
+`canary` and `canary-<sha7>` GHCR tags remain available until manually removed,
+but they do not track new `main` commits. Tagged releases still publish the full
+Bookworm and Alpine image set.
 
 ## Homebrew tap
 
@@ -302,9 +898,8 @@ The `homebrew` job updates the formula on every tag push:
    the remote between each. It only ever touches the mapped files, never other
    formulas.
 
-The formula installs the flat archive (`mangostudio` + `public/` + `README.md`)
-into `libexec` and symlinks the binary, because the binary resolves its
-`public/` frontend sidecar beside its real (symlink-resolved) executable path.
+The formula installs the flat archive (`mangostudio` + `README.md`) into
+`libexec` and symlinks the binary so the real executable path resolves correctly.
 
 `push-dist-repo.ts` is distribution-agnostic — the [Scoop bucket](#scoop-bucket)
 reuses it with a different `--repo` and `--file` mapping:
@@ -317,7 +912,7 @@ bun ./scripts/release/push-dist-repo.ts \
   --file tap/Formula/mangostudio.rb:Formula/mangostudio.rb
 ```
 
-The renderer is shared too: `scripts/release/dist-manifest.ts` fills `{{VERSION}}`
+The renderer is shared too: `scripts/release/template-renderer.ts` fills `{{VERSION}}`
 and the per-platform `{{SHA_*}}` placeholders from `SHA256SUMS`, and the two thin
 entrypoints (`update-homebrew.ts`, `update-scoop.ts`) bind it to their template and
 placeholder map.
@@ -327,7 +922,8 @@ One-time setup (already done; documented for future projects):
 1. Create the shared tap repo: `gh repo create juliopolycarpo/homebrew-tap --public`,
    seeded with a `README.md` and a `Formula/` directory.
 2. Create a fine-grained PAT with **contents read/write on the tap repo** (and the
-   Scoop bucket below) and save it as the **`DIST_REPOS_TOKEN`** repo secret.
+   Scoop bucket below) and save it as the **`DIST_REPOS_TOKEN`** secret on the
+   `release` GitHub Environment.
 
 ## Scoop bucket
 
@@ -350,8 +946,7 @@ The `scoop` job updates the manifest on every tag push, mirroring `homebrew`:
    `mangostudio-<version>-windows-{x64,arm64}.zip` archives are present (failing
    loud on naming-contract drift), and renders
    `scripts/release/templates/mangostudio.json.tmpl`. The manifest declares
-   `"bin": "mangostudio.exe"`; Scoop's shim execs the real exe path, so the
-   binary resolves its `public/` frontend sidecar beside it.
+   `"bin": "mangostudio.exe"`; Scoop's shim execs the real exe path.
 2. `scripts/release/push-dist-repo.ts` clones the bucket, copies the manifest only
    if its content changed (re-runs are no-ops), commits as `github-actions[bot]`,
    and pushes with rebase-retry — the same machinery the tap uses.
@@ -367,53 +962,82 @@ One-time setup (already done; documented for future projects):
 2. Extend the `DIST_REPOS_TOKEN` PAT with **contents read/write on the bucket
    repo** (the same PAT already covers the Homebrew tap).
 
-## crates.io launcher
+## crates.io installs
 
-`cargo install mangostudio` (and `cargo binstall mangostudio`) installs a thin
-Rust launcher from `packages/cargo-shim/` — the only Rust in the repository. On
-first run it downloads the platform archive matching the crate version from the
-GitHub release into `~/.mango/dist/<version>/` (verified against `SHA256SUMS`,
-same layout as the shell installer) and execs the real binary. See
-[`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md).
+`cargo binstall mangostudio` installs the prebuilt app binary directly from the
+GitHub release archive matching the crate version and target. binstall extracts
+only the `mangostudio` binary, so a binstall install has no execution host
+beside it and cannot start stdio environments; use the shell installer or
+`cargo install` (below) for a complete install.
+
+The binstall binary does not use the launcher
+cache under `~/.mango/dist/`.
+
+`cargo install mangostudio` builds the thin Rust launcher from
+`crates/mangostudio-launcher/` with Rust 1.99.0 or newer. On first run it
+downloads the platform archive matching the crate version from the GitHub
+release into `~/.mango/dist/<version>/` (verified against `SHA256SUMS`, same
+layout as the shell installer) and execs the real binary. Both install paths
+report the same `mangostudio --version`. See
+[`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md).
 
 Design notes:
 
-- binstall's prebuilt strategies are **intentionally disabled** in the crate
-  metadata: the app needs its `public/` sidecar beside the binary, and binstall
-  only installs binaries out of an archive, which would drop the UI. binstall
-  therefore falls back to compiling the launcher, which installs the complete
-  archive on first run.
+- binstall metadata maps Rust target triples to the release archive platform ids
+  (`linux-x64`, `darwin-arm64`, `windows-x64`, and so on). The archives have a
+  flat root, identical on every platform: `mangostudio` (or `mangostudio.exe`),
+  `mangostudio-runtime`, and `README.md`. binstall installs only the first of
+  those, which is why `cargo install`/the shell installer remain the paths that
+  deliver a complete install.
 - musl is detected at compile time (`target_env = "musl"`); Alpine users should
   prefer the shell installer, which detects musl at runtime.
-- The crate's CI lane (`.github/workflows/cargo-shim.yml`) is path-filtered to
-  `packages/cargo-shim/**`, so Bun-only changes never wait on a Rust toolchain.
+- The root Rust CI lane (`.github/workflows/cargo-shim.yml`) triggers on every
+  PR to either protected target, but a cheap `changes` job skips the toolchain
+  when no Rust path changed. It builds and tests the locked workspace on Linux,
+  macOS and Windows at the shared Rust 1.99.0 minimum, checks Windows ARM64, and resolves the
+  excluded fuzz workspace. The `Cargo Shim / Gate` name stays stable for
+  repository rules (see [`ci.md`](/en/docs/reference/ci/#branch-protection--required-checks)).
 - The `cargo-publish` release job checks crates.io before publishing and
   re-checks between retries, so workflow re-runs converge instead of failing on
   "version already exists".
-- The [Canary channel](#canary-channel) publishes only the fixed
-  `<root>-canary` crate version for Cargo, never a per-SHA
-  `…-canary.<sha7>` crate. The launcher refreshes canary assets on each run so
-  installed canary users track the rolling `v<root>-canary` GitHub pre-release.
+- The [Canary channel](#canary-channel) no longer publishes crates.io canaries.
+  Existing installs of the current `<root>-canary` launcher continue to track
+  the frozen `v<root>-canary` GitHub pre-release published before 2026-09-16 —
+  immutable releases mean that release's assets can never be replaced, so the
+  launcher keeps resolving under the same names even though nothing
+  republishes it.
 
 ## Prerequisites
 
 The [One-shot contract](#one-shot-contract) table lists every secret. In short:
 
-- **`NPM_TOKEN`** repo secret with publish rights to `mangostudio` and the
-  `@mangostudio/cli-*` platform packages.
-- **`DIST_REPOS_TOKEN`** repo secret: fine-grained PAT with contents read/write
-  on `juliopolycarpo/homebrew-tap` (see [Homebrew tap](#homebrew-tap)) and
-  `juliopolycarpo/scoop-bucket` (see [Scoop bucket](#scoop-bucket)).
-- **`CARGO_REGISTRY_TOKEN`** repo secret: crates.io API token with
-  `publish-new` + `publish-update` scope for the `mangostudio` crate (see
-  [crates.io launcher](#cratesio-launcher)).
-- Permission for the release workflow to land `CHANGELOG.md` on `main`: the
-  `update-changelog` job grants `contents: write` for the direct push and
-  `pull-requests: write` for the protected-branch PR fallback — no branch-protection
-  changes needed.
+- **`NPM_TOKEN`** — optional `release` environment secret: npm automation token
+  with publish rights to `mangostudio` and the `@mangostudio/cli-*` platform
+  packages, used only when a maintainer sets `allow_legacy_npm_token=true` on
+  `workflow_dispatch`. Stable release publishes authenticate via Trusted
+  Publishing OIDC (`release.yml`, environment `release`) once configured on
+  npmjs.com. A repository-scoped copy remains required for `npm-canary`:
+  `.github/workflows/canary.yml` always passes it with `allow-legacy-token:
+  true` and never attempts OIDC, so it stays required even after a second
+  Trusted Publishing row is registered for its caller workflow, `ci.yml` (see
+  the [one-time setup checklist](#one-time-setup-checklist)) — only migrating
+  that workflow itself would remove the need for it.
+- **`DIST_REPOS_TOKEN`** — `release` environment secret: fine-grained PAT with
+  contents read/write on `juliopolycarpo/homebrew-tap` (see
+  [Homebrew tap](#homebrew-tap)) and `juliopolycarpo/scoop-bucket` (see
+  [Scoop bucket](#scoop-bucket)), checked in those jobs only. Delete any
+  leftover repository-level copy after a green release through the environment.
+- **`CARGO_REGISTRY_TOKEN`** optional legacy secret: crates.io API token with
+  `publish-new` + `publish-update` scope, used only when a maintainer sets
+  `allow_legacy_cargo_token=true` on `workflow_dispatch`. Prefer Trusted
+  Publishing OIDC and revoke this token after a successful OIDC publish.
 
-The npm publish job grants `id-token: write` so token-based publishes can include
-npm provenance. npm trusted publishing (OIDC without `NPM_TOKEN`) is the future
-upgrade path once the packages are configured on npmjs.com.
+No token or write permission is needed for the changelog: it lands on `main` in
+the release-prep commit before the tag exists, so the release workflow never
+writes to the repository.
 
-The first release (`v0.1.0`) is cut by pushing the tag after this work merges.
+The npm publish jobs grant `id-token: write`, install Node ≥22.14 with
+`registry-url: https://registry.npmjs.org`, publish via `npx npm@11.5.1`, and
+require `--provenance`. Release `npm-publish` uses Trusted Publishing OIDC when
+configured on npmjs.com; the release summary reports `auth=oidc` or
+`legacy-explicit` alongside crates.io.

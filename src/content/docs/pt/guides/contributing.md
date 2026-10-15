@@ -8,8 +8,8 @@ groupId: "guides"
 groupTitle: "Guias"
 order: 10
 sourcePath: "docs/pt-br/CONTRIBUTING.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/CONTRIBUTING.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/CONTRIBUTING.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Contribuindo com o MangoStudio
@@ -20,8 +20,14 @@ Obrigado pelo seu interesse em contribuir com o MangoStudio!
 
 ## Pré-requisitos
 
-- [Bun](https://bun.sh/) v1.3.14 ou superior
+- [Bun](https://bun.sh/) 1.4.3 ou mais recente — `bun upgrade` ou
+  `curl -fsSL https://bun.sh/install | bash` na primeira instalação
+- Rust 1.99.0 ou mais recente via [rustup](https://rustup.rs/) — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. O hub inicia o
+  Local como o `mangostudio-runtime` construído com cargo; o `bun run dev` o compila antes, e o
+  `rust-toolchain.toml` fixa a versão
 - Git com assinatura GPG configurada (veja [Diretrizes de Commit](#diretrizes-de-commit))
+
+O repositório fixa o Bun 1.4.3. O pin passou para a linha 1.4.x na 1.4.0, a release que tornou o runtime pós-reescrita disponível de forma geral; até então ele seguia o canal `canary`. O `.bun-version` é o que a CI instala, e o `packageManager` precisa indicar a mesma versão — veja [`docs/reference/tooling.md`](/en/docs/reference/tooling/#bun).
 
 ## Configuração do Ambiente
 
@@ -43,7 +49,7 @@ cp .mango/.env.example ~/.mango/.env
 ## Fluxo de Desenvolvimento
 
 ```bash
-# Inicia todos os servidores de dev (API em :3001, frontend em :5173)
+# Inicia o servidor de dev (API e frontend em :3001)
 bun run dev
 
 # Ou inicie cada workspace individualmente
@@ -53,21 +59,24 @@ bun run dev --frontend
 
 ## Mapa da Documentação
 
-- [`../README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/README.md) — ponto de entrada da árvore de documentação
-- [`../guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — caminho mais curto para começar a contribuir
-- [`../reference/testing.md`](/en/docs/reference/testing/) — taxonomia de testes, runners e regras de suporte
-- [`../reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) — mapa de arquivos por feature para trabalho direcionado
+- [`../README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — ponto de entrada da árvore de documentação
+- [`../guides/contributor-quickstart.md`](/docs/guides/contributor-quickstart/) — caminho mais curto para começar a contribuir
+- [`../reference/testing.md`](/docs/reference/testing/) — taxonomia de testes, runners e regras de suporte
+- [`../reference/agent-playbooks.md`](/docs/reference/agent-playbooks/) — mapa de arquivos por feature para trabalho direcionado
 
 ## Padrões de Código
 
-Consulte [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) para o guia completo de estilo, convenções de nomes, regras de i18n e diretrizes de testes. Pontos principais:
+Consulte [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) para o guia completo de estilo, convenções de nomes, regras de i18n e diretrizes de testes. Pontos principais:
 
 - TypeScript em todo o projeto — nenhum arquivo `.js` puro
 - Indentação de 2 espaços, aspas simples, ponto e vírgula
 - Todas as strings visíveis ao usuário devem vir de `@mangostudio/shared/i18n` — nunca codifique texto diretamente
 - Hooks que contêm JSX devem usar a extensão `.tsx`
 - Arquivos `CLAUDE.md` com `@imports`
-- Agentes de IA: use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) como fonte de orientações agnósticas
+- Agentes de IA: use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) como fonte de orientações agnósticas
+- Extras só do Cursor (incluindo notas da VM Cursor Cloud) ficam em
+  [`.cursor/rules/`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.cursor/rules/). Não duplique `AGENTS.md` lá; o Cursor já carrega
+  esse arquivo automaticamente.
 
 ## Executando os Testes
 
@@ -103,7 +112,7 @@ Executa Biome, dprint, verificação de dependências circulares e verificação
 bun run build
 ```
 
-Gera o build do frontend com Vite por padrão. Use `bun run build --binary` para binários standalone.
+Gera o build do frontend com `Bun.build()` (`apps/frontend/build.ts`) por padrão. Use `bun run build --binary` para binários standalone.
 
 ## Diretrizes de Commit
 

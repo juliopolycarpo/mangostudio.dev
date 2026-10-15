@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Referência"
 order: 10
 sourcePath: "docs/pt-br/reference/cli.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/cli.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/reference/cli.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Referência da CLI
@@ -27,41 +27,155 @@ Escolha qualquer canal de distribuição — cada um entrega o mesmo binário
 pré-compilado e sidecar do frontend. Veja a
 [matriz de instalação do README](/en/docs/quickstart/#install) ou:
 
-| Canal              | Ponto de entrada                                                                                                                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| npm / bun          | `mangostudio` — veja [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md)                             |
-| Homebrew           | `brew install juliopolycarpo/tap/mangostudio`                                                                                                                                                   |
-| Shell / PowerShell | `install.sh` / `install.ps1` do GitHub Releases                                                                                                                                                 |
-| Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                     |
-| Cargo              | `cargo install mangostudio` — veja [`packages/cargo-shim/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) |
-| Docker             | `ghcr.io/juliopolycarpo/mangostudio` — veja [`deployment.md`](/docs/operations/deployment/#docker)                                                                                              |
-| Manual             | Baixe arquivos de plataforma do GitHub Releases e verifique `SHA256SUMS`                                                                                                                        |
+| Canal              | Ponto de entrada                                                                                                                                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| npm / bun          | `mangostudio` — veja [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md)                                             |
+| Homebrew           | `brew install juliopolycarpo/tap/mangostudio`                                                                                                                                                                   |
+| Shell / PowerShell | `install.sh` / `install.ps1` do [GitHub Releases](https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh) (espelhado em mangostudio.dev)                                             |
+| Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                                     |
+| Cargo              | `cargo install mangostudio` — veja [`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) |
+| Docker             | `ghcr.io/juliopolycarpo/mangostudio` — veja [`deployment.md`](/docs/operations/deployment/#docker)                                                                                                              |
+| Manual             | Baixe arquivos de plataforma do GitHub Releases e verifique `SHA256SUMS`                                                                                                                                        |
 
 ## Comandos
 
-| Comando                            | Descrição                                                  |
-| ---------------------------------- | ---------------------------------------------------------- |
-| `mangostudio`                      | Imprime ajuda e a lista de comandos.                       |
-| `serve [host\|port\|host:port]`    | Inicia o servidor em foreground (padrão `localhost:3001`). |
-| `serve [host\|port\|host:port] -d` | Inicia o servidor em background (detached) e retorna.      |
-| `status`                           | Mostra se um servidor está rodando e seus detalhes.        |
-| `stop`                             | Encerra graciosamente o servidor em execução (SIGTERM).    |
-| `killserver`                       | Força encerramento do servidor (SIGKILL).                  |
-| `doctor`                           | Executa diagnósticos de ambiente e configuração.           |
-| `version`, `--version`, `-v`       | Imprime a versão embutida do MangoStudio.                  |
+| Comando                                                                                                               | Descrição                                                                                            |
+| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `mangostudio`                                                                                                         | Imprime ajuda e a lista de comandos.                                                                 |
+| `setup [host\|port\|host:port] [--service\|--no-service] [--no-open]`                                                 | Leva uma instalação nova até um hub rodando e abre no navegador.                                     |
+| `serve [host\|port\|host:port]`                                                                                       | Inicia o servidor em foreground (padrão `localhost:3001`).                                           |
+| `serve [host\|port\|host:port] -d`                                                                                    | Inicia o servidor em background (detached) e retorna.                                                |
+| `status`                                                                                                              | Mostra se um servidor está rodando, sua URL, modo de início e saúde.                                 |
+| `status --json`                                                                                                       | Emite o documento de status do hub em vez de texto simples.                                          |
+| `stop`                                                                                                                | Encerra graciosamente o servidor em execução (SIGTERM).                                              |
+| `restart`                                                                                                             | Reinicia o servidor do mesmo jeito que ele foi iniciado.                                             |
+| `killserver`                                                                                                          | Força encerramento do servidor (SIGKILL).                                                            |
+| `service <ação> [host\|port\|host:port] [--json]`                                                                     | Mantém o servidor rodando após logout e reboot.                                                      |
+| `logs [-f] [-n <count>]`                                                                                              | Imprime o fim do log do servidor; `-f` acompanha.                                                    |
+| `open`                                                                                                                | Abre o servidor em execução no navegador padrão.                                                     |
+| `doctor`                                                                                                              | Executa diagnósticos de ambiente e configuração.                                                     |
+| `doctor --all`                                                                                                        | Inclui checagens do conector ChatGPT mesmo sem conector configurado.                                 |
+| `env [runtimes\|agents] [--json]`                                                                                     | Reporta runtimes, gerenciadores de versão e CLIs de agente (somente leitura).                        |
+| `env install <recipe> [--environment <id>] [--version <spec>]`                                                        | Executa uma receita de instalação nesta máquina (`--environment` é sempre recusado por enquanto).    |
+| `env update <recipe> [--environment <id>]`                                                                            | Igual a `env install`, restrito a receitas de atualização.                                           |
+| `env toolchain [node\|bun <caminho\|auto>] [--environment <id>] [--user <email>]`                                     | Mostra ou define com qual Node e Bun os processos iniciados rodam em um ambiente.                    |
+| `upgrade [--check] [--yes] [--stable \| --canary [<sha7>] \| --version <x.y.z>] [--rollback] [--no-restart] [--json]` | Atualiza esta instalação, ou entrega ao gerenciador de pacotes que é dono dela. `update` é um alias. |
+| `version`, `--version`, `-v`                                                                                          | Imprime a versão embutida do MangoStudio.                                                            |
+
+Ações de `service`: `install`, `uninstall`, `status`, `start`, `stop`,
+`restart`. `install` grava uma unidade de usuário — unidade systemd
+`mangostudio.service` no Linux, agente launchd `com.mangostudio.hub` no macOS,
+Tarefa Agendada `MangoStudio Hub` no Windows — que roda `serve` e registra a
+saída em `~/.mango/logs/service.log`.
+
+`env install`/`env update` espelham o fluxo de instalação da página
+Environments a partir do terminal: exigem `installs_enabled = true` em
+`config.toml` (ou `MANGO_ENV_INSTALLS_ENABLED=true`), aceitam `--environment`
+por paridade com a API — mas por enquanto sempre recusado, pois a CLI não tem
+sessão para checar o `allowInstalls` de um ambiente pareado — e `--version`
+para receitas que aceitam uma versão do Node. Saem com `0` em sucesso, `1` se
+a execução terminar em qualquer status diferente de `succeeded`, e `2` quando
+a receita nunca chega a rodar (bloqueada, não suportada, faltando um
+pré-requisito, ou somente-cópia).
+
+`upgrade` descobre primeiro **quem instalou o binário** (marcador do launcher
+npm/Cargo, depois o `install-origin.json` na raiz de versões, depois o caminho
+do executável) e só então age. Numa instalação feita pelos scripts, o hub
+resolve o alvo, baixa e verifica o arquivo (`SHA256SUMS`, ou o `dist.integrity`
+do npm para um commit canary), e executa o script de instalação embutido no seu
+próprio binário com `--local`; o script move o ponteiro `current`, grava
+`install-origin.json` com `origin: upgrade` e limpa versões antigas. Depois um
+hub em execução é reiniciado pelo ponteiro `current`. Numa instalação por
+gerenciador de pacotes (npm/bun/pnpm, Homebrew, Scoop, Cargo) o comando do
+gerenciador é impresso, ou executado com `--yes` no macOS e Linux; no Windows
+`--yes` entrega o comando a um processo que espera este sair. Homebrew e Scoop
+são somente stable; container e checkout de código-fonte são recusados com o
+comando a usar. Sem `--yes`, um terminal interativo confirma antes de baixar e
+antes de reiniciar; fora de um terminal, `upgrade` só relata o que existe e sai
+com `0`. Códigos de saída: `0` atualizado, já atual ou `--check`; `1`
+recusado; `2` falha de download, verificação ou do script. A verificação diária
+de release nova (`[updates]` no `config.toml`, `MANGO_UPDATES_CHECK`,
+`NO_UPDATE_NOTIFIER`, `DO_NOT_TRACK`, `CI`) alimenta as linhas `Installed via`
+e `Update` de `status` e `doctor` e o aviso na página "Esta máquina". Detalhes
+na [versão em inglês](/en/docs/reference/cli/#upgrade).
+
+### setup
+
+O primeiro comando de uma instalação nova, e a metade em terminal do fluxo de
+primeira execução do navegador. Garante que existe um segredo de autenticação,
+opcionalmente instala o serviço em segundo plano, inicia o hub (ou reaproveita
+um já em execução) e abre o endereço no navegador.
+
+- `--service` / `--no-service` respondem a pergunta do serviço de antemão. Sem
+  um terminal para perguntar, um deles é **obrigatório**: instalar uma unidade
+  sobrevive ao comando, e pular silenciosamente deixaria uma instalação
+  automatizada com um hub que morre no logout enquanto reporta sucesso.
+- `--no-open` imprime a URL em vez de abrir qualquer coisa.
+- Onde nenhum navegador pode ser aberto — uma sessão Linux sem `DISPLAY`,
+  tipicamente por SSH — a URL e uma linha `ssh -L` são impressas em vez de uma
+  afirmação de que uma janela apareceu.
+- Um hub que já responde ao health check é reaproveitado, nunca reiniciado. Um
+  que está vivo mas ainda não responde — subindo, ou falhando o `/health` por um
+  instante — é esperado em vez de substituído, e se ele morrer durante a espera,
+  um substituto é iniciado. Um arquivo de estado deixado por um que travou é
+  limpo antes.
+- Sai com código diferente de zero se o hub que ele iniciou não responder em 30
+  segundos, e nomeia o pid quando quem ficou calado foi o que já estava rodando.
+
+`setup` não consegue conectar uma CLI de fornecedor, escolher um repositório ou
+enviar a primeira mensagem; isso é do fluxo no navegador, e ele diz isso abrindo
+o fluxo em vez de alegar que estão prontos. Veja
+[`docs/pt-br/guides/first-run.md`](/docs/guides/first-run/).
 
 ## Exemplos
 
 ```bash
+mangostudio setup              # instalação nova: segredo, serviço, início, abrir
+mangostudio setup --no-service --no-open  # automatizado, imprime a URL
 mangostudio serve              # foreground em localhost:3001
 mangostudio serve 3000         # foreground em localhost:3000
 mangostudio serve 127.0.0.1 -d # background em 127.0.0.1:3001
 mangostudio serve lan:3000 -d  # background em 0.0.0.0:3000
+mangostudio service install    # inicia agora e a cada login
+mangostudio restart            # reinicia do jeito que foi iniciado
+mangostudio logs -f            # acompanha o log do servidor
 mangostudio --version
 mangostudio status
 mangostudio stop
 ```
 
-Para detalhes de modo background, instância única, arquivos de runtime, códigos
-de saída e configuração, consulte a
+Para detalhes de `service` (o que a unidade roda, a lista de variáveis de
+ambiente permitidas, a passagem de bastão na instalação, linger no Linux),
+`restart`, `logs`, modo background, instância única, arquivos de runtime, códigos
+de saída, a seção **Doctor** e configuração, consulte a
 [versão completa em inglês](/en/docs/reference/cli/).
+
+O hub inicia o Local como o binário `mangostudio-runtime`. `mangostudio doctor` reporta o
+binário que o Local executaria — `MANGOSTUDIO_RUNTIME_BINARY`, o binário ao lado de um hub
+standalone ou o build cargo mais recente de um checkout do código-fonte — e marca a linha
+como falha quando ele está ausente, já que o Local não inicia sem ele: reinstale o
+MangoStudio (ou defina `MANGOSTUDIO_RUNTIME_BINARY`) ou, em um checkout, execute
+`cargo build -p mangostudio-runtime`. Uma versão diferente da do hub é só um aviso — o
+handshake recusa a divergência, então reinstale em vez de misturar releases — e não é
+reportada contra um hub de desenvolvimento, que não tem release para comparar.
+
+O segundo binário, `mangostudio-runtime`, tem os próprios comandos —
+`connect`, `serve`, `setup`, `install`, `service`, `health`, `doctor` e `audit`.
+`install` copia o binário que você baixou para dentro do slot
+(`~/.mango/runtime/<slot>/`) e publica o lançador usado por `service install`.
+No Unix, é o ponteiro `current`; no Windows, é o arquivo estável
+`mangostudio-runtime.cmd`, que aponta para um executável de versão imutável e
+dispensa elevação, Modo de Desenvolvedor e privilégio para links simbólicos.
+A Tarefa Agendada `MangoStudio Runtime` reinicia o lançador após o código de
+saída `75`. Um `connect` ou `serve` iniciado à mão a partir do slot também sai
+com o código `75` depois de uma atualização ao vivo pelo hub, e nada o reinicia:
+execute o mesmo comando de novo para usar a nova versão, ou instale o serviço
+para que a atualização o reinicie sozinha. `service stop` e `restart` aguardam a
+instalação ativa terminar, com limite total de 30 segundos; `service stop --force`
+pula essa espera. No Windows, a parada encerra também qualquer runtime que tenha
+sobrado do slot desta home, e encerra o runtime imediatamente: diferente do
+systemd e do launchd, uma etapa de instalação em andamento é interrompida junto.
+A credencial guardada é restrita
+ao seu usuário — por modo `0600` no POSIX e por ACL (`icacls`) no Windows, onde
+`chmod` só altera o atributo somente-leitura. Detalhes na
+[versão em inglês](/en/docs/reference/cli/#mangostudio-runtime).

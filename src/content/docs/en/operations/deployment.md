@@ -8,8 +8,8 @@ groupId: "operations"
 groupTitle: "Operations"
 order: 10
 sourcePath: "docs/operations/deployment.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/operations/deployment.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/operations/deployment.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Deployment
@@ -37,21 +37,38 @@ volume:
 - `/data/.mango/database.sqlite`
 - `/data/.mango/uploads`
 - `/data/.mango/images`
+- `/data/.mango/tool-images`
 - `/data/.mango/agents`
 
 Useful environment variables:
 
-| Variable             | Purpose                                                      |
-| -------------------- | ------------------------------------------------------------ |
-| `BETTER_AUTH_SECRET` | Required 32+ character auth secret                           |
-| `GEMINI_API_KEY`     | Gemini connector key; other provider keys use the same env   |
-| `API_PORT`           | Container listen port, default `3001`                        |
-| `DATABASE_PATH`      | Override SQLite path, default `/data/.mango/database.sqlite` |
-| `UPLOADS_DIR`        | Override uploaded file storage path                          |
-| `IMAGES_DIR`         | Override generated image storage path                        |
-| `AGENTS_DIR`         | Override agent settings storage path                         |
-| `BETTER_AUTH_URL`    | Public URL when deployed behind a domain                     |
-| `TRUST_PROXY`        | Set to `true` only behind a header-overwriting proxy         |
+| Variable             | Purpose                                                                       |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET` | Required 32+ character auth secret                                            |
+| `GEMINI_API_KEY`     | Gemini connector key; other provider keys use the same env                    |
+| `API_PORT`           | Container listen port, default `3001`                                         |
+| `DATABASE_PATH`      | Override SQLite path, default `/data/.mango/database.sqlite`                  |
+| `UPLOADS_DIR`        | Override uploaded file storage path                                           |
+| `IMAGES_DIR`         | Override generated image storage path                                         |
+| `TOOL_IMAGES_DIR`    | Override custom tool avatar storage path                                      |
+| `AGENTS_DIR`         | Override agent settings storage path                                          |
+| `BETTER_AUTH_URL`    | Public URL when deployed behind a domain                                      |
+| `TRUST_PROXY`        | Set to `true` only behind a header-overwriting proxy                          |
+| `ALLOWED_ORIGINS`    | Comma-separated browser origins allowed when the frontend is served elsewhere |
+
+`ALLOWED_ORIGINS` is only half of a split deployment. It tells this API which origin to accept
+requests from; the bundle also has to be told where the API is. Unpack
+`mangostudio-<version>-frontend-dist.tar.gz` and edit `config.js` beside `index.html`:
+
+```js
+window.__MANGO_CONFIG__ = { apiUrl: 'https://api.example.com' };
+```
+
+No rebuild is needed — the file is read at page load, and it outranks anything baked in at
+build time. Leave `apiUrl` empty (the shipped default) to use the origin the page was served
+from, which is what a single-origin install and the standalone binary both want.
+`MANGO_API_URL` sets the same value at build time, for anyone building the bundle themselves.
+See `docs/architecture/frontend-build.md`.
 
 Compose example:
 
@@ -104,13 +121,25 @@ Windows archives use `.zip` instead of `.tar.gz` (`windows-x64`, `windows-arm64`
 Asset names and archive layout are documented in
 [`docs/reference/releasing.md`](/en/docs/reference/releasing/#release-asset-naming).
 
+Windows-only environment variable:
+
+| Variable        | Purpose                                                                                                                                                                                                                                                                                             |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MANGO_WSL_EXE` | Overrides which `wsl.exe` the hub spawns for WSL environments. Auto-detected otherwise (`%ProgramFiles%\WSL\wsl.exe`, then `%ProgramW6432%\WSL\wsl.exe` for a 32-bit host process, then `%SystemRoot%\System32\wsl.exe`, then PATH); `mango doctor --env` reports the resolved path and its source. |
+
 ## Production Build
 
 ```bash
-bun run build --binary
+bun run build --binary --platform linux-x64                  # this machine's platform
+bun run build --binary --runtime-dir .mango/runtime-prebuilt # all 8, with prebuilt runtimes
 ```
 
-This compiles the API into binaries under `.mango/out/<platform>/` with the frontend assets as sidecar files.
+This compiles the hub (with the frontend embedded) into `.mango/out/<platform>/mangostudio`
+and places the cargo-built `mangostudio-runtime` beside it. Without `--runtime-dir`, only the
+host's own platform can be built, because only its runtime is built locally with `cargo build`.
+Any other platform needs a prebuilt runtime at `<dir>/<platform>/mangostudio-runtime[.exe]`
+(`bun run build:runtime`, or the CI artifact); see
+[releasing.md](/en/docs/reference/releasing/#how-the-runtime-binary-is-built).
 
 ## Platform Targets
 
@@ -129,13 +158,41 @@ This compiles the API into binaries under `.mango/out/<platform>/` with the fron
 
 ```
 .mango/out/linux-x64/
-  ├── mangostudio       # Statically compiled binary
-  ├── public/            # Frontend SPA assets (index.html, JS, CSS)
-  ├── run.sh             # Startup helper script
-  └── README.md          # Platform notes
+  ├── mangostudio          # Bun-compiled hub (frontend embedded)
+  ├── mangostudio-runtime  # cargo-built runtime; launched as Local
+  ├── run.sh               # Startup helper script
+  └── README.md            # Platform notes
 ```
 
-The binary serves the frontend SPA from the `public/` directory next to the executable. API routes are served under `/api/` and SPA routes fallback to `index.html`.
+The binary serves the embedded frontend SPA. API routes are served under `/api/` and SPA routes fallback to `index.html`.
+
+The two binaries are one unit: the hub launches `mangostudio-runtime` from beside its own
+executable, and the protocol handshake refuses a runtime whose version differs. Keep them
+together when copying a build, and upgrade both at once.
+
+## Runtime Binary Requirements
+
+The runtime is a native Rust binary with no interpreter or shared runtime to install:
+
+- **Linux glibc** (`linux-x64`, `linux-arm64`): glibc 2.17 or newer, the same floor as the hub.
+- **Linux musl** (`*-musl`): the runtime is statically linked and needs no extra packages. The
+  hub is a Bun-compiled binary that links `libstdc++` dynamically, so a bare Alpine needs
+  `apk add libstdc++` (plus `bash` and `curl`, which the installer uses) before `install.sh`. Without it the installer's version check fails; it
+  prints the loader's own message and that `apk` hint.
+- **Windows**: the MSVC C runtime is linked statically, so no Visual C++ Redistributable is
+  needed.
+- **macOS**: one binary per architecture (`darwin-x64`, `darwin-arm64`).
+
+`mangostudio-runtime --version` prints the bare release version; `mangostudio doctor` and
+WSL/SSH provisioning compare it with the hub's. Every release asset, raw runtime binaries
+included, is listed in `SHA256SUMS`, and `SHA256SUMS` carries a build provenance attestation:
+
+```bash
+gh attestation verify SHA256SUMS --repo juliopolycarpo/mangostudio
+```
+
+See [releasing.md](/en/docs/reference/releasing/#how-the-runtime-binary-is-built) for how each
+target is built and checked.
 
 ## Configuration
 
@@ -145,6 +202,19 @@ Production configuration uses `~/.mango/config.toml` and `~/.mango/.env` for the
 [server]
 host = "0.0.0.0"
 port = 3001
+# How peers outside this process reach the hub, which is a different question
+# from how it binds. Required for paired WebSocket runtimes: the pairing card
+# has no other way to print the address they dial, and a request header would
+# be a spoofable guess. Env override: PUBLIC_URL. Direct URL environments do
+# not need this — the hub dials the runtime's baseUrl instead.
+publicUrl = "https://your-domain.com"
+# Only for a split deployment, where the frontend bundle is served from a
+# different origin than this API. Added to the server's own origins, never
+# substituted for them. Each entry must be a bare scheme://host[:port] — a path,
+# a trailing slash, or an explicit default port fails at startup, because every
+# gate compares the browser's Origin header by exact string. Env override:
+# ALLOWED_ORIGINS (comma-separated), which replaces this list.
+allowedOrigins = ["https://studio.example.com"]
 
 [database]
 path = "/var/lib/mangostudio/database.sqlite"
@@ -192,6 +262,12 @@ server {
     ssl_certificate /etc/ssl/certs/your-cert.pem;
     ssl_certificate_key /etc/ssl/private/your-key.pem;
 
+    # Compress the frontend bundle and JSON. text/html is always included once
+    # gzip is on; text/event-stream is left out, so SSE stays uncompressed.
+    gzip on;
+    gzip_vary on;
+    gzip_types text/css text/javascript application/javascript application/json image/svg+xml;
+
     location / {
         proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
@@ -212,9 +288,49 @@ server {
 
 ```
 your-domain.com {
+    # Compress the frontend bundle and JSON. The list is explicit because the
+    # default one matches text/*, which also compresses SSE (text/event-stream)
+    # once an event is larger than 512 bytes.
+    encode zstd gzip {
+        match {
+            header Content-Type text/html*
+            header Content-Type text/css*
+            header Content-Type text/javascript*
+            header Content-Type application/javascript*
+            header Content-Type application/json*
+            header Content-Type image/svg+xml*
+        }
+    }
     reverse_proxy 127.0.0.1:3001
 }
 ```
+
+### Compression
+
+The hub serves the frontend bundle uncompressed and leaves compression to the proxy. Both
+examples above compress it: the main JavaScript file drops from about 1.8 MB to about 0.6 MB
+on the wire, which matters for remote access (a browser on the same machine gains little).
+Fonts and images are already compressed and are not listed.
+
+SSE responses (`text/event-stream`) are deliberately left uncompressed, so each event reaches
+the browser as soon as the hub sends it. If you extend either list, keep `text/event-stream`
+out of it, and keep `proxy_buffering off` in nginx.
+
+If another proxy, load balancer or CDN sits in front of nginx and adds a `Via` request header,
+nginx treats the request as proxied and skips gzip by default. Add `gzip_proxied any;` beside
+`gzip on;` in that setup.
+
+To check a deployment, request a hashed asset from the page with a `GET` and read the headers
+(`curl -I` sends `HEAD`, which the hub's asset routes do not answer):
+
+```bash
+curl -sS -o /dev/null -D - -H 'Accept-Encoding: gzip' \
+  https://your-domain.com/assets/main-<hash>.js | grep -i '^content-encoding:'
+```
+
+A compressed response prints its `Content-Encoding: gzip` header (the case varies by proxy).
+No output (and `grep` exiting with 1) means the proxy sent the file uncompressed. To check
+Caddy's zstd path, send `Accept-Encoding: zstd` instead and expect `zstd`.
 
 ### Trusting proxy headers
 
@@ -225,9 +341,55 @@ under `[security]` in `config.toml` so the limiter resolves the real client IP
 from the `X-Forwarded-For` / `X-Real-IP` / `CF-Connecting-IP` headers the proxy
 sets.
 
-> **Only enable this behind a proxy that overwrites those headers** (the nginx
-> config above uses `$proxy_add_x_forwarded_for`). With direct internet exposure,
-> a trusted header lets any client spoof its IP and evade rate limiting.
+The same setting decides the local-surface guard that gates environment installs
+and the machine actions (`/api/machine/restart`, `/api/machine/service`,
+`/api/machine/logs`). That guard asks whether the browser is at this machine's
+keyboard, and the socket peer cannot answer it behind a proxy — every caller
+arrives from loopback. With `TRUST_PROXY=true` the forwarded client answers
+instead, so a remote signed-in session is correctly refused.
+
+The two read different hops of `X-Forwarded-For`, because they are asking
+different questions. The header is a list, and a proxy *appends* the address it
+saw rather than replacing the list — both `$proxy_add_x_forwarded_for` above and
+Caddy's `reverse_proxy` do. The limiter takes the **first** hop, the origin
+client, which is what a counter should be keyed on. The guard takes the **last**
+hop, the one your proxy wrote, because every earlier entry is whatever the
+caller sent — a remote browser can put `X-Forwarded-For: 127.0.0.1` on a
+same-origin request, and the guard must not read that as your keyboard.
+
+> **Only enable this behind a proxy that actually sets those headers.** With
+> direct internet exposure, or behind something that forwards a caller's
+> `X-Forwarded-For` verbatim without appending to it, a trusted header lets any
+> client spoof its IP — evading rate limiting, and passing the local-surface
+> guard.
+
+#### When the proxy sets no forwarded header
+
+A proxy that forwards without `X-Forwarded-For` — an nginx `location` block with
+no `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;` — leaves the
+guard with only the socket peer to read, and that peer is the proxy, on
+loopback. Every remote browser then passes a check that means "at this machine's
+keyboard".
+
+`ALLOW_DIRECT_LOOPBACK` (env) or `allowDirectLoopback` under `[security]`
+decides what happens there. It defaults to `true`: an unforwarded request is
+judged by its socket peer, exactly as it was before `TRUST_PROXY` was set, so a
+browser that reaches the hub directly — bypassing the proxy on `localhost:3001`
+— keeps the machine page and its installs.
+
+```toml
+[security]
+trustProxy = true
+allowDirectLoopback = false
+```
+
+Set it to `false` when the proxy in front of this hub does not set
+`X-Forwarded-For` and you cannot change that. An unforwarded request is then
+refused as `client-unverified` rather than accepted as local — a distinct reason
+from `client-not-loopback`, so the page says the address could not be
+established instead of claiming the caller is somewhere else. Direct requests to
+the hub's own port are refused with it, and the CLI (`mangostudio restart`,
+`mangostudio service install`) remains the way in.
 
 ## Systemd Service
 
@@ -254,7 +416,7 @@ WantedBy=multi-user.target
 Validate the binary before deployment:
 
 ```bash
-PLATFORM=linux-x64 bun run test-build
+PLATFORM=linux-x64 bun run scripts/test-build.ts
 ```
 
 This verifies:

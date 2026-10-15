@@ -8,8 +8,8 @@ groupId: "providers"
 groupTitle: "Provedores"
 order: 20
 sourcePath: "docs/pt-br/providers/deepseek.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/providers/deepseek.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/providers/deepseek.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Provedor DeepSeek
@@ -20,7 +20,7 @@ O DeepSeek é modelado como um provedor de primeira classe, e não apenas como u
 
 - **Provider ID:** `deepseek`
 - **Base URL:** `https://api.deepseek.com` (configurável)
-- **SDK:** `@ai-sdk/deepseek` (Vercel AI SDK)
+- **SDK:** `openai` (SDK da OpenAI apontado para a base URL do DeepSeek)
 - **Formato wire:** API OpenAI Chat Completions
 
 ## Estratégia De Continuação
