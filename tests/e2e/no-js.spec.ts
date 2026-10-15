@@ -143,11 +143,17 @@ test.describe('scripts enabled', () => {
       ).toBeHidden();
     });
 
-    test(`animates terminal lines in, ${locale.name}`, async ({ page }) => {
+    test(`animates terminal lines after scrolling into view, ${locale.name}`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 640 });
       await page.emulateMedia({ reducedMotion: 'no-preference' });
       await page.goto(locale.path);
 
       await expect(page.locator('#terminal-demo')).toHaveAttribute('data-terminal', 'ready');
+      // Let the previous eager-start delay elapse while the terminal is offscreen.
+      await page.waitForTimeout(900);
+      await expect(page.locator('[data-typed]')).toHaveText('');
+      await expect(page.locator('.term-line.is-visible')).toHaveCount(0);
+      await page.locator('.demo-term').scrollIntoViewIfNeeded();
       await expect(page.locator('.term-line.is-visible')).toHaveCount(4, { timeout: 8000 });
       // The fade-in runs for 0.3s after each line gains .is-visible.
       await expect
