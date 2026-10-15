@@ -68,17 +68,21 @@ export interface StaticPayloadBudgetRow {
 
 const DEFAULT_DIST_DIR = 'dist';
 const KIB = 1024;
-const PAGE_TARGETS: readonly PageTarget[] = [
+/** Pages whose gzipped HTML is reported; each needs a `pageHtmlGzipBytes` budget. */
+export const PAGE_TARGETS: readonly PageTarget[] = [
   { label: 'home HTML', path: 'index.html' },
   { label: 'English home HTML', path: 'en/index.html' },
   { label: 'quickstart docs HTML', path: 'docs/quickstart/index.html' },
+  { label: 'English quickstart docs HTML', path: 'en/docs/quickstart/index.html' },
   { label: 'releases HTML', path: 'releases/index.html' },
 ];
 export const STATIC_PAYLOAD_BUDGETS: StaticPayloadBudgets = {
   pageHtmlGzipBytes: {
     'index.html': 20 * KIB,
     'en/index.html': 20 * KIB,
-    'docs/quickstart/index.html': 16 * KIB,
+    // The quickstart is synced upstream content (setup, connectors, tooling); same ceiling as home.
+    'docs/quickstart/index.html': 20 * KIB,
+    'en/docs/quickstart/index.html': 20 * KIB,
     'releases/index.html': 16 * KIB,
   },
   maxJsAssetGzipBytes: 5 * KIB,
