@@ -10,10 +10,23 @@ import {
   formatStaticPayloadBudgetResult,
   formatStaticPayloadReport,
   gzipByteLength,
+  PAGE_TARGETS,
+  STATIC_PAYLOAD_BUDGETS,
   type StaticPayloadBudgets,
   type StaticPayloadReport,
   validateStaticPayloadBudgets,
 } from './report-static-payloads';
+
+await run('every reported page has an HTML gzip budget', () => {
+  const unbudgeted = PAGE_TARGETS.filter(
+    (page) => STATIC_PAYLOAD_BUDGETS.pageHtmlGzipBytes[page.path] === undefined
+  ).map((page) => page.path);
+  deepStrictEqual(
+    unbudgeted,
+    [],
+    `expected a pageHtmlGzipBytes budget for each page target | received unbudgeted: ${unbudgeted.join(', ')}`
+  );
+});
 
 await run('extractStylesheetHrefs returns unique sorted stylesheet links', () => {
   const html = `
