@@ -1,4 +1,4 @@
-import { constants } from 'node:fs';
+import { constants, type Stats } from 'node:fs';
 import { copyFile, lstat, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
@@ -49,8 +49,8 @@ export async function retainDeployAssets(
   await requireDirectory(assetsRoot);
   const currentFiles = (await readdir(assetsRoot)).sort();
   for (const file of currentFiles) {
-    validateAssetName(file);
     await requireFile(join(assetsRoot, file));
+    validateAssetName(file);
   }
   const previous = await readManifest(cacheRoot);
   // A build may have been active for days before being superseded. Its grace
@@ -122,9 +122,15 @@ function validateAssetName(file: string): void {
 }
 
 async function requireFile(path: string): Promise<void> {
-  if (!(await lstat(path)).isFile()) {
-    throw new Error(`asset path: expected a regular file without symlinks | received: ${path}`);
+  const message = `asset path: expected a regular file without symlinks | received: ${path}`;
+  let stats: Stats;
+  try {
+    stats = await lstat(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    throw new Error(message, { cause: error });
   }
+  if (!stats.isFile()) throw new Error(message);
 }
 
 async function requireDirectory(path: string): Promise<void> {

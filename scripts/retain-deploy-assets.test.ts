@@ -186,6 +186,34 @@ await run('rejects overlapping directories and invalid arguments', async (fake) 
   );
 });
 
+await run('reports missing retained cache members as invalid asset files', async (fake) => {
+  await fake.build({ 'page.abcdefgh.css': 'current' });
+  await fake.seedManifest(['missing.abcdefgh.js']);
+  await rejects(
+    retainDeployAssets(fake.assets, fake.cache, 'current', 0),
+    /asset path: expected a regular file without symlinks \| received: .*missing\.abcdefgh\.js/
+  );
+  deepStrictEqual(await readdir(fake.assets), ['page.abcdefgh.css']);
+});
+
+await run('reports a missing manifest in a nonempty cache as an invalid file', async (fake) => {
+  await fake.build({ 'page.abcdefgh.css': 'current' });
+  await mkdir(join(fake.cache, 'assets'), { recursive: true });
+  await rejects(
+    retainDeployAssets(fake.assets, fake.cache, 'current', 0),
+    /asset path: expected a regular file without symlinks \| received: .*manifest\.json/
+  );
+});
+
+await run('rejects nested current assets with the flat file contract', async (fake) => {
+  await fake.build({ 'page.abcdefgh.css': 'current' });
+  await mkdir(join(fake.assets, 'nested'));
+  await rejects(
+    retainDeployAssets(fake.assets, fake.cache, 'current', 0),
+    /asset path: expected a regular file without symlinks \| received: .*nested/
+  );
+});
+
 async function run(
   name: string,
   test: (fake: FakeDeployDirectories) => Promise<void>
