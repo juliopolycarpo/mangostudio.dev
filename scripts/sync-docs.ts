@@ -288,12 +288,7 @@ export function rewriteMarkdownLinks(
     sourcePathMap: Map<string, { lang: Lang; slug: string }>;
   }
 ): string {
-  const rewrite = (href: string): string =>
-    rewriteHref(href, {
-      sourcePath: context.sourcePath,
-      sourceCommit: context.sourceCommit,
-      sourcePathMap: context.sourcePathMap,
-    });
+  const rewrite = (href: string): string => rewriteHref(href, context);
 
   return input
     .replace(/(?<!!)\[([^\]\n]+)\]\(([^)\s]+)\)/g, (_match, label: string, href: string) => {
@@ -396,6 +391,7 @@ function createSourcePathMap(
 function rewriteHref(
   href: string,
   context: {
+    lang: Lang;
     sourcePath: string;
     sourceCommit: string;
     sourcePathMap: Map<string, { lang: Lang; slug: string }>;
@@ -422,10 +418,32 @@ function rewriteHref(
   const targetDoc = pathPart.endsWith('.md') ? context.sourcePathMap.get(targetPath) : undefined;
 
   if (targetDoc) {
-    return `${routes.doc(targetDoc.lang, targetDoc.slug)}${suffix}`;
+    return `${routes.doc(linkLang(targetDoc, context), targetDoc.slug)}${suffix}`;
   }
 
   return `${sourceBlobUrl(context.sourceCommit, targetPath)}${suffix}`;
+}
+
+/**
+ * Portuguese mirrors are often copied from English with `../` paths that now
+ * resolve to the English file. Route those links to the Portuguese page when it
+ * exists. A link to the same page in another language is a language switch and
+ * keeps its language, as do explicit links from English sources.
+ */
+function linkLang(
+  target: { lang: Lang; slug: string },
+  context: {
+    lang: Lang;
+    sourcePath: string;
+    sourcePathMap: Map<string, { lang: Lang; slug: string }>;
+  }
+): Lang {
+  if (context.lang !== 'pt' || target.lang !== 'en') return target.lang;
+  if (context.sourcePathMap.get(context.sourcePath)?.slug === target.slug) return target.lang;
+  const mirrored = [...context.sourcePathMap.values()].some(
+    (doc) => doc.lang === 'pt' && doc.slug === target.slug
+  );
+  return mirrored ? 'pt' : target.lang;
 }
 
 /** True for links relative to the source file: not an anchor, site-root path, or URL with a scheme. */

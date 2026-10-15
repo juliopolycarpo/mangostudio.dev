@@ -322,6 +322,33 @@ await run('rewriteMarkdownLinks leaves anchors, site URLs, and external URLs unt
   }
 });
 
+await run('rewriteMarkdownLinks keeps Portuguese pages on Portuguese routes', () => {
+  const sourcePathMap = new Map([
+    ['README.md', { lang: 'en' as const, slug: 'quickstart' }],
+    ['docs/pt-br/README.md', { lang: 'pt' as const, slug: 'quickstart' }],
+    ['docs/reference/cli.md', { lang: 'en' as const, slug: 'reference/cli' }],
+    ['docs/pt-br/reference/cli.md', { lang: 'pt' as const, slug: 'reference/cli' }],
+    ['docs/reference/mcp.md', { lang: 'en' as const, slug: 'reference/mcp' }],
+  ]);
+
+  strictEqual(
+    rewriteMarkdownLinks(
+      [
+        '[CLI](../reference/cli.md#commands)',
+        '[Read in English](../../README.md)',
+        '[MCP](../reference/mcp.md)',
+      ].join('\n'),
+      { lang: 'pt', sourcePath: 'docs/pt-br/README.md', sourceCommit: 'abc123', sourcePathMap }
+    ),
+    [
+      '[CLI](/docs/reference/cli/#commands)',
+      '[Read in English](/en/docs/quickstart/)',
+      '[MCP](/en/docs/reference/mcp/)',
+    ].join('\n'),
+    'expected mirrored targets on Portuguese routes, with the language switch and unmirrored docs kept in English'
+  );
+});
+
 await run('rewriteMarkdownLinks rejects relative links that escape the repository', () => {
   let message = '';
 
