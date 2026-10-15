@@ -75,6 +75,7 @@ export const PAGE_TARGETS: readonly PageTarget[] = [
   { label: 'quickstart docs HTML', path: 'docs/quickstart/index.html' },
   { label: 'English quickstart docs HTML', path: 'en/docs/quickstart/index.html' },
   { label: 'releases HTML', path: 'releases/index.html' },
+  { label: 'English releases HTML', path: 'en/releases/index.html' },
 ];
 export const STATIC_PAYLOAD_BUDGETS: StaticPayloadBudgets = {
   pageHtmlGzipBytes: {
@@ -84,6 +85,7 @@ export const STATIC_PAYLOAD_BUDGETS: StaticPayloadBudgets = {
     'docs/quickstart/index.html': 20 * KIB,
     'en/docs/quickstart/index.html': 20 * KIB,
     'releases/index.html': 16 * KIB,
+    'en/releases/index.html': 16 * KIB,
   },
   maxJsAssetGzipBytes: 5 * KIB,
   maxTotalJsGzipBytes: 8 * KIB,
