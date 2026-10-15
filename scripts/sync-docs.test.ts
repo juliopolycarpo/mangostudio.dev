@@ -1,4 +1,4 @@
-import { deepStrictEqual, ok, strictEqual, throws } from 'node:assert/strict';
+import { deepStrictEqual, ok, rejects, strictEqual, throws } from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -407,6 +407,20 @@ await run('collectDocDefinitions skips an English doc without a Portuguese mirro
     deepStrictEqual(warnings.messages, [
       'docs sync: expected Portuguese mirror docs/pt-br/reference/mcp.md for docs/reference/mcp.md | received: missing file, skipping this doc',
     ]);
+  } finally {
+    await rm(sourceDir, { force: true, recursive: true });
+  }
+});
+
+await run('collectDocDefinitions fails when a Portuguese mirror cannot be read', async () => {
+  const sourceDir = await createSourceFixture();
+  const warnings = new FakeWarnings();
+
+  try {
+    await writeFileWithDir(join(sourceDir, 'docs/reference/mcp.md'), '# MCP\n');
+    await mkdir(join(sourceDir, 'docs/pt-br/reference/mcp.md'), { recursive: true });
+    await rejects(collectDocDefinitions(sourceDir, warnings.warn), /EISDIR/);
+    deepStrictEqual(warnings.messages, [], 'expected no skip warning for an unreadable mirror');
   } finally {
     await rm(sourceDir, { force: true, recursive: true });
   }

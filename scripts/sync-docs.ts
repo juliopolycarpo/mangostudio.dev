@@ -692,8 +692,10 @@ async function isReadable(path: string): Promise<boolean> {
   try {
     await readFile(path, 'utf8');
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    // Only a missing mirror is skipped; other filesystem errors must fail the sync.
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw error;
   }
 }
 
