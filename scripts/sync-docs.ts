@@ -418,7 +418,7 @@ function rewriteHref(
   const targetDoc = pathPart.endsWith('.md') ? context.sourcePathMap.get(targetPath) : undefined;
 
   if (targetDoc) {
-    return `${routes.doc(linkLang(targetDoc, context), targetDoc.slug)}${suffix}`;
+    return `${routes.doc(linkLang(targetDoc, suffix, context), targetDoc.slug)}${suffix}`;
   }
 
   return `${sourceBlobUrl(context.sourceCommit, targetPath)}${suffix}`;
@@ -428,17 +428,19 @@ function rewriteHref(
  * Portuguese mirrors are often copied from English with `../` paths that now
  * resolve to the English file. Route those links to the Portuguese page when it
  * exists. A link to the same page in another language is a language switch and
- * keeps its language, as do explicit links from English sources.
+ * keeps its language, as do explicit links from English sources. A link with a
+ * fragment also keeps its language: translated headings change the anchor ids.
  */
 function linkLang(
   target: { lang: Lang; slug: string },
+  suffix: string,
   context: {
     lang: Lang;
     sourcePath: string;
     sourcePathMap: Map<string, { lang: Lang; slug: string }>;
   }
 ): Lang {
-  if (context.lang !== 'pt' || target.lang !== 'en') return target.lang;
+  if (context.lang !== 'pt' || target.lang !== 'en' || suffix.includes('#')) return target.lang;
   if (context.sourcePathMap.get(context.sourcePath)?.slug === target.slug) return target.lang;
   const mirrored = [...context.sourcePathMap.values()].some(
     (doc) => doc.lang === 'pt' && doc.slug === target.slug

@@ -334,18 +334,20 @@ await run('rewriteMarkdownLinks keeps Portuguese pages on Portuguese routes', ()
   strictEqual(
     rewriteMarkdownLinks(
       [
-        '[CLI](../reference/cli.md#commands)',
+        '[CLI](../reference/cli.md)',
+        '[Commands](../reference/cli.md#commands)',
         '[Read in English](../../README.md)',
         '[MCP](../reference/mcp.md)',
       ].join('\n'),
       { lang: 'pt', sourcePath: 'docs/pt-br/README.md', sourceCommit: 'abc123', sourcePathMap }
     ),
     [
-      '[CLI](/docs/reference/cli/#commands)',
+      '[CLI](/docs/reference/cli/)',
+      '[Commands](/en/docs/reference/cli/#commands)',
       '[Read in English](/en/docs/quickstart/)',
       '[MCP](/en/docs/reference/mcp/)',
     ].join('\n'),
-    'expected mirrored targets on Portuguese routes, with the language switch and unmirrored docs kept in English'
+    'expected mirrored targets on Portuguese routes, with fragment links, the language switch, and unmirrored docs kept in English'
   );
 });
 
