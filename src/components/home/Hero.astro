@@ -105,7 +105,7 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
   .hero-logo-glow {
     position: absolute;
     top: 26px;
-    right: calc(6% - 48px);
+    right: max(0px, calc(6% - 48px));
     width: 216px;
     height: 216px;
     background: radial-gradient(
