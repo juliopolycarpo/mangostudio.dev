@@ -1,8 +1,21 @@
 import { deepStrictEqual, rejects, strictEqual } from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { confirmDeployment, retainDeployAssets } from './retain-deploy-assets';
+import { fileURLToPath } from 'node:url';
+import {
+  confirmDeployment,
+  retainDeployAssets,
+  retainDeployAssetsOrReset,
+} from './retain-deploy-assets';
+
+class FakeWarnings {
+  readonly messages: string[] = [];
+  readonly warn = (message: string): void => {
+    this.messages.push(message);
+  };
+}
 
 class FakeDeployDirectories {
   readonly assets: string;
@@ -212,6 +225,75 @@ await run('rejects nested current assets with the flat file contract', async (fa
     retainDeployAssets(fake.assets, fake.cache, 'current', 0),
     /asset path: expected a regular file without symlinks \| received: .*nested/
   );
+});
+
+await run('deploy CLI discards a corrupt restored cache instead of failing', async (fake) => {
+  await fake.build({ 'page.abcdefgh.css': 'current' });
+  await fake.seedManifest([]);
+  await writeFile(join(fake.cache, 'manifest.json'), '{"version": 2, "generations": []}');
+  const cli = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL('./retain-deploy-assets.ts', import.meta.url)),
+      fake.assets,
+      fake.cache,
+      'current',
+    ],
+    { encoding: 'utf8' }
+  );
+  strictEqual(
+    cli.status,
+    0,
+    `deploy CLI expected exit 0 after discarding the cache | received: ${cli.status} ${cli.stderr}`
+  );
+  const manifest = JSON.parse(await readFile(join(fake.cache, 'manifest.json'), 'utf8'));
+  deepStrictEqual(
+    manifest.generations.map((generation: { id: string }) => generation.id),
+    ['current']
+  );
+});
+
+await run('reset discards missing members and symlinks with a warning', async (fake) => {
+  await fake.build({ 'page.abcdefgh.css': 'current' });
+  await fake.seedManifest(['missing.abcdefgh.js']);
+  const warnings = new FakeWarnings();
+  const result = await retainDeployAssetsOrReset(
+    fake.assets,
+    fake.cache,
+    'current',
+    0,
+    warnings.warn
+  );
+  deepStrictEqual(result.generations, [
+    { id: 'current', files: ['page.abcdefgh.css'], deployedAt: 0 },
+  ]);
+  deepStrictEqual(await readdir(fake.assets), ['page.abcdefgh.css']);
+  deepStrictEqual(await readdir(join(fake.cache, 'assets')), ['page.abcdefgh.css']);
+  strictEqual(warnings.messages.length, 1, 'expected one cache discard warning');
+  strictEqual(
+    /expected a valid restored cache.*missing\.abcdefgh\.js/.test(warnings.messages[0] ?? ''),
+    true,
+    `expected warning naming the missing member | received: ${warnings.messages[0]}`
+  );
+  await rm(join(fake.cache, 'assets'), { recursive: true });
+  await symlink(fake.assets, join(fake.cache, 'assets'));
+  await fake.seedManifest(['old.abcdefgh.js']);
+  await retainDeployAssetsOrReset(fake.assets, fake.cache, 'next', 1, warnings.warn);
+  deepStrictEqual(await readdir(fake.assets), ['page.abcdefgh.css']);
+});
+
+await run('reset still rejects invalid current assets and arguments', async (fake) => {
+  await fake.build({ 'page.css': 'unversioned' });
+  const warnings = new FakeWarnings();
+  await rejects(
+    retainDeployAssetsOrReset(fake.assets, fake.cache, 'current', 0, warnings.warn),
+    /expected a flat hashed static asset filename.*page.css/
+  );
+  await rejects(
+    retainDeployAssetsOrReset(fake.assets, fake.assets, 'current', 0, warnings.warn),
+    /expected separate, non-overlapping paths/
+  );
+  deepStrictEqual(await readdir(fake.assets), ['page.css']);
 });
 
 async function run(

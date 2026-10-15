@@ -29,23 +29,7 @@ export async function retainDeployAssets(
   generationId: string,
   now = Date.now()
 ): Promise<Manifest> {
-  if (!Number.isSafeInteger(now) || now < 0) {
-    throw new Error(`deploy time: expected non-negative integer milliseconds | received: ${now}`);
-  }
-  if (!/^[A-Za-z0-9_-]+$/.test(generationId)) {
-    throw new Error(
-      `generation id: expected letters, digits, underscores or hyphens | received: ${generationId}`
-    );
-  }
-  const assetsRoot = resolve(assetsDir);
-  const cacheRoot = resolve(cacheDir);
-  if (
-    assetsRoot === cacheRoot ||
-    assetsRoot.startsWith(`${cacheRoot}/`) ||
-    cacheRoot.startsWith(`${assetsRoot}/`)
-  ) {
-    throw new Error('asset and cache directories: expected separate, non-overlapping paths');
-  }
+  const { assetsRoot, cacheRoot } = resolveRoots(assetsDir, cacheDir, generationId, now);
   await requireDirectory(assetsRoot);
   const currentFiles = (await readdir(assetsRoot)).sort();
   for (const file of currentFiles) {
@@ -89,6 +73,33 @@ export async function retainDeployAssets(
 }
 
 /**
+ * Retains recent assets, discarding a restored cache that fails validation so one
+ * bad cache entry cannot block every later deploy. Invalid arguments and invalid
+ * current-build assets still fail, and the cache is removed only after the
+ * arguments pass.
+ *
+ * @example
+ * await retainDeployAssetsOrReset('dist/_astro', '/tmp/deploy-assets', '12345-1');
+ */
+export async function retainDeployAssetsOrReset(
+  assetsDir: string,
+  cacheDir: string,
+  generationId: string,
+  now = Date.now(),
+  warn: (message: string) => void = console.warn
+): Promise<Manifest> {
+  const { cacheRoot } = resolveRoots(assetsDir, cacheDir, generationId, now);
+  try {
+    return await retainDeployAssets(assetsDir, cacheDir, generationId, now);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    warn(`asset cache: expected a valid restored cache, discarding it | received: ${reason}`);
+    await rm(cacheRoot, { recursive: true, force: true });
+    return retainDeployAssets(assetsDir, cacheDir, generationId, now);
+  }
+}
+
+/**
  * Records when Wrangler finished so the retirement grace starts after deployment.
  *
  * @example
@@ -113,6 +124,32 @@ export async function confirmDeployment(
   }
   current.deployedAt = now;
   await writeFile(join(cacheDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+function resolveRoots(
+  assetsDir: string,
+  cacheDir: string,
+  generationId: string,
+  now: number
+): { assetsRoot: string; cacheRoot: string } {
+  if (!Number.isSafeInteger(now) || now < 0) {
+    throw new Error(`deploy time: expected non-negative integer milliseconds | received: ${now}`);
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(generationId)) {
+    throw new Error(
+      `generation id: expected letters, digits, underscores or hyphens | received: ${generationId}`
+    );
+  }
+  const assetsRoot = resolve(assetsDir);
+  const cacheRoot = resolve(cacheDir);
+  if (
+    assetsRoot === cacheRoot ||
+    assetsRoot.startsWith(`${cacheRoot}/`) ||
+    cacheRoot.startsWith(`${assetsRoot}/`)
+  ) {
+    throw new Error('asset and cache directories: expected separate, non-overlapping paths');
+  }
+  return { assetsRoot, cacheRoot };
 }
 
 function validateAssetName(file: string): void {
@@ -203,7 +240,7 @@ if (import.meta.main) {
   if (mode === '--confirm') {
     await confirmDeployment(cacheDir, generationId);
   } else {
-    const manifest = await retainDeployAssets(assetsDir, cacheDir, generationId);
+    const manifest = await retainDeployAssetsOrReset(assetsDir, cacheDir, generationId);
     console.warn(`Retained ${manifest.generations.length} deploy generations.`);
   }
 }
