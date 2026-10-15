@@ -4,10 +4,13 @@
  * The lines stay readable until this runs; CSS hides them only under
  * `[data-terminal="ready"]`, which is set here. Never gate on the inline `html.js`
  * flag, because it is set even when this bundle fails to load.
+ *
+ * @example
+ * initTerminal(); // Animate once the terminal scrolls into view.
  */
 export function initTerminal(): void {
   const root = document.getElementById('terminal-demo');
-  if (!root) return;
+  if (!root || root.dataset.terminal === 'ready') return;
   const typedEl = root.querySelector('[data-typed]');
   if (!(typedEl instanceof HTMLElement)) return;
 
@@ -42,5 +45,26 @@ export function initTerminal(): void {
   };
 
   typedEl.textContent = '';
-  window.setTimeout(typeChar, 650);
+  if (typeof window.IntersectionObserver === 'undefined') {
+    window.setTimeout(typeChar, 650);
+    return;
+  }
+
+  let started = false;
+  const observer = new window.IntersectionObserver(
+    (entries) => {
+      if (
+        started ||
+        !entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.4)
+      ) {
+        return;
+      }
+      started = true;
+      observer.disconnect();
+      window.setTimeout(typeChar, 650);
+    },
+    { threshold: 0.4 }
+  );
+  // On mobile the browser preview sits below the terminal in the same grid.
+  observer.observe(root.querySelector('.demo-term') ?? root);
 }
