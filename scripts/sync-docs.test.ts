@@ -392,6 +392,26 @@ await run(
   }
 );
 
+await run('collectDocDefinitions skips an English doc without a Portuguese mirror', async () => {
+  const sourceDir = await createSourceFixture();
+  const warnings = new FakeWarnings();
+
+  try {
+    await writeFileWithDir(join(sourceDir, 'docs/reference/mcp.md'), '# MCP\n');
+    const definitions = await collectDocDefinitions(sourceDir, warnings.warn);
+
+    ok(
+      !definitions.some((definition) => definition.slug === 'reference/mcp'),
+      `expected reference/mcp skipped without docs/pt-br/reference/mcp.md | received: ${definitions.map((definition) => definition.slug).join(', ')}`
+    );
+    deepStrictEqual(warnings.messages, [
+      'docs sync: expected Portuguese mirror docs/pt-br/reference/mcp.md for docs/reference/mcp.md | received: missing file, skipping this doc',
+    ]);
+  } finally {
+    await rm(sourceDir, { force: true, recursive: true });
+  }
+});
+
 await run('syncDocs writes localized content and a deterministic manifest', async () => {
   const sourceDir = await createSourceFixture();
   const repoRoot = await mkdtemp(join(tmpdir(), 'mango-site-'));
@@ -722,6 +742,13 @@ async function createSourceFixture(): Promise<string> {
 async function writeFileWithDir(path: string, content: string): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, content, 'utf8');
+}
+
+class FakeWarnings {
+  readonly messages: string[] = [];
+  readonly warn = (message: string): void => {
+    this.messages.push(message);
+  };
 }
 
 async function run(name: string, fn: () => void | Promise<void>): Promise<void> {

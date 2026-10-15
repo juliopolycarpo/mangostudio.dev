@@ -216,7 +216,18 @@ export async function syncDocs(options: SyncDocsOptions = {}): Promise<SyncDocsR
   return { sourceCommit, docs };
 }
 
-export async function collectDocDefinitions(sourceDir: string): Promise<SourceDocDefinition[]> {
+/**
+ * Lists the docs to sync. An English doc without its `docs/pt-br/` mirror is
+ * skipped with a warning, so one untranslated doc cannot block every other
+ * docs update while both locales keep the same pages.
+ *
+ * @example
+ * const definitions = await collectDocDefinitions('mangostudio-source');
+ */
+export async function collectDocDefinitions(
+  sourceDir: string,
+  warn: (message: string) => void = console.warn
+): Promise<SourceDocDefinition[]> {
   const definitions = [...SPECIAL_DOCS];
   const docsDir = join(sourceDir, 'docs');
   const docsPaths = await collectMarkdownFiles(docsDir);
@@ -236,10 +247,12 @@ export async function collectDocDefinitions(sourceDir: string): Promise<SourceDo
     const ptSource = `docs/pt-br/${docsPath}`;
     const enSource = `docs/${docsPath}`;
 
-    await assertReadable(
-      join(sourceDir, ptSource),
-      `Missing Portuguese docs mirror for ${enSource}`
-    );
+    if (!(await isReadable(join(sourceDir, ptSource)))) {
+      warn(
+        `docs sync: expected Portuguese mirror ${ptSource} for ${enSource} | received: missing file, skipping this doc`
+      );
+      continue;
+    }
 
     definitions.push({
       slug,
@@ -675,11 +688,12 @@ async function readSourceCommit(sourceDir: string): Promise<string> {
   }
 }
 
-async function assertReadable(path: string, message: string): Promise<void> {
+async function isReadable(path: string): Promise<boolean> {
   try {
     await readFile(path, 'utf8');
+    return true;
   } catch {
-    throw new Error(message);
+    return false;
   }
 }
 
