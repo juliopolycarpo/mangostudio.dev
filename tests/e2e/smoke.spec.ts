@@ -134,6 +134,24 @@ test.describe('constrained viewport guardrails', () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 
+  test('install commands show in full without horizontal scrolling', async ({ page }) => {
+    await page.goto('/');
+    const code = page.locator('.install-code');
+    for (const [platform, method] of [
+      ['Linux', 'shell'],
+      ['Windows', 'scoop'],
+      ['Docker', 'docker'],
+    ] as const) {
+      await page.getByRole('tab', { name: platform, exact: true }).click();
+      await page.getByRole('tab', { name: method, exact: true }).click();
+      const hidden = await code.evaluate((el) => el.scrollWidth - el.clientWidth);
+      expect(
+        hidden,
+        `${platform} ${method} command: expected 0px hidden behind horizontal scroll | received: ${hidden}px`
+      ).toBeLessThanOrEqual(1);
+    }
+  });
+
   test('decorative hero logo is hidden on phones', async ({ page }) => {
     await page.goto('/');
 
