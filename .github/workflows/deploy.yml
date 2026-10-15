@@ -66,6 +66,22 @@ jobs:
       - name: Build
         run: bun run build
 
+      # Cache entries are written only by this serialized deploy job, scoped to its branch.
+      # A unique run attempt key also supports manually redeploying the same commit.
+      - name: Restore previous production assets
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ runner.temp }}/deploy-assets
+          key: production-assets-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            production-assets-v1-${{ runner.os }}-
+
+      - name: Retain recent production assets
+        env:
+          ASSET_CACHE_DIR: ${{ runner.temp }}/deploy-assets
+          DEPLOY_GENERATION: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: bun scripts/retain-deploy-assets.ts dist/_astro "$ASSET_CACHE_DIR" "$DEPLOY_GENERATION"
+
       - name: Audit public static output
         run: bun run audit:static
 
@@ -75,6 +91,20 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+
+      - name: Record successful deployment time
+        env:
+          ASSET_CACHE_DIR: ${{ runner.temp }}/deploy-assets
+          DEPLOY_GENERATION: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: bun scripts/retain-deploy-assets.ts dist/_astro "$ASSET_CACHE_DIR" "$DEPLOY_GENERATION" --confirm
+
+      # Save only after Wrangler succeeds. A failed smoke check must not discard
+      # the assets of a deploy that has already reached production.
+      - name: Save production assets
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ runner.temp }}/deploy-assets
+          key: production-assets-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Smoke test production URLs
         run: bun run smoke:production
