@@ -93,10 +93,10 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
     max-width: 100%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--mango) 34%, transparent),
-      transparent 68%
+      color-mix(in srgb, var(--mango) 28%, transparent) 0%,
+      color-mix(in srgb, var(--mango) 12%, transparent) 38%,
+      transparent 78%
     );
-    filter: blur(34px);
     animation: glowpulse 7s ease-in-out infinite;
     pointer-events: none;
   }
@@ -163,12 +163,9 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
     .hero-logo {
       display: none;
     }
-    /* Drop the continuous compositing pass and shrink the blur raster area on phones,
-       where the pulsing glow is the most expensive decorative paint. The glow stays
-       visible so the brand still reads. */
+    /* Keep the decorative glow still on phones. */
     .hero-glow {
       animation: none;
-      filter: blur(22px);
     }
   }
 </style>

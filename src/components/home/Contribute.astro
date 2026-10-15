@@ -53,10 +53,10 @@ const { lang, content: c } = Astro.props;
     max-width: 100%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--mango) 26%, transparent),
-      transparent 70%
+      color-mix(in srgb, var(--mango) 20%, transparent) 0%,
+      color-mix(in srgb, var(--mango) 8%, transparent) 40%,
+      transparent 82%
     );
-    filter: blur(40px);
     pointer-events: none;
   }
 
