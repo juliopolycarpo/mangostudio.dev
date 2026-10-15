@@ -7,14 +7,14 @@ const root = process.cwd();
 /**
  * Lists `filter` declarations that blur or drop-shadow a layer. Gradients and
  * box-shadow draw the same decoration without re-rasterizing the layer; a
- * `backdrop-filter` is not matched.
+ * `backdrop-filter` is not matched. CSS keywords are case-insensitive, so the match is too.
  *
  * @example
  * findBlurFilters('.a { filter: blur(4px); }'); // ['filter: blur(4px)']
  */
 export function findBlurFilters(css: string): string[] {
   return [
-    ...css.matchAll(/(?<![-\w])(?:-webkit-)?filter\s*:\s*[^;}]*\b(?:blur|drop-shadow)\([^;}]*/g),
+    ...css.matchAll(/(?<![-\w])(?:-webkit-)?filter\s*:\s*[^;}]*\b(?:blur|drop-shadow)\([^;}]*/gi),
   ].map(([declaration]) => declaration.trim());
 }
 
@@ -27,12 +27,14 @@ run('findBlurFilters matches blur and drop-shadow filters, not backdrop or color
         '.c { backdrop-filter: blur(10px); }',
         '.d { filter: brightness(1.04); }',
         '.e { -webkit-filter: blur(2px); }',
+        '.f { FILTER: Drop-Shadow(0 1px 2px #000); }',
       ].join('\n')
     ),
     [
       'filter: blur(34px)',
       'filter: brightness(1.04) drop-shadow(0 4px 8px #000)',
       '-webkit-filter: blur(2px)',
+      'FILTER: Drop-Shadow(0 1px 2px #000)',
     ]
   );
 });
