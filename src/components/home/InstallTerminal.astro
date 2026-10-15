@@ -254,8 +254,9 @@ const staticCommands = INSTALL_TABS.filter((tab) => tab.status === 'ready').map(
     font-family: var(--font-mono);
     font-size: 14px;
     color: var(--text);
-    overflow-x: auto;
-    white-space: nowrap;
+    /* Wrap like the no-JS fallback so long commands stay readable on phones. */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     min-width: 0;
   }
 

@@ -134,6 +134,33 @@ test.describe('constrained viewport guardrails', () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 
+  test('install commands show in full without horizontal scrolling', async ({ page }) => {
+    await page.goto('/');
+    const code = page.locator('.install-code');
+    for (const [platform, method, command] of [
+      ['Linux', 'shell', 'curl -fsSL https://mangostudio.dev/install.sh | bash'],
+      [
+        'Windows',
+        'scoop',
+        'scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket && scoop install mangostudio',
+      ],
+      [
+        'Docker',
+        'docker',
+        'docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio',
+      ],
+    ] as const) {
+      await page.getByRole('tab', { name: platform, exact: true }).click();
+      await page.getByRole('tab', { name: method, exact: true }).click();
+      await expect(page.locator('#hero-cmd')).toHaveText(command);
+      const hidden = await code.evaluate((el) => el.scrollWidth - el.clientWidth);
+      expect(
+        hidden,
+        `${platform} ${method} command: expected 0px hidden behind horizontal scroll | received: ${hidden}px`
+      ).toBeLessThanOrEqual(1);
+    }
+  });
+
   test('decorative hero logo is hidden on phones', async ({ page }) => {
     await page.goto('/');
 
