@@ -17,6 +17,8 @@ concurrency:
 
 jobs:
   sync:
+    # workflow_dispatch can select any ref; only main may open sync PRs with a write token.
+    if: github.ref == 'refs/heads/main'
     name: Sync latest stable release
     runs-on: ubuntu-latest
     timeout-minutes: 10
