@@ -30,12 +30,7 @@ export async function retainDeployAssets(
   now = Date.now()
 ): Promise<Manifest> {
   const { assetsRoot, cacheRoot } = resolveRoots(assetsDir, cacheDir, generationId, now);
-  await requireDirectory(assetsRoot);
-  const currentFiles = (await readdir(assetsRoot)).sort();
-  for (const file of currentFiles) {
-    await requireFile(join(assetsRoot, file));
-    validateAssetName(file);
-  }
+  const currentFiles = await readCurrentAssets(assetsRoot);
   const previous = await readManifest(cacheRoot);
   // A build may have been active for days before being superseded. Its grace
   // period starts at its successor's deployment, rather than its own deployment.
@@ -88,7 +83,9 @@ export async function retainDeployAssetsOrReset(
   now = Date.now(),
   warn: (message: string) => void = console.warn
 ): Promise<Manifest> {
-  const { cacheRoot } = resolveRoots(assetsDir, cacheDir, generationId, now);
+  const { assetsRoot, cacheRoot } = resolveRoots(assetsDir, cacheDir, generationId, now);
+  // Current-build errors must fail before the restored cache can be discarded.
+  await readCurrentAssets(assetsRoot);
   try {
     return await retainDeployAssets(assetsDir, cacheDir, generationId, now);
   } catch (error) {
@@ -150,6 +147,16 @@ function resolveRoots(
     throw new Error('asset and cache directories: expected separate, non-overlapping paths');
   }
   return { assetsRoot, cacheRoot };
+}
+
+async function readCurrentAssets(assetsRoot: string): Promise<string[]> {
+  await requireDirectory(assetsRoot);
+  const files = (await readdir(assetsRoot)).sort();
+  for (const file of files) {
+    await requireFile(join(assetsRoot, file));
+    validateAssetName(file);
+  }
+  return files;
 }
 
 function validateAssetName(file: string): void {

@@ -282,7 +282,9 @@ await run('reset discards missing members and symlinks with a warning', async (f
   deepStrictEqual(await readdir(fake.assets), ['page.abcdefgh.css']);
 });
 
-await run('reset still rejects invalid current assets and arguments', async (fake) => {
+await run('reset keeps a valid cache when current assets are invalid', async (fake) => {
+  await fake.build({ 'page.abcdefgh.css': 'previous' });
+  await retainDeployAssets(fake.assets, fake.cache, 'previous', 0);
   await fake.build({ 'page.css': 'unversioned' });
   const warnings = new FakeWarnings();
   await rejects(
@@ -294,6 +296,12 @@ await run('reset still rejects invalid current assets and arguments', async (fak
     /expected separate, non-overlapping paths/
   );
   deepStrictEqual(await readdir(fake.assets), ['page.css']);
+  deepStrictEqual(
+    await readdir(join(fake.cache, 'assets')).catch(() => ['<cache removed>']),
+    ['page.abcdefgh.css'],
+    'expected the previous cache generation to survive invalid current assets'
+  );
+  deepStrictEqual(warnings.messages, [], 'expected no cache discard warning');
 });
 
 async function run(
