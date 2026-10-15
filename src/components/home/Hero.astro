@@ -20,6 +20,7 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
 <section class="hero">
   <div class="hero-grid" aria-hidden="true"></div>
   <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-logo-glow" aria-hidden="true"></div>
   <img
     src={heroLogo.src}
     alt=""
@@ -101,13 +102,27 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
     pointer-events: none;
   }
 
+  .hero-logo-glow {
+    position: absolute;
+    top: 26px;
+    right: max(0px, calc(6% - 48px));
+    width: 216px;
+    height: 216px;
+    background: radial-gradient(
+      circle,
+      rgba(232, 89, 12, 0.22),
+      rgba(232, 89, 12, 0.08) 38%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
   .hero-logo {
     position: absolute;
     top: 44px;
     right: 6%;
     width: 120px;
     height: auto;
-    filter: drop-shadow(0 18px 36px rgba(232, 89, 12, 0.4));
     animation: floaty 6.5s ease-in-out infinite;
     pointer-events: none;
     opacity: 0.96;
@@ -160,6 +175,7 @@ const heroLogo = await getImage({ src: siteAssets.icon192, width: 192, height: 1
     .hero {
       padding: 56px 24px 32px;
     }
+    .hero-logo-glow,
     .hero-logo {
       display: none;
     }
