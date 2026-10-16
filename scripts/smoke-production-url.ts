@@ -5,6 +5,15 @@ export const DOCS_REDIRECT_PROBE_URL = 'https://mangostudio.dev/docs';
 export const EXPECTED_DOCS_REDIRECT_LOCATION = '/docs/quickstart/';
 export const EN_DOCS_REDIRECT_PROBE_URL = 'https://mangostudio.dev/en/docs';
 export const EXPECTED_EN_DOCS_REDIRECT_LOCATION = '/en/docs/quickstart/';
+export const LIVE_SCRIPT_PROBE_URLS = [APEX_URL, 'https://mangostudio.dev/docs/quickstart/'];
+/** Build output scripts live under this same-origin prefix. */
+export const BUILD_SCRIPT_PREFIX = '/_astro/';
+/**
+ * Scripts the Cloudflare zone injects at the edge. The WebMCP bridge stays
+ * listed until the zone setting is turned off (issue #121); any other
+ * injected script fails the smoke check.
+ */
+export const EDGE_INJECTED_SCRIPTS: readonly string[] = ['/.webmcp/bridge.js'];
 
 export interface SmokeCheckResult {
   name: string;
@@ -57,6 +66,47 @@ export function validateDocsRedirectResponse(
   );
 }
 
+/**
+ * Checks that a live page loads only build scripts and the known edge-injected
+ * scripts, so a new Cloudflare injection or third-party script fails the deploy.
+ *
+ * @example validateLiveScripts(APEX_URL, '<script src="/_astro/main.js"></script>') // { ok: true, ... }
+ */
+export function validateLiveScripts(
+  pageUrl: string,
+  html: string,
+  allowed: readonly string[] = EDGE_INJECTED_SCRIPTS
+): SmokeCheckResult {
+  const name = `${new URL(pageUrl).pathname} loads only build and known edge scripts`;
+  const unexpected = extractScriptSrcs(html)
+    .map((src) => new URL(src, pageUrl))
+    .filter((url) => !isAllowedScript(url, pageUrl, allowed))
+    .map((url) => url.href);
+
+  if (unexpected.length === 0) {
+    return { name, ok: true };
+  }
+
+  return {
+    name,
+    ok: false,
+    error:
+      `${pageUrl} loads unexpected scripts: ${unexpected.join(', ')} | ` +
+      `expected: same-origin ${BUILD_SCRIPT_PREFIX}* or ${allowed.join(', ')}`,
+  };
+}
+
+function extractScriptSrcs(html: string): string[] {
+  return [...html.matchAll(/<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi)].map(
+    (match) => match[1] ?? ''
+  );
+}
+
+function isAllowedScript(url: URL, pageUrl: string, allowed: readonly string[]): boolean {
+  if (url.origin !== new URL(pageUrl).origin) return false;
+  return url.pathname.startsWith(BUILD_SCRIPT_PREFIX) || allowed.includes(url.pathname);
+}
+
 function validatePermanentRedirect(
   name: string,
   response: { status: number; location: string | null },
@@ -102,11 +152,19 @@ async function fetchHead(url: string): Promise<{ status: number; location: strin
   };
 }
 
+async function fetchHtml(url: string): Promise<string> {
+  const response = await fetch(url);
+  return response.text();
+}
+
 async function runProductionSmoke(): Promise<SmokeCheckResult[]> {
   const apex = await fetchHead(APEX_URL);
   const www = await fetchHead(WWW_REDIRECT_PROBE_URL);
   const docs = await fetchHead(DOCS_REDIRECT_PROBE_URL);
   const enDocs = await fetchHead(EN_DOCS_REDIRECT_PROBE_URL);
+  const livePages = await Promise.all(
+    LIVE_SCRIPT_PROBE_URLS.map(async (url) => ({ url, html: await fetchHtml(url) }))
+  );
 
   return [
     validateApexResponse(apex.status),
@@ -118,6 +176,7 @@ async function runProductionSmoke(): Promise<SmokeCheckResult[]> {
       EXPECTED_EN_DOCS_REDIRECT_LOCATION,
       EN_DOCS_REDIRECT_PROBE_URL
     ),
+    ...livePages.map((page) => validateLiveScripts(page.url, page.html)),
   ];
 }
 
