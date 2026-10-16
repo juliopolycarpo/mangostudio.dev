@@ -115,6 +115,12 @@ It reads `localStorage["mango.theme"]`, falls back to `prefers-color-scheme`, se
 - exactly one `routes` entry: the apex `custom_domain` (`mangostudio.dev`). `www` stays an external
   Cloudflare DNS/Redirect Rule, never a Worker route. `scripts/audit-static-site.ts` enforces this.
 
+The Cloudflare zone injects a WebMCP bridge (`/.webmcp/bridge.js`) into production HTML at the
+edge; it is not in `dist/`. `bun run smoke:production` fails when a live page loads any script other
+than build output under `/_astro/` or an entry in `EDGE_INJECTED_SCRIPTS`. Remove the bridge from
+that list once the zone setting is turned off. `Cache-Control: no-transform` also stops the
+injection, but it disables HTML compression, so do not use it.
+
 Pull request workflows must not read Cloudflare secrets. Production deploys run only from `main`
 through the protected `production` GitHub Environment. Never push directly to `main`; open a pull
 request from a feature branch.
