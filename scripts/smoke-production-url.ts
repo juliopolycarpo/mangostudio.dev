@@ -97,8 +97,8 @@ export function validateLiveScripts(
 }
 
 function extractScriptSrcs(html: string): string[] {
-  return [...html.matchAll(/<script\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi)].map(
-    (match) => match[1] ?? ''
+  return [...html.matchAll(/<script\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)].map(
+    (match) => match[1] ?? match[2] ?? match[3] ?? ''
   );
 }
 
@@ -153,7 +153,10 @@ async function fetchHead(url: string): Promise<{ status: number; location: strin
 }
 
 async function fetchHtml(url: string): Promise<string> {
-  const response = await fetch(url);
+  const response = await fetch(url, { redirect: 'manual' });
+  if (response.status !== 200) {
+    throw new Error(`${url} returned status ${response.status}, expected 200`);
+  }
   return response.text();
 }
 

@@ -113,13 +113,15 @@ run('validateLiveScripts fails on an unknown edge script and a third-party scrip
   const html = [
     "<script defer src='/cdn-cgi/scripts/beacon.min.js'></script>",
     '<script src="https://cdn.example.com/_astro/tracker.js"></script>',
+    '<script async src=/cdn-cgi/unquoted.js></script>',
   ].join('');
   const result = validateLiveScripts('https://mangostudio.dev/', html);
   strictEqual(result.ok, false);
   strictEqual(
     result.error,
     'https://mangostudio.dev/ loads unexpected scripts: ' +
-      'https://mangostudio.dev/cdn-cgi/scripts/beacon.min.js, https://cdn.example.com/_astro/tracker.js | ' +
+      'https://mangostudio.dev/cdn-cgi/scripts/beacon.min.js, https://cdn.example.com/_astro/tracker.js, ' +
+      'https://mangostudio.dev/cdn-cgi/unquoted.js | ' +
       'expected: same-origin /_astro/* or /.webmcp/bridge.js'
   );
 });
