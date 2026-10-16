@@ -118,10 +118,10 @@ test.describe('docs pages', () => {
     ).toHaveAttribute('aria-current', 'page');
   });
 
-  test('preloads the fonts the docs render, before the stylesheet requests them', async ({
-    page,
-  }) => {
+  test('preloads every font the docs render', async ({ page }) => {
     await page.goto('/docs/quickstart');
+    // Font downloads do not block `load`; wait until every face in use has settled.
+    await page.evaluate(() => document.fonts.ready);
 
     const preloads = await page
       .locator('head link[rel="preload"][as="font"]')
