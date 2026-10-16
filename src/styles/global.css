@@ -56,16 +56,55 @@
     U+FEFF, U+FFFD;
 }
 
-/* Metric-matched local fallbacks keep layout stable while Geist swaps in. */
+/* Metric-matched local fallbacks keep layout stable while Geist swaps in.
+   Geist widens with weight and Arial does not, so each weight band gets its own
+   size-adjust; bands at 600 and above use the real bold face. */
 @font-face {
   font-family: "Geist Fallback";
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 100 449;
   src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Helvetica Neue");
-  ascent-override: 94.56%;
-  descent-override: 27.76%;
+  ascent-override: 98.44%;
+  descent-override: 28.9%;
   line-gap-override: 0%;
-  size-adjust: 106.28%;
+  size-adjust: 102.09%;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  font-style: normal;
+  font-weight: 450 549;
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Helvetica Neue");
+  ascent-override: 96.74%;
+  descent-override: 28.4%;
+  line-gap-override: 0%;
+  size-adjust: 103.88%;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  font-style: normal;
+  font-weight: 550 649;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"),
+    local("Helvetica Neue Bold");
+  ascent-override: 100.7%;
+  descent-override: 29.56%;
+  line-gap-override: 0%;
+  size-adjust: 99.8%;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  font-style: normal;
+  font-weight: 650 900;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"),
+    local("Helvetica Neue Bold");
+  ascent-override: 99.64%;
+  descent-override: 29.25%;
+  line-gap-override: 0%;
+  size-adjust: 100.86%;
 }
 
 @font-face {
