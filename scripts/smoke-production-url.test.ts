@@ -99,14 +99,24 @@ run('validateWwwRedirectResponse fails when Location points at the wrong apex ta
   );
 });
 
-run('validateLiveScripts passes build scripts, inline scripts, and the known edge bridge', () => {
+run('validateLiveScripts passes build scripts and inline scripts', () => {
   const html = [
     '<script>document.documentElement.classList.add("js")</script>',
-    '<script type="module" src="https://mangostudio.dev/.webmcp/bridge.js" data-packs="c2pa"></script>',
     '<script type="module" src="/_astro/main.BzxX4PTW.js"></script>',
   ].join('');
   const result = validateLiveScripts('https://mangostudio.dev/', html);
   strictEqual(result.ok, true, `expected ok | received: ${result.error}`);
+});
+
+run('validateLiveScripts rejects the WebMCP bridge now that the zone injection is off', () => {
+  const html = '<script type="module" src="https://mangostudio.dev/.webmcp/bridge.js"></script>';
+  const result = validateLiveScripts('https://mangostudio.dev/', html);
+  strictEqual(result.ok, false, 'expected the default allowlist to reject /.webmcp/bridge.js');
+  strictEqual(
+    result.error,
+    'https://mangostudio.dev/ loads unexpected scripts: https://mangostudio.dev/.webmcp/bridge.js | ' +
+      'expected: same-origin /_astro/*'
+  );
 });
 
 run('validateLiveScripts fails on an unknown edge script and a third-party script', () => {
@@ -115,21 +125,21 @@ run('validateLiveScripts fails on an unknown edge script and a third-party scrip
     '<script src="https://cdn.example.com/_astro/tracker.js"></script>',
     '<script async src=/cdn-cgi/unquoted.js></script>',
   ].join('');
-  const result = validateLiveScripts('https://mangostudio.dev/', html);
+  const result = validateLiveScripts('https://mangostudio.dev/', html, ['/edge/allowed.js']);
   strictEqual(result.ok, false);
   strictEqual(
     result.error,
     'https://mangostudio.dev/ loads unexpected scripts: ' +
       'https://mangostudio.dev/cdn-cgi/scripts/beacon.min.js, https://cdn.example.com/_astro/tracker.js, ' +
       'https://mangostudio.dev/cdn-cgi/unquoted.js | ' +
-      'expected: same-origin /_astro/* or /.webmcp/bridge.js'
+      'expected: same-origin /_astro/* or /edge/allowed.js'
   );
 });
 
-run('validateLiveScripts fails on the bridge once it leaves the allowlist', () => {
-  const html = '<script type="module" src="https://mangostudio.dev/.webmcp/bridge.js"></script>';
-  const result = validateLiveScripts('https://mangostudio.dev/', html, []);
-  strictEqual(result.ok, false, 'expected the bridge to fail with an empty allowlist');
+run('validateLiveScripts passes a same-origin script on an explicit allowlist', () => {
+  const html = '<script src="https://mangostudio.dev/edge/allowed.js"></script>';
+  const result = validateLiveScripts('https://mangostudio.dev/', html, ['/edge/allowed.js']);
+  strictEqual(result.ok, true, `expected ok | received: ${result.error}`);
 });
 
 function run(name: string, fn: () => void): void {
