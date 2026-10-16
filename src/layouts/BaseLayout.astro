@@ -42,26 +42,20 @@ const ogImage = new URL(siteAssets.icon512.src, Astro.site).toString();
     <link rel="icon" href={siteAssets.icon192.src} type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href={siteAssets.appleTouchIcon.src} sizes="180x180" />
     <link rel="manifest" href="/site.webmanifest" />
-    {
-      page === 'home' && (
-        <>
-          <link
-            rel="preload"
-            href={siteFonts.geistLatin}
-            as="font"
-            type="font/woff2"
-            crossorigin="anonymous"
-          />
-          <link
-            rel="preload"
-            href={siteFonts.geistMono}
-            as="font"
-            type="font/woff2"
-            crossorigin="anonymous"
-          />
-        </>
-      )
-    }
+    <link
+      rel="preload"
+      href={siteFonts.geistLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href={siteFonts.geistMono}
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
     <title>{pageTitle}</title>
     <meta name="description" content={pageDesc} />
     {noindex && <meta name="robots" content="noindex" />}

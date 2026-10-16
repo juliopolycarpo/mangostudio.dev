@@ -117,6 +117,29 @@ test.describe('docs pages', () => {
       page.locator('.docs-sidebar a[href="/en/docs/operations/security/"]')
     ).toHaveAttribute('aria-current', 'page');
   });
+
+  test('preloads the fonts the docs render, before the stylesheet requests them', async ({
+    page,
+  }) => {
+    await page.goto('/docs/quickstart');
+
+    const preloads = await page
+      .locator('head link[rel="preload"][as="font"]')
+      .evaluateAll((links) => links.map((link) => (link as HTMLLinkElement).href));
+    const fonts = await page.evaluate(() =>
+      performance
+        .getEntriesByType('resource')
+        .map((entry) => entry.name)
+        .filter((name) => name.endsWith('.woff2'))
+    );
+    expect(fonts.length, 'expected the docs page to load at least one WOFF2 font').toBeGreaterThan(
+      0
+    );
+    expect(
+      fonts.filter((font) => !preloads.includes(font)),
+      `expected every loaded font to be preloaded | preloads: ${preloads.join(', ') || 'none'}`
+    ).toEqual([]);
+  });
 });
 
 test.describe('constrained viewport guardrails', () => {
