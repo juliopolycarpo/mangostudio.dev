@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 // Geist, or lines rewrap and the page shifts when the font swaps in. Geist widens with
 // weight and Arial does not, so each weight the site uses is checked on its own. The
 // measurement uses 100px text, where whole-pixel glyph hinting does not skew widths.
+// 700 comes from the browser default for <strong>, <b> and <th> in synced docs.
 const WEIGHTS = [400, 500, 600, 650, 700] as const;
 const TOLERANCE = 0.015;
 
