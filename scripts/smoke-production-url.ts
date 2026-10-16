@@ -9,11 +9,10 @@ export const LIVE_SCRIPT_PROBE_URLS = [APEX_URL, 'https://mangostudio.dev/docs/q
 /** Build output scripts live under this same-origin prefix. */
 export const BUILD_SCRIPT_PREFIX = '/_astro/';
 /**
- * Scripts the Cloudflare zone injects at the edge. The WebMCP bridge stays
- * listed until the zone setting is turned off (issue #121); any other
- * injected script fails the smoke check.
+ * Same-origin script paths the Cloudflare zone is allowed to inject at the edge.
+ * Empty: the WebMCP injection is off, so any edge-injected script fails the smoke check.
  */
-export const EDGE_INJECTED_SCRIPTS: readonly string[] = ['/.webmcp/bridge.js'];
+export const EDGE_INJECTED_SCRIPTS: readonly string[] = [];
 
 export interface SmokeCheckResult {
   name: string;
@@ -92,7 +91,7 @@ export function validateLiveScripts(
     ok: false,
     error:
       `${pageUrl} loads unexpected scripts: ${unexpected.join(', ')} | ` +
-      `expected: same-origin ${BUILD_SCRIPT_PREFIX}* or ${allowed.join(', ')}`,
+      `expected: ${[`same-origin ${BUILD_SCRIPT_PREFIX}*`, ...allowed].join(' or ')}`,
   };
 }
 
