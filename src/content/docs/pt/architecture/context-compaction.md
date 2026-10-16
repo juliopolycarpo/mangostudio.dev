@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Arquitetura"
 order: 40
 sourcePath: "docs/pt-br/architecture/context-compaction.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/context-compaction.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/architecture/context-compaction.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Compactação De Contexto

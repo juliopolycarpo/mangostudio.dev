@@ -1,15 +1,15 @@
 ---
 title: "MangoStudio"
 sidebarLabel: "Início rápido"
-description: "Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI e Anthropic."
+description: "Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI, Anthropic, DeepSeek e ChatGPT."
 lang: "pt"
 slug: "quickstart"
 groupId: "getting-started"
 groupTitle: "Começando"
 order: 10
 sourcePath: "docs/pt-br/README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/README.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/README.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # MangoStudio
@@ -17,14 +17,14 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 [CI](https://github.com/juliopolycarpo/mangostudio/actions/workflows/ci.yml)
 [Release](https://github.com/juliopolycarpo/mangostudio/actions/workflows/release.yml)
 
-Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI e Anthropic.
+Estúdio de geração de imagens e chat alimentado por IA com suporte a modelos Gemini, compatíveis com OpenAI, Anthropic, DeepSeek e ChatGPT.
 
 > 🇺🇸 [Read in English](/en/docs/quickstart/)
 
 ## Instalar
 
 Execute o MangoStudio sem clonar o repositório. Cada canal distribui o mesmo
-binário pré-compilado (mais o sidecar `public/` do frontend) e verifica
+binário pré-compilado e verifica
 downloads contra `SHA256SUMS` quando aplicável.
 
 | Canal                  | Comando                                                                                                                |
@@ -34,51 +34,107 @@ downloads contra `SHA256SUMS` quando aplicável.
 | Homebrew (macOS/Linux) | `brew install juliopolycarpo/tap/mangostudio`                                                                          |
 | Instalador shell       | `curl -fsSL https://mangostudio.dev/install.sh \| bash`                                                                |
 | Scoop (Windows)        | `scoop bucket add juliopolycarpo https://github.com/juliopolycarpo/scoop-bucket` e depois `scoop install mangostudio`  |
-| Cargo                  | `cargo install mangostudio` (ou `cargo binstall mangostudio`)                                                          |
+| Cargo                  | `cargo install mangostudio` (app completo) ou `cargo binstall mangostudio` (pré-compilado)                             |
 | Docker                 | `docker run -p 3001:3001 -v mango-data:/data ghcr.io/juliopolycarpo/mangostudio`                                       |
 | Manual                 | Baixe em [GitHub Releases](https://github.com/juliopolycarpo/mangostudio/releases/latest) e verifique com `SHA256SUMS` |
+
+O app pré-compilado não precisa de um compilador Rust local. `cargo install mangostudio` compila
+o launcher e exige Rust 1.99.0 ou mais recente. `cargo binstall` usa um arquivo pré-compilado
+quando disponível; a compilação de fallback exige a mesma versão do Rust. Veja a
+[política de suporte e releases Rust](/docs/reference/releasing/#suporte-rust-e-releases) ao migrar
+do Rust 1.96 ou 1.97.
 
 Início rápido com o instalador shell:
 
 ```bash
 curl -fsSL https://mangostudio.dev/install.sh | bash
-mangostudio serve # inicia em http://localhost:3001
+mangostudio setup           # segredo, serviço, início e abre o navegador
 ```
 
-No Windows, execute o instalador PowerShell hospedado:
+Em um Alpine (musl) puro, rode `apk add bash curl libstdc++` antes: o instalador é um
+script bash, e o hub linka `libstdc++` dinamicamente. Sem ele a verificação de versão do
+instalador falha com a mensagem do loader e esta mesma dica.
+
+`setup` é o único comando de que uma instalação nova precisa: gera um segredo de
+autenticação se não houver, pergunta se o hub deve continuar rodando depois do
+logout, inicia (ou reaproveita um já em execução) e abre. Por SSH ele imprime o
+endereço e uma linha de encaminhamento de porta em vez de fingir que abriu uma
+janela. `mangostudio serve` e `mangostudio service install` continuam sendo os
+equivalentes diretos.
+
+Na primeira vez que você entra, o navegador abre um fluxo curto de configuração
+— pasta, toolchain, quem responde, e uma pergunta de verdade no seu próprio
+projeto. Todo passo é pulável e refazível em **Configurações → Geral**. Veja
+[`docs/pt-br/guides/first-run.md`](/docs/guides/first-run/).
+
+No Windows, execute o instalador PowerShell:
 
 ```powershell
 irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 ou use Scoop (veja a tabela acima). O canal Cargo instala um
-[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cargo-shim/README.md) que baixa o mesmo
+[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) que baixa o mesmo
 arquivo verificado por checksum na primeira execução.
+
+Os dois scripts de instalação vivem neste repositório (`scripts/install/`), são
+publicados como assets de release ao lado dos arquivos que instalam e constam
+em `SHA256SUMS`; as cópias em `https://mangostudio.dev/install.sh` e
+`install.ps1` são espelhos. Use `--canary` (`-Canary`) para o pre-release
+canary mais recente ou `--version x.y.z` (`-Version`) para fixar uma versão.
+
+### Atualizar
+
+`mangostudio upgrade` (alias `update`) descobre como o binário foi instalado e
+atualiza no lugar ou entrega a tarefa à ferramenta que é dona dele:
+
+| Instalado via                 | Atualização                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Instalador shell / PowerShell | `mangostudio upgrade` — também `--canary`, `--canary <sha7>`, `--version x.y.z`, `--rollback`, `--check`           |
+| npm / bun / pnpm              | `npm i -g mangostudio@latest` (`bun add -g` / `pnpm add -g`); `mangostudio upgrade --yes` executa no macOS e Linux |
+| Homebrew                      | `brew upgrade mangostudio` (somente stable)                                                                        |
+| Scoop                         | `scoop update mangostudio` (somente stable)                                                                        |
+| Cargo                         | `cargo install mangostudio --locked`                                                                               |
+| Docker                        | `docker pull ghcr.io/juliopolycarpo/mangostudio:<versão>` e recrie o container                                     |
+
+O hub verifica uma vez por dia se há release mais nova; `mangostudio status`,
+`mangostudio doctor` e a página "Esta máquina" avisam quando existe uma, e a
+página consegue aplicá-la na própria máquina do hub. `[updates] check = false`
+no `config.toml`, `MANGO_UPDATES_CHECK=false`, `NO_UPDATE_NOTIFIER`,
+`DO_NOT_TRACK` ou `CI` desligam a verificação.
 
 `mangostudio` é um CLI de binário único que gerencia um servidor local:
 
 ```bash
 mangostudio serve [host|port|host:port] # foreground (padrão localhost:3001)
 mangostudio serve lan:3001 -d           # background (logs em ~/.mango/logs/)
+mangostudio service install # mantém rodando após logout e reboot
 mangostudio status         # mostra a instância em execução
+mangostudio restart        # reinicia do jeito que foi iniciado
+mangostudio logs -f        # acompanha o log do servidor
 mangostudio stop           # encerramento gracioso
 mangostudio doctor         # diagnóstico de ambiente
 ```
 
 Execute `mangostudio` sem argumentos para a lista completa de comandos. Veja
-[`docs/reference/cli.md`](/en/docs/reference/cli/) para detalhes.
+[`docs/reference/cli.md`](/docs/reference/cli/) para detalhes.
 
 Na primeira execução, `mangostudio serve` pode gerar um `BETTER_AUTH_SECRET` forte
 e armazená-lo em `~/.mango/.env` ou `~/.mango/config.toml`. Configure chaves de
 provedor como `GEMINI_API_KEY` quando estiver pronto para usar modelos hospedados. Configurações
 opcionais de runtime incluem `API_HOST`, `API_PORT` e `DATABASE_PATH`.
-Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/packages/cli/README.md) para o ambiente completo.
+Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) para o ambiente completo.
 Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Pré-requisitos (desenvolvimento)
 
-- [Bun](https://bun.sh/) (v1.3.14+)
-- Uma ou mais chaves de API para os provedores suportados (Gemini, compatíveis com OpenAI, Anthropic)
+- [Bun](https://bun.sh/) 1.4.3 ou mais recente (`bun upgrade` ou
+  `curl -fsSL https://bun.sh/install | bash` na primeira instalação)
+- Rust 1.99.0 ou mais recente via [rustup](https://rustup.rs/) (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`). O hub inicia o
+  Local como o `mangostudio-runtime` construído com cargo, e o `rust-toolchain.toml` fixa a
+  versão que o rustup instala no primeiro build.
+- Uma ou mais chaves de API ou contas com login para provedores suportados
+  (Gemini, compatíveis com OpenAI, Anthropic, DeepSeek, ChatGPT)
 
 ## Desenvolver a partir do código-fonte
 
@@ -101,9 +157,11 @@ Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operat
    bun run dev
    ```
 
-   Isso inicia:
+   Primeiro ele executa `cargo build -p mangostudio-runtime --locked` — o runtime Local que o hub
+   inicia —; sem cargo ele para e mostra o comando do rustup, e `MANGOSTUDIO_RUNTIME_BINARY`
+   aponta para um binário já construído. Depois inicia:
    - **API** em `http://localhost:3001` (Elysia + Kysely/SQLite)
-   - **Frontend** em `http://localhost:5173` (Vite + React)
+   - **Frontend** servido pela mesma API em `http://localhost:3001` (React, empacotado com Bun)
 
 ## Configuração de Conectores (Secrets)
 
@@ -121,6 +179,17 @@ Acesse a página **Configurações** na interface do MangoStudio para adicionar 
 
 Para cada conector, é possível habilitar ou desabilitar modelos específicos (ex: Gemini 2.5 Flash, Gemini 2.0 Flash Image). O MangoStudio seleciona automaticamente o conector correto com base no modelo ativo no chat.
 
+### Provedores Suportados
+
+| Provedor          | Credencial                                  | Notas                                        |
+| ----------------- | ------------------------------------------- | -------------------------------------------- |
+| Gemini            | Chave de API                                | Modelos de texto e imagem                    |
+| OpenAI            | Chave de API                                | IDs opcionais de organização/projeto         |
+| Compatível OpenAI | Chave de API + base URL                     | Endpoints compatíveis customizados           |
+| Anthropic         | Chave de API                                | Modelos Claude de texto                      |
+| DeepSeek          | Chave de API                                | Provedor de reasoning de primeira classe     |
+| ChatGPT           | Login pelo navegador com assinatura ChatGPT | Armazena tokens rotativos no OS secret store |
+
 ### Sincronização via Terminal
 
 Você pode adicionar chaves manualmente em `~/.mango/config.toml`:
@@ -132,6 +201,22 @@ trabalho = "outra-chave-aqui"
 ```
 
 O MangoStudio sincroniza essas chaves automaticamente ao carregar a página de Configurações ou ao iniciar uma geração.
+
+### Cursor
+
+O Cursor **não** é um conector. Ele roda como agente externo — escolha-o no seletor de
+runner do compositor e ele usa o seu próprio login, regras e configuração MCP do Cursor
+CLI. O provider Cursor mantido pelo MangoStudio foi descontinuado: conectores existentes
+continuam editáveis, mas não executam mais turnos. Veja
+[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+
+### Conector De Assinatura ChatGPT
+
+O provedor **ChatGPT** usa login pelo navegador em vez de chave de API. Ele inicia
+um servidor temporário de callback na porta `1455`, armazena tokens OAuth
+rotativos no OS secret store e usa os modelos disponíveis no plano ChatGPT
+conectado. Veja [docs/providers/chatgpt.md](/docs/providers/chatgpt/) para
+detalhes e notas de port-forwarding em hosts remotos.
 
 ## Estrutura do Projeto
 
@@ -195,8 +280,8 @@ mangostudio/
 | `bun run dev`             | Inicia todos os servidores de dev simultaneamente                      |
 | `bun run dev --api`       | Inicia apenas o servidor de dev da API                                 |
 | `bun run build`           | Build do frontend para produção                                        |
-| `bun run build --binary`  | Gera binários standalone com frontend embutido                         |
-| `bun run check`           | Executa Biome, dprint, madge e typecheck                               |
+| `bun run build --binary`  | Gera os binários standalone do host (hub + runtime cargo)              |
+| `bun run check`           | Executa Biome, dprint, ciclos de importação e typecheck                |
 | `bun run test`            | Executa as lanes unit e integration                                    |
 | `bun run test --unit`     | Executa apenas as suítes unitárias                                     |
 | `bun run test:e2e:setup`  | Instala Playwright Chromium para browser smoke                         |
@@ -209,16 +294,14 @@ mangostudio/
 
 ## Ferramentas de Desenvolvimento
 
-| Ferramenta     | Escopo                                               | Funcionalidade Principal                          |
-| -------------- | ---------------------------------------------------- | ------------------------------------------------- |
-| **Biome**      | JS, TS, JSX, TSX, JSON, JSONC, CSS, HTML             | Linter e formatador com regras unificadas         |
-| **dprint**     | Markdown, MDX, TOML, YAML, Dockerfile                | Formatador plugável com plugins WASM              |
-| **lefthook**   | Git hooks (pre-commit)                               | Gerenciador de hooks Git para validação em commit |
-| **madge**      | Grafos de dependência JS/TS                          | Detecção de dependências circulares               |
-| **jscpd**      | Todos os arquivos fonte                              | Detecção de código duplicado                      |
-| **bun:test**   | Testes unitários (api, shared, lógica pura frontend) | Executor nativo rápido com cobertura LCOV         |
-| **Vitest**     | Testes React frontend e dependentes do Vite          | jsdom, plugins Vite, cobertura e watch            |
-| **Playwright** | Testes end-to-end no Chromium                        | Automação de navegador para fluxos de auth        |
+| Ferramenta     | Escopo                                                  | Funcionalidade Principal                          |
+| -------------- | ------------------------------------------------------- | ------------------------------------------------- |
+| **Biome**      | JS, TS, JSX, TSX, JSON, JSONC, CSS, HTML                | Linter e formatador com regras unificadas         |
+| **dprint**     | Markdown, MDX, TOML, YAML, Dockerfile                   | Formatador plugável com plugins WASM              |
+| **lefthook**   | Git hooks (pre-commit)                                  | Gerenciador de hooks Git para validação em commit |
+| **jscpd**      | Todos os arquivos fonte                                 | Detecção de código duplicado                      |
+| **bun:test**   | Testes unitários e de integração de todos os workspaces | Executor nativo rápido com cobertura LCOV         |
+| **Playwright** | Testes end-to-end no Chromium                           | Automação de navegador para fluxos de auth        |
 
 Estes binários são instalados como devDependencies e invocados através dos scripts `bun run`. Nenhuma instalação global é necessária.
 
@@ -228,12 +311,12 @@ Estes binários são instalados como devDependencies e invocados através dos sc
 
 Um hook [lefthook](https://github.com/evilmartians/lefthook) de pre-commit é instalado automaticamente via `bun install` (através do script `prepare`). Ele executa as seguintes verificações em paralelo a cada `git commit`:
 
-| Hook                 | Gatilho      | Arquivos alvo               | Comando                                                                |
-| -------------------- | ------------ | --------------------------- | ---------------------------------------------------------------------- |
-| `biome`              | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | `bunx biome check --write {staged_files}`                              |
-| `dprint`             | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | `bunx dprint fmt {staged_files}`                                       |
-| `dprint-dockerfile`  | `pre-commit` | `{Dockerfile,Dockerfile.*}` | `bunx dprint fmt {staged_files}`                                       |
-| `typecheck-affected` | `pre-commit` | Todos os arquivos staged    | `bun run check --staged --skip-format` (ignorado durante merge/rebase) |
+| Hook                | Gatilho      | Arquivos alvo               | Comando                                                                |
+| ------------------- | ------------ | --------------------------- | ---------------------------------------------------------------------- |
+| `biome`             | `pre-commit` | `*.{ts,tsx,js,jsx,json}`    | `bunx biome check --write {staged_files}`                              |
+| `dprint`            | `pre-commit` | `*.{md,mdx,toml,yml,yaml}`  | `bunx dprint fmt {staged_files}`                                       |
+| `dprint-dockerfile` | `pre-commit` | `{Dockerfile,Dockerfile.*}` | `bunx dprint fmt {staged_files}`                                       |
+| `check-affected`    | `pre-commit` | Todos os arquivos staged    | `bun run check --staged --skip-format` (ignorado durante merge/rebase) |
 
 Arquivos formatados são re-adicionados ao stage automaticamente. Todos os hooks devem ser bem-sucedidos para o commit prosseguir.
 
@@ -248,7 +331,7 @@ Arquivos formatados são re-adicionados ao stage automaticamente. Todos os hooks
 
 | Camada       | Tecnologias                                                                     |
 | ------------ | ------------------------------------------------------------------------------- |
-| **Frontend** | React 19, Vite 8, Tailwind CSS v4, TanStack Router/Query                        |
+| **Frontend** | React 19, Tailwind CSS v4, TanStack Router/Query, bundle via `Bun.build()`      |
 | **API**      | Elysia, Better Auth, rate limiting nativo, arquitetura modular inspirada em DDD |
 | **Banco**    | SQLite via Kysely (query builder type-safe)                                     |
 | **IA**       | Multi-provedor (Gemini, OpenAI, Anthropic, DeepSeek, OpenAI-compatible)         |
@@ -336,7 +419,7 @@ Configurado em `dprint.json` com o seguinte escopo e configurações:
 
 ### Dependências Circulares
 
-Detectadas via `madge` como parte do `bun run check`. A verificação falha se existirem caminhos de importação circular entre os pacotes do workspace.
+O Biome verifica os ciclos de importação como parte do `bun run check`, incluindo imports de valores, de tipos e do próprio módulo. Cada workspace verifica arquivos TS, TSX, MTS, CTS, JS, JSX, MJS e CJS, incluindo arquivos na raiz, arquivos gerados e saídas de build ignoradas pelo Git, com o `biome.cycles.json`. Arquivos JavaScript são verificados como dependências de arquivos TypeScript e como raízes independentes. Somente `node_modules` e `.git` são excluídos da verificação de ciclos. A formatação e os demais checks de lint continuam seguindo o `biome.json`.
 
 ### Detecção de Código Duplicado
 
@@ -375,9 +458,14 @@ O tipo `Messages` é inferido diretamente do dicionário `pt-BR.ts` (`as const`)
 - [`./architecture/continuation.md`](/docs/architecture/continuation/) — arquitetura de continuação
 - [`./providers/development.md`](/docs/providers/development/) — guia de integração de provedores
 - [`./reference/cli.md`](/docs/reference/cli/) — referência da CLI e canais de instalação
+- [`./reference/ci.md`](/docs/reference/ci/) — gates agregados e checks obrigatórios
 - [`./reference/releasing.md`](/docs/reference/releasing/) — runbook de release e canais de distribuição
+- [`./reference/runtime-metrics.md`](/docs/reference/runtime-metrics/) — tamanho, perfil de build e volume de código do runtime Rust
 - [`./reference/testing.md`](/docs/reference/testing/) — estratégia e guia de testes
 - [`./reference/agent-playbooks.md`](/docs/reference/agent-playbooks/) — mapas de arquivos por feature
+- [`./reference/labels.md`](/docs/reference/labels/) — taxonomia de labels de classificação
+- [`./operations/deployment.md`](/docs/operations/deployment/) — deploy e builds standalone
+- [`./operations/security.md`](/docs/operations/security/) — política e modelo de segurança
 - [`./CONTRIBUTING.md`](/docs/guides/contributing/) — diretrizes de contribuição em Português
 
 ## Estrutura Espelhada
@@ -395,11 +483,11 @@ Quando uma alteração relevante for feita em `docs/`, a versão correspondente 
 
 ## Notas de Build Standalone
 
-O comando `bun run build --binary` compila a API em binários específicos por plataforma em `.mango/out/<platform>/`.
+O comando `bun run build --binary` compila a API em binários específicos por plataforma em `.mango/out/<platform>/`, ao lado do `mangostudio-runtime` construído com cargo. Localmente ele constrói a plataforma do próprio host (`--platform <host>`); outras plataformas precisam de runtimes pré-construídos via `--runtime-dir <dir>` (veja [releasing](/docs/reference/releasing/#como-o-binário-do-runtime-é-construído)).
 
 - O banco de dados é persistido em `~/.mango/database.sqlite` por padrão.
-- Os assets do frontend são servidos a partir do diretório `public/` vizinho ao executável.
+- Os assets do frontend são embarcados no executável em tempo de compilação.
 
 ## Licença
 
-Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/LICENSE).
+Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/LICENSE).

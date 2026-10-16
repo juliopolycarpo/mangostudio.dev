@@ -8,8 +8,8 @@ groupId: "features"
 groupTitle: "Features"
 order: 10
 sourcePath: "docs/features/settings.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/features/settings.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/features/settings.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Settings Architecture
@@ -42,11 +42,52 @@ Controls global preferences that apply across all providers and tools.
 **API:**
 
 ```
-GET  /api/settings/app    → Returns AppSettings
-PUT  /api/settings/app    → Updates and returns normalized AppSettings
+GET  /api/settings/app    → Returns AppSettingsResponse (AppSettings + libraryLocationDefaultsPending)
+PUT  /api/settings/app    → Merges a patch and returns normalized AppSettingsResponse
 ```
 
+Which library locations default to on is detected from the agent CLIs installed
+on the hub's machine, and the first detection after a hub start can take
+seconds. `GET` never waits for it: until a detected value exists it answers the
+saved settings over static placeholder defaults with
+`libraryLocationDefaultsPending: true`, and publishes an `app` settings
+invalidation to each user it answered that way once detection lands. Clients
+must not show or write back library-location enablement while the flag is set.
+`PUT` always waits for detection, so its answer is never pending and a write
+never stores the placeholder.
+
 Settings are stored as a single JSON blob in the `settingsJson` column. On read, `normalizeAppSettings()` handles partial or malformed data by falling back to defaults for any missing or invalid fields.
+
+**The PUT body is a patch, not a snapshot.** Every field is optional; the server
+overlays what arrives on the row it already holds, then normalizes. Two things
+follow, and both are the point: a client survives every field the schema grows
+later instead of being rejected for omitting one it has never heard of, and two
+surfaces editing different settings stop overwriting each other because neither
+carries the other's field at all.
+
+The rule, in full:
+
+- an omitted key keeps whatever is stored;
+- a supplied field replaces what was stored under it, whole. An optional member
+  the patch leaves out is a clear, not an omission — which is how "the machine
+  changed, forget that folder" is said at all;
+- arrays replace for the same reason — merging by index would make "remove the
+  second rule" inexpressible;
+- only the containers *above* those fields merge: `profileSettings` and one
+  profile's entry, whose children have different owners;
+- `null` on a key that admits it resets that subtree to its default. That is how
+  a whole subtree is cleared, and it works because normalization runs *after*
+  the merge.
+
+The unit of a patch is a whole top-level field: send `contextSettings` and you
+send all of it, and half a subtree is rejected rather than backfilled with
+defaults. A field is addressable more finely only where its parts are
+independently owned — `profileSettings.<id>.libraryLocations` and `.onboarding`
+are written by different screens, so each is optional on its own.
+
+`appSettingsPatchExcludingProfiles`, `libraryLocationsPatch` and
+`onboardingPatch` (`@mangostudio/shared/app-settings`) build the three patches
+the frontend sends.
 
 ### Prompt Settings (sub-object)
 

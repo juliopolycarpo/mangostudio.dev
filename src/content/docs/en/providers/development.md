@@ -8,8 +8,8 @@ groupId: "providers"
 groupTitle: "Providers"
 order: 10
 sourcePath: "docs/providers/development.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/providers/development.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/development.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Provider Development Guide
@@ -59,10 +59,17 @@ capabilities: {
 ```
 
 DeepSeek is modeled as a first-class provider rather than an
-OpenAI-compatible connector. It still uses the AI SDK runtime surface, but the
-separate provider type lets the catalog report DeepSeek-specific reasoning,
+OpenAI-compatible connector. It still talks to DeepSeek through the OpenAI SDK,
+but the separate provider type lets the catalog report DeepSeek-specific reasoning,
 tool, caching, and continuation capabilities without changing generic
 OpenAI-compatible behavior.
+
+Cursor is **not** a provider to model a new one on. It is registered and
+deprecated: it advertises no models and refuses execution, and Cursor is reached
+through the external-agent adapter instead, where the vendor's own CLI owns the
+model, the tools and the approvals. See
+[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md) for why the ownership inversion made one
+of the two paths untenable.
 
 ---
 
@@ -118,6 +125,7 @@ provider format lives in `replay-builder.ts`.
 | Provider            | Replay function                 | Output shape                                                                     |
 | ------------------- | ------------------------------- | -------------------------------------------------------------------------------- |
 | OpenAI Responses    | `buildOpenAIResponsesReplay`    | Array of `ResponseInputItem` (role-based + function_call / function_call_output) |
+| ChatGPT             | `buildOpenAIResponsesReplay`    | Responses input plus turn-local reasoning/function-call loop items               |
 | Gemini Interactions | `buildGeminiInteractionsReplay` | Array of turn objects (role + content, function_call, function_result)           |
 | OpenAI-compatible   | `buildChatCompletionsReplay`    | `ChatCompletionMessageParam[]` (with `tool_calls` array)                         |
 | DeepSeek            | `buildChatCompletionsReplay`    | `ChatCompletionMessageParam[]` (with `reasoning_content` in tool loop messages)  |

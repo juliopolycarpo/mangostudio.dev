@@ -8,8 +8,8 @@ groupId: "guides"
 groupTitle: "Guias"
 order: 20
 sourcePath: "docs/pt-br/guides/contributor-quickstart.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/guides/contributor-quickstart.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/guides/contributor-quickstart.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Início Rápido Para Contribuidores
@@ -17,6 +17,11 @@ sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
 Use este guia quando quiser o caminho mais curto entre o clone do repositório e uma alteração validada.
 
 ## 1. Configuração
+
+Você precisa do [Bun](https://bun.sh/) e do Rust 1.99.0 ou mais recente instalado pelo
+[rustup](https://rustup.rs/) (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`).
+O hub inicia o Local como o binário `mangostudio-runtime` compilado pelo cargo, e o
+`rust-toolchain.toml` fixa a versão que o rustup instala no primeiro build.
 
 ```bash
 git clone <repo-url>
@@ -38,14 +43,24 @@ cp .mango/.env.example ~/.mango/.env
 bun run dev
 ```
 
+Ele executa `cargo build -p mangostudio-runtime --locked` antes, para que o Local tenha um binário para
+iniciar; defina `MANGOSTUDIO_RUNTIME_BINARY` para usar um que você já compilou. Os testes da API
+que alcançam o Local precisam do mesmo binário.
+
 URLs locais padrão:
 
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:3001`
+- App e API: `http://localhost:3001`
+
+Nada observa o frontend. Depois de editar um arquivo do frontend, reconstrua e atualize o
+navegador — não há HMR, então a atualização é necessária de qualquer forma:
+
+```bash
+bun run --filter @mangostudio/frontend build
+```
 
 ## 3. Saber Por Onde Começar
 
-- Leia [`../../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/AGENTS.md) para regras e roteamento do repositório.
+- Leia [`../../../AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) para regras e roteamento do repositório.
 - Use [`../reference/agent-playbooks.md`](/docs/reference/agent-playbooks/) quando precisar de um mapa de arquivos por feature.
 - Use [`../reference/testing.md`](/docs/reference/testing/) antes de adicionar ou alterar comportamento.
 - Use [`../architecture/overview.md`](/docs/architecture/overview/) para o layout dos workspaces e módulos.
@@ -93,6 +108,6 @@ bun run fix --staged      # correção automática apenas nos workspaces afetado
 
 ## 7. Documentos Relacionados
 
-- [`../../../.github/CONTRIBUTING.md`](/en/docs/guides/contributing/) para política de contribuição e regras de commit
+- [`../../../.github/CONTRIBUTING.md`](/docs/guides/contributing/) para política de contribuição e regras de commit
 - [`../reference/api.md`](/docs/reference/api/) para o mapa de endpoints
 - [`../operations/deployment.md`](/docs/operations/deployment/) para builds standalone

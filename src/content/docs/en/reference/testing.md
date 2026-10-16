@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 30
 sourcePath: "docs/reference/testing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/reference/testing.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/testing.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Testing Strategy
@@ -35,9 +35,9 @@ apps/
       unit/
       integration/
       support/
-        setup/     # vitest.setup.ts
-        harness/   # render.tsx
-        mocks/     # create-fetch-scenario.ts (jsdom hooks only)
+        setup/     # dom-setup.ts + bun.setup.ts (bunfig preloads)
+        harness/   # render.tsx, render-with-router.tsx, timers.ts
+        mocks/     # create-fetch-scenario.ts (happy-dom hook tests only)
 
   shared/
     tests/
@@ -52,18 +52,37 @@ apps/
 - `integration`: covers a flow that crosses module boundaries inside the same workspace.
 - `browser-smoke`: minimal Playwright Chromium suite covering end-to-end auth flows (signup, login, authenticated landing, logout, re-login).
 
+### Interactive MCP coverage matrix
+
+Keep the combinatorial protocol matrix below the browser layer. The API suites use real MCP SDK transports and the public SSE/HTTP contracts; frontend integration owns mounted and reloaded React state; Playwright is reserved for behavior that depends on an actual browser.
+
+| Behavior                                                                                              | Owning layer              | Coverage                                                                                            |
+| ----------------------------------------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| Text success, tool error, result cap, disabled server, Skill coexistence                              | API turn integration      | `modules/generation/mcp-turn.integration.test.ts`                                                   |
+| Image, audio, text resource, binary resource, unsupported link, malformed content, durable provenance | API turn integration      | `modules/generation/mcp-turn.integration.test.ts`                                                   |
+| Elicitation accept, decline, cancel, timeout, user abort, stale response, pending/terminal reload     | API route E2E             | `routes/respond-stream-mcp-interactive.integration.test.ts`                                         |
+| Ordered `StreamChunkSchema` events and tool lifecycle snapshots                                       | API route E2E             | `routes/respond-stream-mcp-interactive.integration.test.ts`                                         |
+| Same-server FIFO/correlation, disconnect, interrupted recovery handoff                                | API route E2E             | `routes/respond-stream-mcp-interactive.integration.test.ts`                                         |
+| SDK wrapper, HTTP transport, stdio spawn/exit, session reconnect (through the Local runtime)          | API transport integration | `services/mcp/*-transport.integration.test.ts`, `services/mcp/wrapper-contract.integration.test.ts` |
+| Mounted terminal elicitation, persisted MCP media, question resume                                    | Frontend integration      | `components/interactive-chat-flows.integration.test.tsx`                                            |
+| Streamed todo cache update and persisted reload on chat switch                                        | Frontend integration      | `components/interactive-chat-flows.integration.test.tsx`                                            |
+| Browser-only navigation, focus, download, or native rendering behavior                                | Browser smoke             | Add a focused Playwright case only when happy-dom and API E2E cannot prove the behavior             |
+
+Interactive fixtures must use local SDK servers, explicit synchronization barriers, ephemeral ports, bounded diagnostics, and teardown assertions. They must not contact public MCP services, use production credentials, or depend on arbitrary sleeps for tool ordering.
+
 ## Workspace Runners
 
-| Workspace       | Runner                | Environment                                     |
-| --------------- | --------------------- | ----------------------------------------------- |
-| `apps/api`      | `bun test`            | Bun native                                      |
-| `apps/frontend` | `bun:test` + `vitest` | Bun native for pure logic, jsdom for React/Vite |
-| `apps/shared`   | `bun:test`            | Bun native                                      |
+| Workspace       | Runner     | Environment                                    |
+| --------------- | ---------- | ---------------------------------------------- |
+| `apps/api`      | `bun test` | Bun native                                     |
+| `apps/frontend` | `bun test` | Bun native for pure logic, happy-dom for React |
+| `apps/shared`   | `bun:test` | Bun native                                     |
 
 ## Root Scripts
 
 ```bash
-bun run check               # format + lint + typecheck across all workspaces
+bun run check               # format + lint + typecheck + code health
+bun run code-health         # standalone Knip unused code/dependency report
 bun run test                # unit + integration (e2e is opt-in)
 bun run test --unit         # API, shared, and frontend unit suites
 bun run test --integration  # API and frontend integration suites
@@ -71,25 +90,1077 @@ bun run test:e2e:setup     # install Playwright Chromium + OS dependencies
 bun run test --e2e          # Playwright Chromium auth smoke suite (opt-in)
 bun run test --coverage     # coverage collection across applicable workspaces
 bun run test --all          # all lanes including e2e
-bun run verify              # full local CI gate: check → test --coverage → build --all
+bun run test --changed      # only tests affected since merge-base HEAD origin/main
+bun run test --changed --base <ref>  # ... since merge-base HEAD <ref>
+bun run verify              # local gate: check → test --coverage → build --all
 ```
+
+`--changed` is a local fast loop, not a gate. It diffs the merge-base against
+the working tree (committed, staged, unstaged and untracked files) and hands
+`bun test --changed=<merge-base>` to each lane, which keeps only the test
+files whose import graph reaches a changed file. Bun's walk stops at a
+workspace symlink — on 1.4.2 an edit under `apps/shared` selects no api or
+frontend test — and never sees a file that is read rather than imported, so a
+lane runs whole instead when a workspace it imports by package name changed
+(`CHANGED_LANE_DEPENDENCIES` in `scripts/lib/test.ts`, pinned against the
+manifests), when one of its own non-module files changed, or, for the root
+lane, when any non-module file changed. The protocol lane runs only when the
+protocol surface changed. The runner prints each lane's mode and reason before
+it starts. It refuses `--coverage`, since the floors need the whole suite;
+`--e2e` still runs whole. A test that reads source as text rather than
+importing it is invisible to `--changed`, so CI keeps running everything.
 
 ### Lane Taxonomy
 
-| Lane        | Task name          | Workspaces            | Runner              | Turbo cached |
-| ----------- | ------------------ | --------------------- | ------------------- | ------------ |
-| unit        | `test:unit`        | api, frontend, shared | bun test / vitest   | yes          |
-| integration | `test:integration` | api, frontend         | bun test / vitest   | no           |
-| coverage    | `test:coverage`    | api, frontend, shared | bun test / vitest   | no           |
-| e2e         | —                  | root (browser-smoke)  | Playwright Chromium | —            |
-| scripts     | `//#test:scripts`  | root                  | bun test            | yes          |
+| Lane        | Task name          | Workspaces            | Runner                                                | Turbo cached |
+| ----------- | ------------------ | --------------------- | ----------------------------------------------------- | ------------ |
+| unit        | `test:unit`        | api, frontend, shared | bun test (api: [worker processes](#api-unit-workers)) | yes          |
+| integration | `test:integration` | api, frontend         | bun test                                              | no           |
+| coverage    | `test:coverage`    | api, frontend, shared | bun test                                              | no           |
+| e2e         | —                  | root (browser-smoke)  | Playwright Chromium                                   | —            |
+| scripts     | `//#test:scripts`  | root                  | bun test                                              | yes          |
 
 Turbo skips packages that do not define a given task, so passing all workspace
 filters is safe — no per-workspace metadata is needed to gate lane participation.
 
+A unit lane runs the sources of the workspaces it imports, not only its own (a
+frontend test drives API code, an API test drives `shared`), so its cache key covers
+them: `test:unit` depends on the script-less `transit` task, which hashes every
+workspace upstream without running anything or making a lane wait. A unit result is
+replayed only while those workspaces are unchanged. An edit in `apps/api` therefore
+re-runs the API and frontend lanes, and an edit in `apps/frontend` re-runs only its
+own. `scripts/tests/unit-cache-graph.unit.test.ts` pins this.
+
+### Timeouts
+
+Every lane sets a **15s floor** — `--timeout 15000`, passed on the command line
+because `bunfig.toml`'s `timeout` key is ignored in this workspace. `bun test`
+otherwise defaults to 5s, and a loaded CI runner is 4–14x slower than a dev
+machine on subprocess-heavy tests, so the default leaves tests that pass in
+milliseconds locally one bad runner away from failing on wall clock alone.
+
+A per-test or per-hook timeout still wins in **both** directions: a test
+declaring `20_000` keeps it, and one deliberately declaring a short budget stays
+held to it. Declare an explicit timeout only where the number is part of what the
+test asserts; otherwise take the floor.
+
+> **Do not set this in `bunfig.toml`.** Bun has no `[test] timeout` key and
+> ignores one **silently** rather than erroring — a 6s test still fails under
+> `timeout = 20000`. `BUN_TEST_TIMEOUT` is ignored too. The `--timeout` CLI flag
+> is the only mechanism that works (re-verified on Bun `1.4.0-canary.1` and
+> `1.4.2`: a 6s test still times out at 5000ms under both, and passes under
+> `--timeout 20000`).
+
+Raising the floor is not a substitute for fixing a slow test. Prefer removing the
+cost — replay migrations against `:memory:` rather than a temp-dir SQLite file,
+and reach for a real filesystem only when the test is about the filesystem.
+
+### Parallelism
+
+`test:unit` in `apps/api` passes `--parallel=1` and `test:coverage:unit` passes
+`--parallel=4`. Read the first as "one worker, isolated" rather than "no
+parallelism": Bun's `--parallel=N` runs files in N worker processes and
+**implies `--isolate`**, which gives each file a fresh global object. Isolation
+is the load-bearing half. (`test:unit` then runs that one isolated worker
+several times, as separate processes: see [API unit workers](#api-unit-workers).
+The coverage lane goes wide inside one invocation instead, which
+[Bun 1.4.3 made safe](#known-upstream-blocker-on-the-unit-lane).) Bun's default — no `--parallel` at all — runs every file in one process
+off a single module graph, where the in-memory database from
+`setupTestEnvironment()` and any `mock.module` registration outlive the file
+that made them.
+
+The api coverage lane is **two invocations, with opposite settings**:
+`test:coverage:unit` runs `--parallel=4`, `test:coverage:integration` takes no
+flag at all, and `test:coverage` delegates to
+`scripts/ci/run-workspace-coverage.ts`, which runs both lanes and merges their
+LCOV slices into the one staged `coverage/api/lcov.info`. The orchestrator is
+there instead of an `&&` chain because a chain lets one failing unit test skip
+the integration lane *and* the merge: the red shard then uploads no integration
+JUnit and no api LCOV, and a failure shared across the shards kills the merge
+job on a missing input rather than reporting the test failures. Every lane runs
+whatever the earlier ones did, the merge runs over whatever slices exist (none
+is not an error), and the exit code is the first failing lane's. The split
+itself exists because the unit
+suite cannot live without isolation (the 172-failure table below) while the
+integration suite cannot safely live *inside* it — Bun's isolate machinery is
+what intermittently hangs the whole invocation in CI (see [The isolate runner can hang](#the-isolate-runner-can-hang)), and the spawn-heavy integration
+files are where the wedge has been observed.
+
+Measured on `apps/api/tests/unit` (3437 tests, 301 files), Bun
+`1.4.0-canary.1`, `--timeout 15000` throughout:
+
+| Invocation                          | Result                                            |
+| ----------------------------------- | ------------------------------------------------- |
+| `--parallel=1` (what the lane runs) | 3437 pass, 188.8s                                 |
+| `--isolate` alone                   | 3437 pass, 186.7s — isolation alone is sufficient |
+| neither                             | 172 fail, 3263 pass, 128.7s                       |
+
+Dropping the flag costs 172 failures, not the seven this table used to record.
+The seven are still there — the same turn-recovery and checkpoint tests, now
+timing out at the 15s floor rather than the old 5s default — but they are 7 of
+172. The other 165 fail in **under 2ms**, on assertions rather than wall clock:
+`todo repository`, `requiresExternalDisclosure`, `external turn controller` and
+`external session manager` account for most of them. So the mode does not merely
+buy failures that read as unrelated flakes; it buys a suite that is wrong about
+its own subject matter. Nor is it a race — repeated runs return the same count.
+
+`test:integration` deliberately does **not** take the flag. The lane passes with
+`--isolate` (779 pass), but it costs 268s against 75s without — 3.5x, on a CI job
+already using 7 of its 10 minutes. Isolation is the better default and the wrong
+trade here; prefer substituting through production's own seams over `mock.module`
+in that lane, so nothing needs a fresh global to stay correct.
+
+#### Reproducing a cross-worker race
+
+Raising the worker count is the only way these failures appear, and two things
+decide whether you find one or watch eight clean runs go by:
+
+- **Match CI's core count.** CI runners are 4-core; a 28-core dev machine
+  schedules a different race population entirely. Pin the run —
+  `taskset -c 0-3 bun test --parallel=4 tests/integration` reproduced on its
+  first attempt where unpinned loops on the same machine had gone clean eight
+  times in a row.
+- **Capture whole logs.** A file that aborts under worker parallelism reports
+  through its worker rather than the reporter, so grepping the live output for
+  `(fail)` misses it. Redirect to a file per run and read the failures after.
+
+Run the whole lane, never one file: by construction these failures land in files
+other than the one at fault, and the signature is a handful of failures plus a
+block of tests that never ran.
+
+#### Never bind a well-known port in a test
+
+A fixed port is one machine-wide resource, so two files that want it cannot both
+run. Ask for port 0 and read the bound port back — `createManagedProcessFixture`
+and `startOAuthLoopbackServer` both report theirs, and the ChatGPT sign-in flow
+builds its redirect URI from the bound port rather than from the registered
+constant so tests can take an OS-assigned one
+(`setChatGptLoopbackPortForTest`). Before that, `apps/api/tests/integration` at
+four workers failed 5 runs in 24 with a spurious 503 from whichever file lost
+the race for `127.0.0.1:1455`; after, 22 runs in 22 were clean locally and 12 of
+12 on a CI runner. A test that needs a *busy* port should bind one itself and
+point the code under test at it.
+
+The same rule covers paths: `mkdtemp` rather than a static name under
+`tmpdir()`, and the managed test config directory is scoped by pid and
+`BUN_TEST_WORKER_ID` and removed in `afterAll` (`process.on('exit')` does not
+run under the Bun test runner).
+
+#### Known upstream blocker on the unit lane
+
+**Lifted on Bun 1.4.3.** The coverage lane runs `--parallel=4`; what follows is
+the record of what blocked it and of what the release did and did not fix.
+
+Before 1.4.3, `tests/unit` aborted whole files intermittently under worker
+parallelism, losing every remaining case in the file it hit. It was not a
+property of one machine — it reproduced on GitHub's runners:
+
+| Host                                  | Invocation                  | Runs affected |
+| ------------------------------------- | --------------------------- | ------------- |
+| `ubuntu-latest`, 4-core, Azure kernel | `--parallel=4`              | 2 of 36       |
+| WSL2, pinned to 4 cores               | `--parallel=4`              | 4 of 10       |
+| WSL2, pinned to 4 cores               | `--parallel=8`, to a file   | 4 of 12       |
+| WSL2, pinned to 4 cores               | `--parallel=8`, into a pipe | 2 of 8        |
+
+A runner run took ~58s at four workers against 232–248s at one.
+
+Re-measured on `1.4.3+c6da4a4d3` (2026-10-12, WSL2 pinned to four cores, 437
+files, output to a file):
+
+| Invocation                                             | Runs clean | Wall time |
+| ------------------------------------------------------ | ---------- | --------- |
+| `--parallel=4 tests/unit`                              | 12 of 12   | 75–82s    |
+| `--coverage --parallel=1 tests/unit`                   | 2 of 2     | 270–271s  |
+| `--coverage --parallel=4 tests/unit`                   | 3 of 3     | 79–80s    |
+| coverage lane flags, `--parallel=1`, per `--shard=i/4` | 4 of 4     | 65–69s    |
+| coverage lane flags, `--parallel=4`, per `--shard=i/4` | 4 of 4     | 19–20s    |
+
+Every run passed the same 5,380 cases with no `epoll_ctl`, no crashed worker and
+no hang. At either width the four shards claimed the same 437 files once each,
+split identically. Covered lines are the same at one worker and at four
+(61,807). Coverable lines are not: the merged four-shard LCOV reports 77,116 at
+one worker and 77,065 at four, and two source files moved by a line or two
+between otherwise identical four-worker runs. That is the run-dependent `LF:`
+of [Merging is not concatenation](#merging-is-not-concatenation), and it puts
+the lane's line coverage 0.05pp higher at four workers — inside the QA
+verdict's 0.1pp epsilon, and worth knowing when a coverage delta that small
+shows up.
+
+The pinned soak is strong evidence against the 4-of-10 rate it replaces and weak
+evidence against the hosted 2-of-36 one: twelve clean runs happen about half the
+time at that rate. CI is the soak that settles it. If the abort returns there,
+it is this section's error below, and the lane goes back to `--parallel=1`.
+
+What blocked it:
+
+The error is always
+
+```
+error: EEXIST: file already exists, epoll_ctl
+      at new WriteStream (internal:fs/streams:244:58)
+```
+
+— Bun building a `process.stdout`/`process.stderr` `WriteStream` for a fresh
+isolate on a descriptor the process-wide epoll set still holds from the previous
+one. The victim is whichever file is loading at the time, so it is never a defect
+in the test that reports it, and it is not fixable from this repository.
+
+It is [oven-sh/bun#37968](https://github.com/oven-sh/bun/issues/37968), reproduced
+and root-caused upstream — a leaked epoll registration on a reused stdio
+descriptor at the isolate global swap. Note that the issue recommends
+redirecting to regular files as a workaround; that made it *worse* here, not
+better, so measure before adopting it.
+
+Two patches address it from opposite ends, and only one has shipped:
+
+- [oven-sh/bun#44581](https://github.com/oven-sh/bun/pull/44581), **in 1.4.3**,
+  closed the issue. A finished file's `process.stderr` sink is released by a
+  garbage collection; when that ran inside a `Bun.spawnSync` call, the VM was
+  pointed at `spawnSync`'s own event loop, so the sink's `EPOLL_CTL_DEL` went
+  to the wrong epoll and the entry stayed in the main one. The next dup of the
+  stdio fd to get that number failed with `EEXIST`. The patch stops repointing
+  the VM, so the release reaches the right epoll. The same swap was behind the
+  `spawnSync` spin described under
+  [The isolate runner can hang](#the-isolate-runner-can-hang).
+- [oven-sh/bun#38008](https://github.com/oven-sh/bun/pull/38008), **still
+  open**, ends the outgoing file's stdio sinks at the global swap so nothing
+  leaks in the first place.
+
+> **The leak is still there; the collision is what went away.** Counting how
+> many of an isolate's fds point at the same pipe as fd 2 — PR #38008's own
+> regression test — gives `4 6 8 10 12 14 16 18` across eight files on
+> `1.4.0-canary.1+32e87032b`, on `1.4.2+744846f84` and on `1.4.3+c6da4a4d3`
+> alike: two leaked per file, still climbing, under `--isolate` and
+> `--parallel=1` (a flat `4` without isolation). Only #38008 flattens it. So
+> 1.4.3 removes the one known path from that leak to a failure, not the leak; a
+> suite with thousands of files per worker still accumulates descriptors.
+>
+> A release note is not proof a patch shipped. Check the tag:
+> `gh api repos/oven-sh/bun/compare/<merge-sha>...bun-v<version> --jq .status`
+> answers `ahead` when the tag contains the merge commit.
+
+Do not read the stack frames below `new WriteStream` as the cause. They usually
+point at `google-logging-utils` inside `google-auth-library`'s module init
+(reached from `@google/genai`), because that package copies the `process` module
+namespace and so materializes both streams eagerly. Loading `@google/genai`
+lazily removes those frames and the aborts continue — measured, not assumed. It
+is the messenger.
+
+Redirecting the run to a file makes it likelier but is not the cause; it happens
+through a pipe too, which is what CI gives it.
+
+So before 1.4.3 the unit lane could not take Bun's *in-process* worker
+parallelism (the integration lane could: 12 of 12 clean at four workers on a
+runner, 50.6s against 71–75s unflagged). Its plain run took separate processes
+instead, each of them a one-worker `bun test` that never shares an isolate with
+another, and still does: see [API unit workers](#api-unit-workers).
+
+#### The isolate runner can hang
+
+The abort above is the loud failure. The quiet one: a `bun test` in isolate
+mode — **including `--parallel=1`** — sometimes never exits. Every lane that
+finished shows its summary, the log freezes, and the job burns its whole
+`timeout-minutes` before the runner kills orphaned `bun`/`turbo` processes. A
+milder form of the same wedge shows up as `spawnSync git --version` stalling
+15s+ inside integration files (visible via `MANGOSTUDIO_SPAWN_DIAGNOSTICS`),
+timing out tests with `killed 1 dangling process`.
+
+Observed on stock Bun 1.4.0 across at least seven CI runs (different PRs and
+`main`) in the week after the 1.4.0 pin, always in the api coverage lane — the
+only isolate-mode lane in the shard matrix. Upstream this is
+[oven-sh/bun#39709](https://github.com/oven-sh/bun/issues/39709) (isolate
+runner never exits after its per-file work; dropping `--isolate` removes it)
+and [oven-sh/bun#39584](https://github.com/oven-sh/bun/issues/39584). In the
+234-run soak recorded above, the only build with zero hangs across 85 runs was
+the [oven-sh/bun#38008](https://github.com/oven-sh/bun/pull/38008) build, so
+that patch is the unblock for this too.
+
+**Still true on the 1.4.2 pin (re-checked 2026-09-27).** None of #38008, #39709,
+#39584, or #37190 — the candidate fix for #39584 — is merged upstream; #39709
+has no fix in flight at all. Both mitigations below stay. What 1.4.1 *did* ship
+is adjacent and easy to mistake for the unblock:
+
+- `bun test --isolate` no longer keeps a finished file's module graph alive when
+  that file called `mock()`, `spyOn()`, `mock.module()` or `Bun.plugin()`. That
+  is a **memory leak**, not the hang — worth having on a lane that mocks in
+  nearly every file, but it does not retire the watchdog.
+- A `bun test --parallel` hang when a worker exited before finishing startup.
+  Narrower than #39709, which parks *after* every per-file child has finished.
+- 1.4.2 closed a `FileSink` double-close on a **failed** epoll registration.
+  Same file, different bug: #38008 is a leaked dup on a **successful** one.
+
+Re-check the merge state of #38008 before reading a quiet lane as a fix.
+
+**Re-checked on the 1.4.3 pin (2026-10-12).** #39709 is still open with no fix
+in flight, and #38008 is still unmerged. What 1.4.3 did ship is
+[oven-sh/bun#44581](https://github.com/oven-sh/bun/pull/44581), which removes
+the `spawnSync` spin — the milder form above, where a finalizer run inside
+`spawnSync` drifted that loop's poll count until a later call spun at 100% CPU
+to its timeout — along with the isolate realm fencing in #41831, #42110 and
+#44279 and the crashed-worker cleanup in #41467. In the first 65 CI runs on the
+pin, 460 shard test steps had a median of 48s and a maximum of 120s; none
+reached the watchdog's bound, so it killed nothing. The watchdog stays until
+#39709 closes: the runner-never-exits form has no fix, and a quiet week was
+also what the lane looked like before it first hung.
+
+Two mitigations are in place until it closes:
+
+- The api **integration** suite runs outside isolate mode (see
+  [Parallelism](#parallelism)).
+- Every CI test invocation runs under `scripts/ci/run-tests-watchdog.ts`,
+  which kills the invocation's process group after a per-attempt bound and
+  retries once, restoring the timings baseline first so the retry computes the
+  same shard partition as the other shard jobs. Test failures or unhandled
+  errors reported before the hang still fail the invocation after a clean
+  retry, even when crash retries are disabled.
+
+**Why "re-run failed jobs" used to re-hang while "re-run all jobs" passed:**
+the hang follows specific files, and the file-to-shard partition is a function
+of the resolved timings baseline. Rerunning only failed jobs reuses the
+successful `resolve-timings` job's output — the identical partition, so the
+trigger files land on the same shard again. Rerunning all jobs re-resolves the
+baseline, which usually rotated in the meantime, moving or splitting the
+trigger files.
+
+### Sharding
+
+Sharding came first because `--parallel=N` was blocked and `--shard=i/N` was
+not. Workers put concurrent isolates inside **one** Bun process, which was the
+precondition for the abort above. A shard is a subset of files run by a process
+that never shares itself with another shard, so that precondition never exists.
+The two compose, and since Bun 1.4.3 they do: each shard runs the api unit lane
+at `--parallel=4`, and `--timings` balances both the shard split and the
+workers inside it.
+
+What sharding does *not* sidestep is [the isolate runner hang](#the-isolate-runner-can-hang): that needs no concurrency, only isolate
+mode, so it rode along into the shard jobs until the api integration suite
+left isolate mode. More shards is not a defense either — it only reshuffles
+which shard the trigger files land on.
+
+`bun run test --coverage --shard=i/N` splits every **sharded** lane at once;
+each takes the flag through `MANGOSTUDIO_BUN_TEST_ARGS`. `--shard` requires
+`--coverage`: it is the only lane with a merge step behind it, and a shard of
+any other lane would run a fraction of the files and exit 0.
+
+**The frontend lane does not shard.** Bun's LCOV cannot be reassembled from
+slices (see [Merging is not concatenation](#merging-is-not-concatenation)), so
+its coverage has to come from one invocation. CI runs it whole in its own job
+via `bun run test --coverage --only=frontend`, parallelised in-process instead:
+`--parallel=4 --isolate`, adopted after a 12-run soak of the full 167-file
+suite pinned to four cores came back 12/12 clean — 1397 pass / 0 fail every
+run, zero `epoll_ctl`, zero hangs, ~34s per run against a ~102s serial
+baseline. The lane registry (`scripts/lib/test-lanes.ts`) carries the
+`sharded` flag, and `test-lanes.unit.test.ts` pins that the frontend's script
+cannot even receive `$MANGOSTUDIO_BUN_TEST_ARGS`.
+
+> The soak mattered because oven-sh/bun#37968 (the fd-leak/`epoll_ctl` abort)
+> was open upstream when the lane was adopted. Bun 1.4.3 closed it by removing
+> the collision, not the leak (see
+> [Known upstream blocker on the unit lane](#known-upstream-blocker-on-the-unit-lane)). If CI ever reproduces it, drop to
+> `--parallel=2` first — parallelism *divides* the stale-registration
+> accumulation across workers, so serial `--isolate` concentrates rather than
+> avoids it.
+
+CI runs three shards, the frontend job, and one merge job
+(`.github/workflows/test.yml`). Where the sharded run's time went when the
+split was designed, measured on run 32331139863 (four-core runner, Turbo
+running the lanes concurrently, the frontend then still on Vitest at 189.4s):
+
+| Lane                                          | Files | Duration |
+| --------------------------------------------- | ----- | -------- |
+| `apps/api` `bun test --coverage --parallel=1` | 398   | 278.3s   |
+| `apps/runtime`                                | 63    | 26.4s    |
+| root `test:scripts`                           | 81    | 16.3s    |
+| `apps/shared`                                 | 54    | 1.8s     |
+
+The shard boundary is a slice of *every* sharded lane rather than one job per
+workspace: a per-workspace split leaves `apps/api` alone at 278s.
+
+The count before the current one came from five first-attempt hosted CI runs
+each at 4, 6 and 8 shards on 2026-10-11/12 UTC. The runs were interleaved sequentially on
+frozen source [`683f69a`](https://github.com/juliopolycarpo/mangostudio/commit/683f69a57b798ea85f4fa93184e17acf3de3ce41),
+with Bun 1.4.3 and the shipping native runtime profile. The variants changed
+only the count, matrix and job name. The latency rule fixed before testing ranked
+counts by median from workflow `run_started_at` to completion of `Test / Merge
+shard results`, with Test job runner-seconds breaking a tie. A shard test step at or
+above 147 seconds would reject that count, preserving 30% headroom under the
+existing 210-second watchdog.
+
+| Shards | Median Test end | Observed range | Median Test runner-seconds | Median summed shard queue | Worst shard test step |
+| ------ | --------------- | -------------- | -------------------------- | ------------------------- | --------------------- |
+| 4      | 291s            | 246s to 902s   | 588s                       | 8s                        | 120s                  |
+| 6      | 288s            | 225s to 306s   | 678s                       | 121s                      | 78s                   |
+| 8      | 342s            | 277s to 1248s  | 759s                       | 433s                      | 62s                   |
+
+Test runner-seconds sum the elapsed execution of every `Test /` job, including
+the frontend, timings resolver and merge. Summed shard queue measures each
+numbered shard's `created_at` to `started_at`; it is aggregate waiting, not
+the workflow's critical path.
+
+Four was the count that comparison deployed, to reduce runner demand. Its observed median Test
+end was 51 seconds lower than eight, with 171 fewer Test runner-seconds.
+Six ranked first under the latency rule, but its three-second lead over four
+is small relative to the observed variation. Four used 90 fewer Test
+runner-seconds than six and had less aggregate queue waiting. Its worst shard
+test step stayed below the 147-second rejection limit. The shard watchdog was
+then raised from 210 to 240 seconds, twice that 120-second worst step, so a
+loaded runner has more room before a slow shard is killed as a hung one. Two
+240-second attempts still fit the job's 10-minute timeout: the other steps took
+at most 45 seconds in these runs. The cohort ran under the 210-second bound and
+did not exercise the new one. This cohort does not
+establish a universal optimum or isolate shard count from ambient account
+load. Timing baseline keys varied, and each eight-shard run restored one root
+Turbo task while the four- and six-shard runs missed all root tasks. Manual
+dispatch skipped QA Metrics, which requires normal PR CI separately.
+
+Every run retained the same case identities and outcomes: 13,981 passed and
+82 skipped. Coverage source-file inventories matched, and every four- and
+six-shard run retained the initial control's positive-hit lines. The final
+[eight-shard control](https://github.com/juliopolycarpo/mangostudio/actions/runs/38193748435)
+had 28 fewer positive-hit lines in `shared`'s `instance-reader.ts` after its
+timings baseline split related test files across processes. Cases and outcomes
+still matched. Source and raw-report inspection support a within-control LCOV
+attribution variation; Bun's precise internal mechanism was not reproduced.
+The sample remains in the comparison with that reviewed limitation. This audit
+does not establish full branch or function coverage equivalence.
+
+The comparison predates the subsequent SDK and external-notice changes on
+main. The chosen configuration is validated on updated source separately;
+these timings do not compare the new workload across counts. Re-measure after
+a runtime profile or CI concurrency/topology change.
+
+The current configuration uses three shards with the api unit lane at
+`--parallel=4`. The comparison above ran that lane at one worker per shard, so
+it does not rank three. The initial three-shard estimate used per-lane times
+from one four-shard run on main
+([38202725009](https://github.com/juliopolycarpo/mangostudio/actions/runs/38202725009)),
+where the api lane runs unit then integration back to back and root scripts
+runs beside it:
+
+| Shard | api unit | api integration | root scripts | Test step |
+| ----- | -------- | --------------- | ------------ | --------- |
+| 1     | 50s      | 32s             | 58s          | 82s       |
+| 2     | 55s      | 30s             | 65s          | 86s       |
+| 3     | 39s      | 29s             | 30s          | 68s       |
+| 4     | 46s      | 73s             | 25s          | 119s      |
+
+The initial estimate assumed the unit lane would get about 2.5x from four
+workers on a runner shared with root scripts, against 3.4x on four idle local
+cores. Redistributing those totals over three shards gave roughly 25s of unit,
+55s of integration and 60s of root scripts per shard, a step near 80s.
+
+The parent's first hosted run at four unit workers, still at four shards,
+was [38208603805](https://github.com/juliopolycarpo/mangostudio/actions/runs/38208603805),
+on source [`74f557a5`](https://github.com/juliopolycarpo/mangostudio/commit/74f557a5a6843ffcf1e60f6bf428e5428105efc4):
+
+| Shard | api unit | api integration | root scripts | Test step |
+| ----- | -------- | --------------- | ------------ | --------- |
+| 1     | 21.0s    | 38.1s           | 62.7s        | 62.8s     |
+| 2     | 25.4s    | 31.2s           | 72.9s        | 73.0s     |
+| 3     | 27.7s    | 29.8s           | 43.3s        | 57.8s     |
+| 4     | 19.2s    | 73.6s           | 28.3s        | 93.2s     |
+
+The unit lane improved about 2.0x between these observations, and root scripts
+bounded two of the four shards. Redistributing the newer totals over three
+shards gives about 31s of unit, 58s of integration and 69s of root scripts
+per shard. Unit and integration run back to back, so this projects to a step
+near 90s. A shard drawing both slow integration files and a long root slice
+could exceed 110s. These runs are on different source revisions and do not
+establish a paired speedup or a distribution for three shards.
+
+One fewer shard removes a runner job and its roughly 30s of fixed setup.
+Total runner time and Test completion still need a hosted three-versus-four
+comparison with the same source, worker width and timing baseline. Four shards
+already waited a median 8s in aggregate in the earlier cohort; that queue
+figure is historical, not a saving predicted for this configuration. Reject
+three shards if any shard test step reaches 147s or Test completion is clearly
+worse than four shards over several first-attempt runs. Keep the 240s watchdog
+bound while collecting that evidence.
+
+Two shards remains a later candidate. The newer totals project to about 133s
+of unit plus integration per shard before imbalance, close to the 147s
+rejection limit. Integration parallelism would need separate qualification;
+the lane stays unisolated while oven-sh/bun#39709 remains open. The unit
+lane's hosted soak does not change that gate. Root scripts could then become
+the bound, so widening integration alone would not establish a two-shard win.
+
+Changing the count requires three matching edits: `SHARD_COUNT`, the matrix
+list, and the shard job's `name`. `env` is unavailable in `jobs.<id>.name`, so
+the `/3` there cannot interpolate the value.
+
+#### Root scripts workers
+
+The unit phase of `bun run test` runs `test:scripts:workers` through
+`scripts/run-test-workers.ts --lane=root`. The command after `--` remains
+`bun test --timeout 15000 scripts`. Four workers is the POSIX default, capped
+at half the CPU cores with a minimum of one. Windows defaults to one;
+`MANGO_TEST_WORKERS=<1-8>` overrides either default.
+
+The original `test:scripts` command remains serial for coverage, CI shards,
+and changed-file selection. Its report is `.mango/artifacts/junit/root.xml`;
+the plain workers merge into `.mango/artifacts/test-workers/root.xml`, away
+from coverage evidence. The worker task is cached with its runner import
+closure and test inputs. Worker width is a Turbo `passThroughEnv`, so changing
+width reuses the same successful result.
+
+`bun test scripts` matches paths containing `scripts`, including two API
+files outside `scripts/`: `wsl-runtime-scripts.integration.test.ts` and
+`runtime-slot-scripts.test.ts`. The root lane inventories both. The runner
+requires every file exactly once and complete, nonempty worker reports before
+accepting its merged report. Serial comparisons qualify case and outcome parity.
+
+The width comparison used three serial samples and three at each candidate
+width on source `49bb715f686620f94e04e650c229ca34a8b5ca96`, under WSL with direct
+lane commands and no Turbo hits. All reports contained 2,599 cases across 182
+files: 2,586 pass, 13 skip, zero fail. The rule selected the smallest clean
+width within 10% of the fastest median; four was within that band and reduced
+median wall time by 54.59% from serial. One cell overlapped known external host
+activity and was replaced under the original conditions, preserving its
+original parity evidence.
+
+| Width  | Median wall | User CPU | System CPU | Linux process-tree peak RSS |
+| ------ | ----------- | -------- | ---------- | --------------------------- |
+| Serial | 211.51s     | 61.89s   | 39.24s     | 562,796 KiB                 |
+| Four   | 96.05s      | 68.99s   | 42.13s     | 990,940 KiB                 |
+| Six    | 109.21s     | 69.81s   | 40.67s     | 1,330,468 KiB               |
+| Eight  | 90.12s      | 68.27s   | 39.87s     | 1,790,156 KiB               |
+
+These medians compare the same runtime feature set: the measurement runtime
+was built together with the fake Cursor example, enabling the SDK testing
+feature. They do not qualify a default-only runtime or native Windows width.
+Process-tree RSS counts shared pages per process and excludes native
+PowerShell memory. Final correctness uses a separately built default runtime,
+whose checksum must remain unchanged while building the fake example.
+
+The actual root workers and launchers retain `--no-orphans`. Named handshake,
+signal, watchdog and cancellation fakes use `fixtureChildEnvironment()` with
+Bun's inherited orphan marker set to zero, so their deliberately surviving
+children remain available to the existing lifetime and cleanup assertions.
+The regression cases run through the actual root worker and require the
+selected outcome plus the full lane census.
+
+#### API unit workers
+
+`bun run test` (and `bun run --filter @mangostudio/api test:unit`) splits the API
+unit lane across worker processes. The script is
+`scripts/run-test-workers.ts --lane=api-unit -- bun test --timeout 15000
+--parallel=1 tests/unit`: the command after `--` is the serial lane, unchanged,
+and the runner starts it N times with `--shard=i/N`.
+
+| Worker owns  | How                                                                                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| its files    | Bun's `--shard=i/N`: round-robin over the sorted file list, so a file set always splits the same way                                                           |
+| its home     | each worker starts through `scripts/with-test-home.ts`, a `<tmpdir>/mangostudio-test-home-<random>` of its own, which also scopes the managed config directory |
+| its database | the preload's `:memory:` database, one per process                                                                                                             |
+| its ports    | every unit test binds port 0 (audited: no fixed-port bind under `tests/unit` or `tests/support`)                                                               |
+| its report   | `--reporter=junit` to `worker-<i>-of-<N>.xml` in a directory made for this run and removed at the end                                                          |
+
+Each worker also runs with `--no-orphans`, so the `bun test` behind a launcher
+that gets a `SIGKILL` (the last step when a cancelled worker ignores `SIGTERM`)
+exits with it, and takes down what its tests started. (`--parallel=1` runs the
+files in that one process; there is no separate test worker.) The launcher cannot
+forward that signal and cannot clean its home, so that home stays in the OS temp
+directory, as the launcher's section below says it does.
+
+Width is six, capped at `floor(cpus/2)`. The cap is there because the lane
+shares the host with the other lanes of `bun run test` (the root scripts, frontend
+and shared lanes run beside it, the integration lane after it), and the 15s case
+timeouts are what an oversubscribed CPU breaks first. `MANGO_TEST_WORKERS=<1-8>`
+overrides it; `1` is the serial lane. The variable is a Turbo `passThroughEnv` of the
+task, not an `env` entry: the merged result is the same at any width, so it stays out of
+the cache key. The runner and everything it loads are in the task's `inputs`
+(`apps/api/turbo.json`; `api-lanes-hermetic.unit.test.ts` derives the import closure and
+fails on a file missing from it).
+
+**On Windows the default is one worker**, the serial lane. With six concurrent processes
+`chatgpt-loopback.test.ts` failed with `ECONNRESET` in 12 of 72 runs (0 of 40 serially),
+and a bare Bun server that sends `Connection: close`, or stops while it answers, was reset
+in about 40% of requests under six processes there (3 of 100 in one process), with no
+MangoStudio code involved. That is a connection-teardown problem to understand before
+Windows goes wide. `resolveWorkerCount` carries the `win32` branch to lift, and
+`MANGO_TEST_WORKERS=6` overrides it meanwhile.
+
+The lane fails, naming `api-unit worker i/N`, when a worker:
+
+- exits non-zero, is killed by a signal (an OOM kill reaches the runner as
+  `128 + 9`), cannot be started, or is cancelled (an interrupt of the runner
+  stops every worker, then exits `128 + signal`);
+- exits 0 but wrote no report, wrote a cut-off one, or ran no case.
+
+A failing worker does not stop its siblings, because the serial lane also
+reports every failure. After the workers end, the files their reports name must
+be exactly the files under `tests/unit`, each in one report: a file in two
+reports, in none, or outside the directory fails the lane and names the first.
+A test file that registers no case at all is invisible to JUnit and so fails
+that last check; register a skipped case instead of an empty file.
+
+The merged report is written to `.mango/artifacts/test-workers/api-unit.xml`
+only when every worker left a whole report, and the previous one is removed
+first, so a failed lane (or a selected run, which writes none) cannot leave the
+last green run's totals. It is deliberately not the lane's `junitPath` under
+`.mango/artifacts/junit/`: that is the coverage run's evidence, read by the QA
+gate and the shard merge, and a plain run must never leave a green report there
+for a coverage lane that died before writing its own.
+It holds every worker's `<testsuite>`, with the header counters summed. The case
+and outcome set equals the single-worker lane's, which
+`test-workers.unit.test.ts` asserts with named fake workers (and names the first
+missing or extra case when it does not).
+
+Things this deliberately does not do:
+
+- **Coverage stays one invocation.** `test:coverage:unit` never goes through
+  this runner: a union of per-process LCOV carried 3,501 extra zero-hit line
+  keys across 249 sources on two strict comparisons, with identical cases and
+  covered lines, and nobody has found the cause. It goes wide with Bun's own
+  `--parallel=4` instead, where one invocation writes one LCOV and there is
+  nothing to union. CI's Test job is coverage with shards, so this runner does
+  not change it.
+- **No timings file.** The split would then depend on an untracked file that every
+  coverage run refreshes, and rotate between runs (see
+  [Why the unisolated lane opts out too](#why-the-unisolated-lane-opts-out-too)
+  for what that costs). Round-robin is a function of the file set.
+- **A selected run is one process.** `bun run test --changed` appends
+  `--changed=<sha>` after the lane directory; anything there selects files, so the
+  runner starts the command through the launcher as it always was. A split run would
+  hand some workers no file, and the file-set check would have nothing to compare.
+
+A fixed port or a fixed path under the shared temp directory is what would break
+here. The rule in
+[Never bind a well-known port in a test](#never-bind-a-well-known-port-in-a-test)
+therefore covers the unit lane too: a test that breaks that rule fails only when
+two workers happen to run it side by side.
+
+The lane trades memory for wall time. Measured on a 34-CPU WSL host (Bun 1.4.2,
+the same 5,231 cases in 428 files at every width, merged JUnit equal to the serial
+one, median of three interleaved runs, lane run directly):
+
+| Workers | Wall    | CPU (user+sys) | Peak resident memory, process tree, sampled |
+| ------- | ------- | -------------- | ------------------------------------------- |
+| 1       | 253.2 s | 328 s          | 1.1 GB                                      |
+| 4       | 76.0 s  | 342 s          | 1.8 GB                                      |
+| 6       | 48.6 s  | 306 s          | 2.4 GB                                      |
+| 8       | 38.1 s  | 295 s          | 3.1 GB                                      |
+
+The default is six: the rule fixed before the 6 and 8 runs was to move
+off four only for a width whose median wall time was at least 10% lower with every
+report equal and no failure, and to take the smaller if both qualified. Both did
+(0.64 and 0.50 of the four-worker time), so eight is available through
+`MANGO_TEST_WORKERS=8` for a run of this lane alone, but it is not the default:
+inside `bun run test` the unit phase is bound by the root scripts lane (about
+160 s), which a wider API lane does not shorten. At every width one worker holds
+the wall, 17% to 25% above the mean, and it is the same one run after run, because
+the split is a function of the file set.
+
+`scripts/tests/test-workers-shard-contract.unit.test.ts` pins what the check relies
+on from Bun (every file in exactly one shard, the same split twice, the same files
+`bun test` discovers, and that `--no-orphans` takes a killed launcher's `bun test`
+and the child one of its tests started down with it) by running real Bun over a
+throwaway tree.
+
+#### API integration workers
+
+`bun run test` and `bun run --filter @mangostudio/api test:integration` also use
+`scripts/run-test-workers.ts`. Integration defaults to four workers, capped at
+half the available cores. `MANGO_TEST_WORKERS=<1-8>` overrides the width. Each
+worker runs the unchanged unisolated command, `bun test --timeout 15000
+tests/integration`, over its deterministic `--shard=i/N` slice. It does not use
+Bun's in-process `--parallel` or a timings file. Coverage keeps its existing
+single-process, unisolated command and CI shard matrix.
+
+The integration workers own their temporary homes and managed config paths,
+in-memory databases, OS-assigned ports and separate reports, as the unit workers
+do. Helpers that start a real server or runtime create a fresh scratch directory
+and request port 0. An ambient `MANGO_HOME` is removed before starting a worker,
+so it cannot redirect every runtime to the developer's shared home. Selected
+runs use the same filter before taking the serial fallback. A fixture
+that needs a runtime home sets its own scratch path on the child.
+
+On POSIX each integration worker leads its own process group. After it exits,
+the runner gives descendants two seconds to finish and checks for live members
+of that group. On Linux it also looks for the worker's unique environment token,
+which finds children that started another session. A live descendant fails the
+lane with `expected live descendants: 0 | received: N`, its PID and command. The
+runner kills it before returning the failure. An unreadable process table also
+fails. Zombies are excluded because they hold no ports or locks. `--no-orphans`
+is omitted on this path so Bun cannot kill the evidence before the check.
+
+Cancellation sends SIGTERM to the whole worker group and, on Linux, to
+token-bearing children that left the group. It escalates both to SIGKILL
+after at most two seconds, which leaves settlement its full grace before the outer runner's five-second deadline.
+Output readers have a bounded drain grace so an inherited pipe cannot hold the
+lane open forever. The worker, settlement and cancellation regression tests use
+real fake processes as well as named process-table fakes.
+
+Windows retains a serial default with `--no-orphans`. The POSIX settlement guard
+does not run there; Windows integration concurrency and leftover diagnostics
+are unqualified. The override is available for explicit experiments. On macOS
+the guard sees group members through `ps`, but has no Linux environment-token
+fallback. A process that starts a new session and discards its inherited
+environment is outside the Linux guard's evidence too.
+
+The report goes to `.mango/artifacts/test-workers/api-integration.xml`, leaving
+coverage evidence alone. Every owned file must occur in exactly one whole
+worker report. Named fake workers compare the full merged case and outcome
+multiset with the serial lane, including skips. The live soak compares the same
+sets and records post-run descendants independently of the runner's guard.
+
+#### Balancing the split by time
+
+> An earlier revision of this section concluded that **no timings file was
+> needed** and that `--timings` would buy "under 1%". That was reasoned from the
+> slowest single file (20.2s of 348s) as the lower bound on the critical shard.
+> The reasoning was wrong: the imbalance does not come from one big file, it
+> comes from five lanes each round-robining their own file list, and the sums
+> landing unevenly. Re-measured from real per-file durations on Bun 1.4.0:
+
+| Split                                 | Critical shard | Spread across shards |
+| ------------------------------------- | -------------- | -------------------- |
+| Round-robin (Bun's default `--shard`) | 69.6s          | 34.5s                |
+| `--timings`, each lane balanced       | 58.6s          | 16.4s                |
+| Perfect joint balance (not reachable) | 45.0s          | 0s                   |
+
+Bun's `--shard=i/N` is a **round-robin over the alphabetical file list** — file
+at index `k` runs on shard `k % N + 1` (verified against `apps/shared`). Given
+`--timings=<file>`, it balances by measured duration instead.
+
+The joint optimum is out of reach because each lane balances independently, and
+they all put their own slowest file on the same shard index — `apps/api` (8.7s),
+root (9.6s) and `apps/runtime` (6.5s) all land on shard 1, which is why the
+balanced critical shard is 58.6s rather than the 45.0s mean.
+
+**The timings file is a correctness dependency, not just a speed one.** Under
+round-robin, all N shards derive the same partition independently and *cannot*
+disagree. Under `--timings` the partition is a function of a shared file, so N
+shards reading different bytes will not cover the file set between them — some
+files run twice, others not at all, and every shard still exits 0. Three things
+hold that down:
+
+- The resolver pins one exact trusted-main cache key for every reader in a run.
+  Only the merge job on a successful `main` push writes a new baseline, after
+  both test jobs pass and their receipts, coverage and timings merge successfully.
+  PR runs never save timings: their run-suffixed keys have no future reader.
+- `scripts/ci/merge-timings-shards.ts` fails the run if two shards claim the
+  same file, which is the observable symptom of a disagreement.
+- A **missing** file is tolerated by Bun and falls back to round-robin, so a cold
+  cache degrades to the old behaviour instead of failing. A **malformed** file is
+  a hard error — including `{}` — so nothing writes a placeholder.
+
+The root `//#test:scripts` lane **opts out**. It is the only test task Turbo
+caches, and a timings file is untracked, so it cannot enter that cache key: shard
+`i` would restore a `root.xml` produced when the split put different files on
+shard `i`. Balancing it is worth 0.5s within the lane and 0.6s overall (59.2s vs
+58.6s critical shard), which does not pay for that hazard.
+
+#### Why the unisolated lane opts out too
+
+`api-integration` also opts out, for the opposite reason: everything above
+assumes each file starts from a fresh global, and that lane is the one where it
+does not.
+
+It is the only lane that is both **sharded and unisolated**. Its files share one
+module graph, so what a shard runs a file *beside* decides what that file
+inherits — the in-memory database from `setupTestEnvironment()`, any
+`mock.module` registration, the memoized `getAuth()`. A timings-balanced
+partition is a function of a file that `--update-timings` refreshes every run and
+CI caches across runs, so it **rotates**: a file's companions change from run to
+run, and the shard a file lands on moves with the baseline. A leak then surfaces
+as an intermittent failure in a file nobody touched. This is not hypothetical —
+PR #951's own first CI run failed on shard 3 because `app.ts` snapshotted
+`getConfig().corsOrigins` at module evaluation, so *which file imported `app`
+first* decided what the CORS gate saw.
+
+Round-robin is derived by each shard from the file set alone, so the same commit
+always produces the same partition and a leak is reproducible from the SHA.
+Measured on the 101-file lane (Bun 1.4.0, 85.3s total, `--shard=i/8`):
+
+| Split                                | Critical shard | Reproducible |
+| ------------------------------------ | -------------- | ------------ |
+| `--timings`, balanced (rotates)      | 20.3s          | no           |
+| Round-robin (what the lane now runs) | 29.9s          | yes          |
+
++9.6s, and cheap because one file (`spawn-runtime-child`, 20.3s) is 24% of the
+lane and is the floor under *any* split — the balancing had little left to win.
+Determinism verified rather than assumed: two consecutive no-timings runs
+produced byte-identical partitions, union 101 files, no duplicates.
+
+Two things this does **not** buy, so do not read more into it:
+
+- The partition is stable for a given file set, not across them. Adding or
+  deleting an integration file shifts the whole stride.
+- Determinism is not immunity. It makes a leak reproducible; it does not stop
+  one. Detection is [the randomized-order nightly](#randomized-order)'s job, and
+  a soak of 48 shard runs across six partitions (two round-robin, four rotated)
+  came back 0 fail — the class is not currently manifesting, which is the
+  evidence for taking this option over unsharding the lane.
+
+If the nightly's unisolated lane does go red on cross-file leakage, the
+escalation is to unshard `api-integration` and run it whole in its own CI job the
+way the frontend lane does — correct by construction, at 85.3s on the critical
+path instead of 29.9s.
+
+#### Merging is not concatenation
+
+Bun's per-file `LF:`/`FNF:` are *run-dependent*: a source
+file a shard loaded but never exercised reports every line as coverable, while
+the same file under a shard that ran its code reports the collapsed set lazy
+parsing leaves behind. On `apps/shared` at `--shard=i/3`,
+`src/errors/negotiation.ts` is `LF:208 LH:0` in two shards and `LF:98 LH:92` in
+the third. Union the `DA:` lines and the denominator inflates — 15,303 coverable
+lines against the unsharded 14,740, reporting **94.26% where the truth is
+97.86%**, a coverage regression that never happened.
+
+So `scripts/qa-gate/merge-lcov-shards.ts` takes each file's coverable-line shape
+from the shard record that covered the most of it, marks a line covered if any
+shard hit it, and keeps a positive-hit line that only exists on a non-shape
+record (a lazily parsed region another shard exercised). Zero-hit padding from
+those other records stays out so the denominator does not inflate. Same corpus:
+**97.86% lines against 97.86%**.
+
+What the merge cannot make exact is **function** coverage. When the reports
+carry `FN:`/`FNDA:` records the merge unions them by function identity (a
+function hit in two shards counts once), but Bun emits only the `FNF:`/`FNH:`
+totals (checked on 1.4.2 against every shard artifact of a CI run), so for its
+LCOV the union of hit functions is not recoverable; the merge reports the best
+shard's count, clamped to the total, which is a lower bound. **Function coverage
+for the sharded workspaces (api, shared) is therefore a lower bound until Bun
+emits `FN:` records.** It never sums the shards' totals, so a function is not
+double-counted. Measured on
+`apps/runtime` against its own unsharded run:
+
+| Shards | Lines   | Functions |
+| ------ | ------- | --------- |
+| 2      | −0.47pp | −1.60pp   |
+| 4      | −0.55pp | −2.00pp   |
+| 8      | −0.54pp | −2.52pp   |
+
+Line drift is bounded and effectively flat past two shards. Function drift grows
+with N, because the more shards a file spreads across, the further the best
+single shard sits from the union. Only line coverage reaches the QA verdict
+(`scripts/qa-gate/render/verdict.ts`, 0.1pp epsilon), so the function number is
+a table entry rather than a signal.
+
+This approximation is also why the frontend lane refuses to shard at all: its
+coverage carries an enforced gate (see [Coverage](#coverage)), and a gate on a
+number the merge can only approximate would drift with the shard count rather
+than with the tests. Its single whole-run LCOV rides the same merge machinery
+as a one-input degenerate case — a copy.
+
+The merge is also strict about what it is given. Which job directories owe a
+workspace a report comes from the lane registry (`expectedLcovShards` in
+`scripts/ci/merge-test-shards.ts`): a sharded workspace expects one from every
+numbered shard, the frontend one from `test-shard-frontend` alone. A missing,
+unreadable, empty or truncated report fails that workspace's merge naming the
+shard, deletes any earlier merged file, and reaches the QA envelope as
+`unavailable` with that reason — never a lower complete-looking number. The
+merge is order-independent: the same set of shard reports writes the same bytes
+in any order. The same rule holds one level down: if an api lane fails and
+leaves no slice (it could not start, crashed or was killed),
+`scripts/ci/run-workspace-coverage.ts` names the missing slice and stages no
+partial LCOV, and the frontend floor check
+(`scripts/qa-gate/enforce-coverage-thresholds.ts`) fails on a missing, empty or
+truncated frontend report instead of enforcing floors against it. A shard whose
+slice holds no file from a workspace writes no LCOV at all (Bun 1.4.2 writes none
+for a zero-file shard), so it now fails the merge as a missing report; every
+workspace has far more test files than shards, so that does not occur today. A shard report carries no commit stamp, so staleness is not
+detectable per shard; the fragment-level `sourceSha` check catches a fragment
+from another commit.
+
+> **One transitional report.** The PR QA report compares a head against a
+> `main` baseline. The first PRs after sharding landed compare a sharded head
+> against a pre-shard baseline and show a one-time `line coverage −0.54pp`.
+> Once `main` has a sharded baseline, both sides are sharded and the delta is
+> real signal again. A drop after that is a drop.
+
+#### JUnit, and the one thing it cannot carry
+
+Every lane writes JUnit to `.mango/artifacts/junit/<lane>.xml`, and
+`scripts/qa-gate/junit-results.ts` counts `<testcase>` elements out of the
+test-job directories. Counts come from the elements rather than the
+`<testsuites>` header because header conventions differ across runners — Bun
+emits `tests`/`assertions`/`failures`/`skipped` and nests a `<testsuite>` once
+per `describe`, so summing headers double-counts. A `<testcase>` is a leaf.
+
+Unhandled errors are the exception. An error raised between tests prints a
+`# Unhandled error between tests` block and a `N error` summary line and exits
+1, while the JUnit report reads `failures="0"` with no failing `<testcase>`
+(measured on 1.4.0-canary.1, re-verified on 1.4.2). So the failure class in
+[Unhandled Errors With Green Test Counts](#unhandled-errors-with-green-test-counts)
+exists only in the log, and each test job — the shards and the frontend job
+alike — extracts it with `scripts/qa-gate/unhandled-errors.ts` before the log
+leaves the job. If you ever replace that with a structured source, check the
+reporter first rather than assuming the XML grew an `errors` count.
+
+> Bun does not create the parent directory for `--reporter-outfile`, and it does
+> **not** fail the run when it is missing: it prints `JUnitReportFailed` and
+> still exits 0 (measured on 1.4.0-canary.1, re-verified on 1.4.2), so the
+> lane's counts go silently to
+> zero. That is why `scripts/test.ts` creates `.mango/artifacts/junit/` before
+> any lane starts — and clears it, so a lane that did not run this time cannot
+> contribute last run's counts. The QA collector also treats a configured lane
+> with no JUnit file across the shard set as `parseMiss`, so a missing report
+> cannot become a green suite of zero tests. Bun's `file` attribute is
+> workspace-relative; failed-file counts are per lane so `apps/api` and
+> `apps/shared` files with the same relative path stay distinct. Invoking a
+> workspace `test:coverage` script directly on a fresh checkout skips the
+> directory step; create it first if you care about the report.
+
+#### Per-lane results and what makes a lane `partial`
+
+The QA report carries one result per lane (`root`, `api-unit`,
+`api-integration`, `shared`, `frontend`), rolled up per component and for the
+repository, not one number per workspace. The two API lanes stay separate
+because they run under opposite isolation settings and fail for different
+reasons. The pieces live in `scripts/qa-gate/results/`; they only read the JUnit
+reports and `shard-meta.json` receipts the run already wrote, and never run a
+test.
+
+- **Expected job set.** It comes from the lane registry and the workflow's shard
+  count (`collect-test-metrics.ts <summary> <shards-dir> <shard-count>`): the
+  numbered shards carry every sharded lane, each unsharded lane has its own
+  `test-shard-<lane>` job. Listing the directories that exist would hide a job
+  that died before its upload step.
+- **`partial`, never a smaller total.** A lane is `measured` only when every
+  expected job delivered a whole JUnit report and a process receipt that is not
+  a watchdog kill (exit 124). A missing report, a report cut off (no closing
+  `</testsuites>`, or a `tests` header that disagrees with the cases), a missing
+  receipt or a timeout makes it `partial`: the counts are a lower bound and the
+  report shows `≥`. A lane with nothing readable is `unavailable`, never zero.
+  Bun writes no report for an empty `--shard` slice, so a missing report is
+  treated as lost; every sharded lane has far more files than shards.
+- **Retries.** The current pipeline never puts two runs of a test into one
+  report: `scripts/test.ts` clears the JUnit directory on every start, so a
+  watchdog retry leaves only the final attempt, and Bun's per-test `retry`
+  option reports one passing case with no trace of the earlier failure. What the
+  fold does guarantee is that a test seen in more than one report (a duplicated
+  artifact, another runner) counts once, keyed on file, class, title and line;
+  the later run wins, and an earlier failure it no longer has is kept as
+  `recovered` with its message. Rows that share all four inside one report
+  (`it.each` with a fixed title) are never collapsed.
+- **Hang retried.** The watchdog records `attempts` in `shard-meta.json`. A hang
+  that a clean second attempt recovered still exits 0, so the lane row carries a
+  `note: N shard(s) ran twice` instead of reading as a first-try pass. It does not
+  change the lane's state or the verdict.
+- **Non-zero exits.** `shard-meta.json` is per job, not per lane, so a non-zero
+  exit cannot be pinned on one lane; the lane row shows it and the suite-level
+  verdict fails on it.
+
+The verdict policy is `scripts/qa-gate/policy/`: `pass` only when nothing
+regressed and every head metric is fully measured, `fail` for a concrete
+regression, `incomplete` for missing, partial or stale evidence or a partial
+base. `scripts/qa-gate/policy/verdict.unit.test.ts` is its truth table.
+
+### Randomized order
+
+`randomized-order-nightly.yml` runs three lanes under
+`--randomize --seed=<run number>` every night. It exists for the one class the
+merge gate cannot see: a test that passes only because of what the file before it
+left behind, which is a live hazard here while `bun test` shares one module graph
+across a lane's files.
+
+`--randomize` shuffles **file order** as well as the tests inside each file —
+verified, not assumed: three probe files run as `c, b, a` under seed 3 where
+seeds 1 and 2 keep `a, b, c`. File order is the half that matters for leaked
+`mock.module` registrations.
+
+**The isolation setting decides which half of the hazard a lane can detect**,
+which is why the matrix carries it per entry:
+
+| Lane              | Invocation                                | Detects                          |
+| ----------------- | ----------------------------------------- | -------------------------------- |
+| `api`             | `--parallel=1` over the whole workspace   | order dependence *within* a file |
+| `api-integration` | no `--parallel`, over `tests/integration` | *cross-file* leakage             |
+| `shared`          | `--parallel=1`                            | order dependence within a file   |
+
+`--parallel=1` means "one worker, *isolated*" (see [Parallelism](#parallelism)),
+so a fresh global per file is exactly what hides cross-file leakage. The
+`api-integration` entry deliberately re-runs files the `api` entry already
+covered, in the mode the merge gate actually uses — without it, the class this
+workflow exists for had no detector anywhere in CI, which is how the sharded,
+unisolated lane came to rely on a rotating partition for safety.
+
+It is deliberately not merge-gating. A suite that fails weekly on a different
+seed is a bug report; making it block merges teaches everyone to re-run CI, and
+that habit outlasts the fix. `fail-fast: false` keeps one red lane from
+cancelling the others' evidence. A failure logs its seed and uploads the run log
+under `randomized-order-<lane>-seed-<n>`, because the order **is** the finding.
+Each job's log opens with the exact command to reproduce its own lane; read what
+ran before the failing file rather than the failing file itself.
+
+Every lane runs under `scripts/ci/run-tests-watchdog.ts` with
+`--retry-on-crash`, because [the isolate runner can hang](#the-isolate-runner-can-hang) and can also abort outright. A hang dies at
+the watchdog's per-attempt bound rather than burning the step budget, and a
+crash gets one same-seed retry so the rest of the lane's file list still runs.
+Both are annotated `::warning` so an infra failure does not read as an ordering
+finding — but neither is allowed to hide one. The watchdog scans the hung or
+crashed attempt's log for Bun's inline `(fail)` lines, its `N fail` summary, and the
+unhandled-error signal (`# Unhandled error between tests` / `N error(s)`)
+that JUnit cannot carry, and reports non-zero when any is present even if the
+retry came back clean: the retry proves the runner recovered, not that the
+failures did not happen. A retried night keeps attempt 1 at
+`run.log.attempt-1` and uploads it even when the step itself is green, since a
+truncated attempt is exactly where the night's only finding may sit.
+
+#### What it caught on its first run
+
+The unisolated lane failed 4–5 tests on every seed tried (1, 2 and 3), in four
+files that are green in the fixed order. All of them are one of three shapes,
+and `--randomize` reaches all three because it reorders `it` blocks and
+`describe` blocks *within* a file as well as the files themselves:
+
+| Shape                                                      | Files                                      | Symptom                                                        |
+| ---------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| Per-user rows written under one fixed user id              | `settings-agents`, `settings-app-settings` | a later test reads back an earlier test's persisted settings   |
+| One fixture built in `beforeAll` and shared by every test  | `chat-todos`                               | the "empty list" test reads todos a sibling test wrote         |
+| `beforeAll` seeding rows a **sibling `describe`** consumes | `settings-connectors`                      | `SQLITE_CONSTRAINT_FOREIGNKEY` → 500 on every persisting route |
+
+The third is the least obvious and the most worth remembering: `beforeAll` runs
+per `describe`, so a block that authenticates as a user another block seeded
+only passes while the runner happens to schedule them in that order. Because
+`PRAGMA foreign_keys = ON` is set unconditionally in `src/db/database.ts`, a
+missing `user` row is a hard failure rather than a silent one.
+
+The fixes are all "own your own state", never "truncate these tables": a fresh
+identity per test, fixtures minted in `beforeEach` rather than `beforeAll`, and
+each `describe` seeding exactly the identities it authenticates as. Namespacing
+means a test that later writes a new table cannot reopen the hole; a truncation
+list means it can.
+
+Process-wide state is the exception, because no individual suite can own it.
+`setupTestEnvironment()` reinstalls the canonical test config in **both**
+`beforeEach` and `afterEach`: `beforeEach` alone leaves the last test's
+`loadConfigForTest` override installed through the next file's module
+evaluation and `beforeAll` hooks, which both run before any `beforeEach`. That
+window is where an override reaches module-level state — it once dropped
+`server.allowedOrigins` for a whole shard. Suite-local `afterEach` hooks run
+before the preload-registered one, so a local teardown still sees its own
+override — `describe` scopes unwind inner→outer, and hooks sharing a scope run
+in reverse registration order, which is what covers a test file's own top-level
+`afterEach` (root scope, same as the preload's, registered later). Both verified
+on Bun 1.4.0 and 1.4.2. `afterAll` is the other side of that: it runs *after* the
+preload's `afterEach`, so per-file teardown cannot read the last test's
+override.
+
+### Code Health
+
+`bun run check` includes a repository-wide Knip scan. Change-scoped checks run it
+when staged or changed files can affect dependencies, package exports, runtime or
+test entrypoints, scripts, hooks, workflows, or workspace source. Run
+`bun run code-health` directly while classifying a report.
+
+Files loaded by runtime discovery, process spawning, test configuration, or build
+aliases belong in the narrowest `entry` list in `knip.json`. Do not hide them with
+file ignores. A dependency may be ignored only when repository execution evidence
+shows it is loaded outside a JavaScript or TypeScript import:
+
+| Workspace | Dependency                                               | Execution evidence                                                      |
+| --------- | -------------------------------------------------------- | ----------------------------------------------------------------------- |
+| root      | `@dprint/markdown`, `@dprint/toml`, `@dprint/dockerfile` | `dprint.json` loads each package's WASM plugin from `node_modules`      |
+| root      | `jscpd`                                                  | `scripts/qa-gate/collect/duplication.ts` spawns the installed CLI       |
+| frontend  | `tailwindcss`                                            | `apps/frontend/src/index.css` loads it through the CSS `@import` syntax |
+
 ## Browser Smoke
 
-Playwright Chromium suite under `tests/browser-smoke/`. Covers the full auth flow against a live dev stack (API on `:3001`, frontend on `:5173`).
+Playwright Chromium suite under `tests/browser-smoke/`. Covers the full auth flow against a live dev stack on `:3001` — one server serving both the API and the frontend.
 
 ```bash
 bun run test:e2e:setup
@@ -101,6 +1172,12 @@ Run `bun run test:e2e:setup` once on a new machine or whenever Playwright report
 The CI browser-smoke job runs on `ubuntu-24.04` because Playwright 1.60 cannot install Chromium dependencies on Ubuntu 26.04 yet. If you are on Ubuntu 26.04 locally, use an Ubuntu 24.04/22.04 container or VM for the e2e lane until upstream support lands.
 
 `playwright.config.ts` at the repo root starts both servers via `webServer` before running tests. In CI it enforces `workers: 1` and uploads traces/screenshots on failure.
+
+The suite is hermetic. `playwright.config.ts` creates a fresh `<tmpdir>/mangostudio-smoke-<random>` directory per run and starts the hub with `HOME` (and `USERPROFILE`) pointing at it, so the database, uploads, checkpoints, `run/`, `logs/`, and the `config.toml` and `.env` the hub reads all live under `<tmpdir>/mangostudio-smoke-<random>/.mango` — nothing is read from or written to your real `~/.mango`. `MANGO_HOME` alone would not do this, because it moves only the runtime home. The hub's storage variables (`DATABASE_PATH`, `UPLOADS_DIR`, `MANGO_HOME`, and the rest) are pinned to the temporary home as well, so one exported in your shell cannot redirect the suite back to real data, and connector tokens go to a file secret store inside it instead of the OS keychain. The hub is bound to `127.0.0.1` (`API_HOST`), because a fresh home has no `config.toml` to narrow the default all-interfaces bind and the suite relies on open signup. `CARGO_HOME` and `RUSTUP_HOME` keep their real values so the dev server's `cargo build` still finds your toolchain. The directory is removed when the run ends.
+
+The suite never attaches to a hub that is already running, because that hub's home is whatever it was started with. A dev hub on `:3001` makes the run fail with "already used"; stop it first. The web server is also asked to shut down with `SIGTERM`, so the `bun run dev` → turbo → `bun run --watch` chain does not leave a hub listening on `:3001` afterwards. `scripts/tests/browser-smoke-hermetic.unit.test.ts` fails, naming the resolved path and the expected `<tmpdir>/mangostudio-smoke-<random>` shape, if the config ever resolves the hub's home to anywhere else. To inspect a run's data, export `MANGO_SMOKE_HOME=<tmpdir>/mangostudio-smoke-<name>` before the run: that directory is used as given and is not deleted.
+
+The web server is `bun run dev --api`, which runs `cargo build -p mangostudio-runtime --locked` before the hub starts, because the hub launches Local as that binary. CI downloads the binary built once for the run instead, and `MANGOSTUDIO_RUNTIME_BINARY` makes `bun run dev` skip its own build (see [CI runtime binary](#ci-runtime-binary)).
 
 Test scenarios (`tests/browser-smoke/auth-flow.spec.ts`):
 
@@ -114,6 +1191,39 @@ Test scenarios (`tests/browser-smoke/auth-flow.spec.ts`):
 | --------------- | ----------------------- | -------------------- |
 | `browser-smoke` | `playwright` (Chromium) | real browser + stack |
 
+## Binary Smoke
+
+`scripts/test-build.ts` builds the standalone binary for a target platform, validates
+packaging layout, and boots the binary on matching CI runners to exercise core HTTP routes
+plus the Cursor deprecation refusal and ChatGPT connector validation.
+
+```bash
+PLATFORM=linux-x64 bun run scripts/test-build.ts
+```
+
+On Windows hosts, use `PLATFORM=windows-x64`. The CI `Smoke — Binary` workflow runs this
+script across all six native platform runners.
+
+The runtime leg signs up a throwaway user, posts a Cursor connector with a fake API key, and
+asserts the binary refuses it with `410` — Cursor is a deprecated provider, and the refusal
+must hold in the shipped executable, not only where a picker hid the option. The response and
+the server's stderr are still scanned for module-resolution failures such as
+`Cannot find module` or `./642.js`, which is where a broken compiled binary shows itself. It
+also completes a ChatGPT OAuth loopback sign-in against the fake ChatGPT auth/backend server,
+then verifies the connector and model catalog. The smoke stays hermetic by pointing
+`MANGO_CHATGPT_AUTH_BASE_URL` / `MANGO_CHATGPT_BASE_URL` at the fake ChatGPT server. ChatGPT
+smoke tokens use `MANGO_SECRET_STORE_UNSAFE_FILE_FALLBACK_DIR` under the temporary smoke home
+so the binary never writes fake tokens to the user's OS secret store. No real Cursor or
+ChatGPT API calls are made.
+
+The ChatGPT smoke needs callback port `1455`. When that port is already bound, the script
+prints a skip message for the ChatGPT connector leg while keeping the rest of the binary
+smoke active.
+
+| Lane           | Runner          | Environment                       |
+| -------------- | --------------- | --------------------------------- |
+| `smoke-binary` | `test-build.ts` | compiled binary on native OS/arch |
+
 ## Workspace Scripts
 
 ### API
@@ -123,6 +1233,35 @@ bun run --filter @mangostudio/api test:unit
 bun run --filter @mangostudio/api test:integration
 ```
 
+> **Local needs the runtime binary.** The hub launches Local as the Rust
+> `mangostudio-runtime`, so every API test that reaches Local spawns it. Build it
+> first with `cargo build -p mangostudio-runtime`, or point
+> `MANGOSTUDIO_RUNTIME_BINARY` at one; without either, those tests fail with
+> `RuntimeBinaryNotFoundError` and the build command — there is no TypeScript
+> fallback. `tests/integration/services/local-rust-runtime.integration.test.ts`
+> qualifies Local itself through the real connector: the `host` slot, the
+> single-owner attestation, terminal revocation, reaping on disconnect, and a home
+> the TypeScript runtime wrote. No API test imports the TypeScript runtime or
+> spawns it by path; `runtime-module-allow-list.test.ts` fails the lane if one does.
+
+> **The cached unit lane keys on the binary's content.** `test:unit` is a cached Turbo
+> task. Turbo hashes the *path* `MANGOSTUDIO_RUNTIME_BINARY` names (the task allows
+> `MANGOSTUDIO_*`), never the file behind it, and a default `target/debug` build is not in
+> the key at all, so a rebuilt or replaced runtime used to replay the pass recorded against
+> the old one. `bun run test` now takes the SHA-256 of the binary the tests spawn once,
+> before Turbo starts, and exports it as `MANGOSTUDIO_RUNTIME_BINARY_SHA256`: replacing the
+> bytes is a cache miss, an unchanged binary is a hit, and neither the path nor the mtime
+> counts. The binary is the one `MANGOSTUDIO_RUNTIME_BINARY` names (a relative path from
+> `apps/api`, where the tests run), otherwise the newest of `target/debug` and
+> `target/release` under `CARGO_TARGET_DIR`, debug on a tie — the resolution
+> `resolveRustRuntimeBinary` and the hub share, pinned by
+> `scripts/tests/runtime-binary-digest.unit.test.ts`. With no binary the variable is left
+> out and the tests skip or fail with their own message. The hub never reads it, so
+> `apps/api/src/lib/config.ts` is untouched. The allowlist is shared by every `test:unit`
+> task in the same Turbo run, so a new runtime build also re-runs the frontend and shared
+> unit tests. `bun run test` is the supported entry: a direct `turbo run test:unit` skips
+> `scripts/test.ts` and gets no digest, no worse than before.
+
 > **Run API tests from the workspace.** `apps/api/bunfig.toml` declares the test
 > preload, and Bun resolves `bunfig.toml` relative to the current directory. Running
 > `bun test apps/api/...` from the repo root silently skips the preload — so always use
@@ -130,6 +1269,70 @@ bun run --filter @mangostudio/api test:integration
 > `cd apps/api && bun test`. When the preload is skipped, the config layer falls back to
 > an isolated in-memory sandbox (never the real `~/.mango`) and the harness throws an
 > actionable error, so a wrong-directory run fails loudly instead of corrupting data.
+
+### Hermetic home
+
+The API unit and integration lanes run on a throwaway home. Code under test derives
+`~/.mango`, `~/.claude`, `~/.ssh` and its shell profiles from `homedir()`, and Bun honours
+`HOME` only when a process **starts** — a runtime assignment to `process.env.HOME` is ignored,
+so a preload or a test cannot redirect it. The `test:unit`, `test:integration` and
+`test:coverage:*` scripts of `apps/api` therefore start `bun test` through
+`scripts/with-test-home.ts`, which creates a fresh `<tmpdir>/mangostudio-test-home-<random>`,
+starts the tests with `HOME` (and `USERPROFILE`) pointing at it, and removes it when the run
+ends. `test:unit` and `test:integration` reach it through the
+[worker runner](#api-unit-workers), which starts every worker through the
+launcher, so each worker has a home of its own. That covers `bun run test`, the CI shards behind the watchdog, the coverage
+orchestrator and a direct `bun run test:unit` from `apps/api`; the nightly randomized-order
+workflow wraps its `bun test` the same way.
+
+What the launcher sets, besides the home:
+
+- `CARGO_HOME`, `RUSTUP_HOME`, `BUN_INSTALL` and `BUN_INSTALL_CACHE_DIR` keep their real
+  values (an exported one wins), so a moved home does not hide the toolchain or make Bun
+  re-download its cache. `MANGOSTUDIO_RUNTIME_BINARY` and every other inherited variable pass
+  through untouched.
+- `GIT_CONFIG_GLOBAL` names a global Git config that does not exist, so the developer's
+  signing policy, identity and `core.hooksPath` never reach the fixture repositories the tests
+  build. A fixture that builds its own `env` for `git` must forward it
+  (`tests/support/git-fixture-env.ts`), or Git falls back to the real `~/.gitconfig`.
+- `MANGOSTUDIO_REAL_HOME` carries the launcher's original home. The API preload aborts the lane
+  with the received and expected values when `homedir()` still equals it, which is how a
+  launcher whose `HOME` did not take effect is caught before the first test.
+
+A bare `bun test` from `apps/api` bypasses the launcher and runs on your real home — use the
+package scripts. `scripts/tests/api-lanes-hermetic.unit.test.ts` fails, naming the resolved
+`homedir()` and the expected `<tmpdir>/mangostudio-test-home-<random>` shape, if an API lane
+script stops going through it. The launcher reuses the guarded create/shape-check/delete of
+`scripts/lib/temp-home.ts`, which the browser-smoke home is built on: it only ever deletes a
+direct child of the OS temp directory with the expected name and refuses `..` segments. A run
+killed with `SIGKILL` cannot clean up and leaves its directory in the OS temp directory.
+
+The frontend, shared, protocol and root-scripts lanes were checked with a `node:fs` spy and
+do not read or write the real home (only `lstat` ancestor walks of the home directory itself
+in the path-containment tests), so they are not behind the launcher.
+
+### Environment-gated suites
+
+Some API integration suites need something the machine may not have and skip themselves
+rather than fail. Git and sshd suites probe for their tool; the container transport suite
+needs more than a tool, so it is told what to use:
+
+```bash
+cd apps/api
+MANGO_CONTAINER_E2E_IMAGE=mango-container-smoke:test \
+MANGO_CONTAINER_E2E_RUNTIME=/abs/path/to/mangostudio-runtime \
+bun test tests/integration/services/connect-container-runtime.integration.test.ts
+```
+
+A compiled Linux runtime binary matching the image's libc is the part a checkout does not
+have. Build one with `bun run build:runtime --platform linux-x64 --zig` (or `linux-x64-musl`;
+the binary lands in `.mango/runtime/<platform>/`), and use an image that satisfies the three requirements in
+[hub-runtime.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md#what-an-image-has-to-provide) — for musl that
+means `alpine:3` plus `apk add --no-cache bash libstdc++`. `MANGO_CONTAINER_E2E_ENGINE=podman`
+runs the same suite against podman.
+
+CI does not compile a second copy: the `Smoke — Container` job consumes the Linux runtime
+binaries the distribution lane already built, so the suite runs against release bytes.
 
 API support lives in `apps/api/tests/support/`:
 
@@ -158,9 +1361,69 @@ bun run --filter @mangostudio/frontend test:coverage
 
 Frontend support lives in `apps/frontend/tests/support/`:
 
-- `setup/vitest.setup.ts` — runtime bootstrap only
+- `setup/dom-setup.ts` and `setup/bun.setup.ts` — runtime bootstrap only, loaded
+  as `bunfig.toml` `[test] preload` entries in that order
 - `harness/render.tsx` — minimal render surface with providers
 - `mocks/create-fetch-scenario.ts` — method-and-path fetch registry **for React hook tests only** (see scope below)
+
+#### Bun test runner facts
+
+- **Coverage thresholds are enforced per file, not in total.** `bunfig.toml`'s
+  `coverageThreshold` fails as soon as any one file misses the bar, so a suite
+  with legitimately uncovered files cannot express a total-coverage gate
+  through it. `scripts/qa-gate/enforce-coverage-thresholds.ts` reads the
+  emitted LCOV back and compares floors from `scripts/lib/test-lanes.ts`
+  against the suite's totals instead, chained after `test:coverage`.
+- **happy-dom is registered at `http://localhost:3001`** — where the API
+  really listens in dev — so a relative request a scenario never registered
+  opens a real socket instead of failing fast. `bun.setup.ts` installs a
+  `fetch` that rejects immediately and names the unanswered request,
+  reinstalled in `afterEach`.
+- **`mockReset()` strips a mock's implementation** rather than restoring it
+  (the opposite of Vitest); a mock built with `jest.fn(impl)` returns
+  `undefined` after a reset. `mockClear()` is the one call that means the same
+  thing in both runners.
+- **Bun links a mocked module's whole namespace at import.** A `mock.module`
+  factory returning fewer names than the real module throws a hard
+  `SyntaxError: Export named 'x' not found` from whichever *other* consumer
+  imports it next — Vitest resolved lazily and let a partial factory pass
+  unnoticed. Spread `const actual = await import(spec)` into any factory that
+  does not cover the full module.
+- **`mock.restore()` does not revert `mock.module()`.** It restores `mock()` /
+  `spyOn` doubles and leaves module registrations installed for the rest of the
+  process — in an unisolated lane, for every file scheduled after the one that
+  registered them. `mock.module()` on an already-loaded module also *merges*
+  into the live namespace rather than replacing it, so re-registering a
+  hand-listed subset leaves the rest of the fake in place. The sanctioned undo
+  is a whole-namespace capture (`const real = { ...mod }`) in a support module,
+  re-registered from the suite's `afterEach`:
+  `support/mocks/google-genai.ts` for the Gemini SDK,
+  `support/connectors/index.ts` for the first-party provider modules.
+  `integration/routes/_respond-stream-helpers.ts` predates this pattern: its
+  `restoreAllMocks` still re-registers hand-listed subsets for seven of the
+  eleven modules it covers, so it cannot undo a partial fake of any of them.
+  Follow the capture pattern above in new code rather than that file's shape.
+- **Never add a direct import of a mocked module to the bunfig preload.** The
+  capture above has to run before any test installs a fake, which makes the
+  preload look like its natural home. It is the one place it cannot go: mocking
+  a module the preload imports *at top level* re-evaluates that graph, producing
+  a second `test-environment.ts` whose `initialized` flag is false, and every
+  later `createApiTestApp` throws the not-initialized guard. Measured on Bun
+  1.4.0 — importing `@google/genai` from the preload took `--randomize --seed=1`
+  over `apps/api/tests/integration` from 36 failures to 605. Transitive
+  reachability is not the trigger, and the rule is not "nothing the preload can
+  reach": `test-environment.ts` already pulls `@google/genai`,
+  `src/services/gemini` and the openai modules in through
+  `registerApplicationServices()`, and the connector suites mock all of them
+  today. Import the capture from a support module test files pull in at module
+  scope instead; module evaluation still precedes every hook in that file, so
+  the capture is early enough in any file order.
+- **Better Auth turns off origin, rate-limit and secret validation under
+  `NODE_ENV=test`** (`bun test` sets it), so no `bun test` case can assert any
+  of the three — the positive case passes while checking nothing and the
+  negative case reads as a discovered vulnerability. `scripts/test-build.ts`
+  spawns the compiled binary with `NODE_ENV=production` and is the only
+  vehicle that can make that assertion.
 
 ### Shared
 
@@ -176,8 +1439,8 @@ bun run --filter @mangostudio/shared test:unit
 
 ```typescript
 import { describe, expect, it } from 'bun:test';
-import { Value } from '@sinclair/typebox/value';
-import { Type } from '@sinclair/typebox';
+import Type from 'typebox';
+import Value from 'typebox/value';
 import { settingsRoutes } from '../../../src/routes/settings';
 import { createApiTestApp } from '../../support/harness/create-api-test-app';
 
@@ -225,7 +1488,7 @@ describe('createGeminiSecretService', () => {
 
 ### Frontend Integration — React hook tests (use fetch mock)
 
-`create-fetch-scenario.ts` is scoped to **React hook tests** in jsdom — hooks that call `fetch` via Eden Treaty and cannot access the Elysia app directly. Do not use it for API contract tests.
+`create-fetch-scenario.ts` is scoped to **React hook tests** in happy-dom — hooks that call `fetch` via Eden Treaty and cannot access the Elysia app directly. Do not use it for API contract tests.
 
 ```tsx
 import { render, screen } from '../../support/harness/render';
@@ -303,27 +1566,37 @@ Each provider stream test must cover:
 
 ## Coverage
 
-Coverage reports are written under `.mango/artifacts/coverage/`. Frontend Vitest writes the
-React/Vite report to `.mango/artifacts/coverage/frontend/vitest/`, and frontend `bun:test`
-writes pure-logic LCOV under `.mango/artifacts/coverage/frontend/bun/`:
+Coverage reports are written under `.mango/artifacts/coverage/`, one directory
+per workspace; the frontend's LCOV lands at
+`.mango/artifacts/coverage/frontend/lcov.info`:
 
 ```bash
 bun run --filter @mangostudio/frontend test:coverage
 ```
 
-Current frontend coverage thresholds:
+**The frontend carries total-coverage floors** — lines 81 / functions 76 /
+statements 81 / branches 53, measured 2026-08-21 at 82.35 / 77.53 / 82.39 /
+54.45 over the full 167-file suite and floored with ~1pt of headroom for
+run-to-run LCOV jitter. (These are Bun-instrumentation numbers; the retired
+istanbul 70/60/64/72 are not comparable.) The floors live in
+`scripts/lib/test-lanes.ts` and are enforced by
+`scripts/qa-gate/enforce-coverage-thresholds.ts`, chained inside
+`test:coverage` itself, so a miss fails the same invocation CI watches — lines
+and functions read from the LCOV, statements and branches derived from the
+sources by `coverage-summary.ts`.
 
-- Statements: `70`
-- Branches: `60`
-- Functions: `64`
-- Lines: `72`
-
-Last verified with `bun run test --coverage` on this baseline:
-
-- Statements: `71.74%`
-- Branches: `62.92%`
-- Functions: `65.30%`
-- Lines: `73.81%`
+> **Why not `bunfig.toml`'s `coverageThreshold`?** Measured on Bun 1.4.0 and
+> re-verified on 1.4.2, it is a different feature than it looks: the threshold
+> applies per *file* (every file must individually clear the bar, so one
+> legitimately uncovered file fails any positive value), a key you omit still
+> enforces a hidden ~0.9 default, singular key names (`line`) are silently
+> ignored, and a miss prints nothing — it exists only in the exit code
+> ([oven-sh/bun#17028](https://github.com/oven-sh/bun/issues/17028), still
+> open). On 1.4.0 the gate was also silently inert under
+> `coverageReporter = ["lcov"]` without `"text"`; on 1.4.2 it enforces under
+> either reporter.
+> `test-lanes.unit.test.ts` pins the key's absence so it cannot come back by
+> accident.
 
 When raising or repairing coverage, prioritize release-critical surfaces first:
 
@@ -332,6 +1605,444 @@ When raising or repairing coverage, prioritize release-critical surfaces first:
 - Chat orchestration and streaming UI states
 - Gallery loading, empty, pagination, and download flows
 
+## Unhandled Errors With Green Test Counts
+
+A frontend run can report every file and every test as passed and still print a
+`# Unhandled error between tests` block — and exit 1. That is not a flake. Do
+not re-run it. CI already failed correctly. The green counts are why it looks
+like noise.
+
+The mechanism is always the same. Something outlives the test that started it —
+a timer, a `lazy()` chunk behind a Suspense boundary, an unanswered `fetch` — and
+lands after the environment it belonged to is gone or after React stopped
+watching. The result is attributed to whichever file happened to be running.
+It only reproduces when the suite is loaded enough for the callback to land in
+that gap, so it does not show up in a local single-file run, and re-running the
+job in CI is a coin flip.
+
+Three guards exist for the three shapes this takes under `bun test` + happy-dom,
+and a change that removes one will not fail any test:
+
+- `bun.setup.ts` installs a `fetch` that rejects immediately, so an unanswered
+  request cannot open a socket to `localhost:3001` and strand an
+  `ECONNREFUSED` under an unrelated file.
+- `support/harness/timers.ts` drains the fake-timer queue before restoring real
+  ones, because React Query announces through a live `setTimeout(callback, 0)`
+  and dropping one leaves its notify manager unable to deliver again.
+- `support/harness/render.tsx` exports `flushAsyncRender()` for a render whose
+  content arrives asynchronously; without it the Suspense resolution lands
+  outside `act` and prints a warning on a passing test.
+
+### Where to look
+
+The stack in the job log names the leaking library. The "originated in" file is
+where the run was when the timer fired, not where the timer was scheduled.
+Treating that path as the owner is half of why this class is expensive.
+
+### How to find the owner
+
+Log inside the suspect hook or module and run the whole suite. The file that
+reports the error is usually not the one that scheduled the timer.
+
+### The rule
+
+A component that schedules a timer clears it on unmount. A test never mounts a
+third-party client whose teardown is deferred.
+
+### Known instances
+
+- `4d936696`. `ToastProvider` scheduled a 4s auto-dismiss `setTimeout` per toast
+  and never cleared it. The originated-in file was
+  `tests/unit/components/git-panel.test.tsx`.
+- `b96e319a`. `useRealtimeInvalidation` reads the Better Auth session, so every
+  component that syncs anything subscribed the session atom. nanostores tears an
+  atom down 1s after its last listener leaves, and that disposer removes a
+  `window` event listener. 18 test files mounted the real client. The
+  originated-in file was `tests/unit/features/library/backup-list.test.tsx`.
+
+The QA report and the Test job step summary lead with these error headlines when
+the suite failed, and link here.
+
+## Dangling Processes And Spawn Diagnostics
+
+`killed N dangling process` in a `bun test` log means **a test timed out** and Bun
+killed the children that test spawned. Two things about that line cost real time
+in #922 and are worth knowing before you read one:
+
+- It is a **consequence** of the timeout, not a cause. A test that leaks a child
+  and passes prints nothing.
+- It is printed **above** the `(fail)` it belongs to, so it reads as if the
+  previous, passing test leaked something.
+
+It also never says *which* child. `MANGOSTUDIO_SPAWN_DIAGNOSTICS=1` does:
+
+```bash
+MANGOSTUDIO_SPAWN_DIAGNOSTICS=1 bun run --filter @mangostudio/api test:integration
+```
+
+Every `Bun.spawn`/`Bun.spawnSync` and every `node:child_process`
+`spawn`/`exec`/`execFile`/`fork` (and their sync forms) logs one stderr line
+with the command, the pid and elapsed time, and a second line when the child
+exits. A child that logs a spawn and no exit is one that outlived the run.
+
+`bun test` on 1.4.2 exposes no current-test API — not `expect.getState()`, not a
+hook argument — so events carry elapsed time rather than a test name. Interleaved
+with the reporter's `(pass)`/`(fail)` lines that still places a spawn between two
+named tests.
+
+The wrappers live in `apps/api/tests/support/setup/spawn-diagnostics.ts` and are
+installed by that workspace's preload only, so this is an api-lane instrument.
+The CI test lanes set the flag (`.github/workflows/test.yml`); unset, nothing is
+installed and nothing is paid for.
+
+> **Local is a child process.** `createLocalRuntimeConnector` spawns the
+> `mangostudio-runtime` binary for every connection, so a test suite that connects
+> Local per test spawns and handshakes one runtime per test. Connect once per file
+> instead (`tests/support/fixtures/local-runtime-user.ts`); the checkpoint suites
+> are the worked example. Closing the connection waits for the child to exit.
+
+> **`pgrep -f` matches its own command line.** A wait loop shaped like
+> `until ! pgrep -f "bun run test"; do sleep 1; done` never terminates when it
+> runs inside a `bash -c "..."` wrapper (a background watcher, a CI step) whose
+> own command line contains the same pattern — `pgrep -f` greps full command
+> lines, including the grepping process's. Capture the target's pid at launch
+> and poll `kill -0 "$pid"` instead, or run the command in the foreground and
+> skip the wait loop entirely.
+
+## CI Runtime Binary
+
+Every lane that starts a hub needs the `mangostudio-runtime` binary Local launches.
+`.github/workflows/local-runtime.yml` builds it once per CI run (a Linux debug build, with
+the cargo cache) and uploads it as `local-runtime-linux-x64`. The composite action
+`.github/actions/local-runtime` downloads that artifact — or builds the binary itself when
+no artifact is named — asks it for `--version`, and exports `MANGOSTUDIO_RUNTIME_BINARY`
+for the rest of the job. A missing or broken binary fails that step by name instead of
+surfacing as scattered Local connect failures. The artifact also carries the
+`fake_cursor_agent` example, built in its own cargo invocation and exported as
+`MANGOSTUDIO_FAKE_CURSOR_AGENT`, so the external-agent qualification suites run in the
+ordinary shards instead of skipping.
+
+- `test.yml` takes the artifact name as a required `runtime_artifact` input, and every
+  shard runs the action before its tests. The frontend lane does not need it.
+- `browser-smoke.yml` takes the same input; a manual dispatch has none and builds in-job.
+- `randomized-order-nightly.yml` builds it in its api lanes.
+- `cargo-shim.yml`'s `real-binary-qualification` builds its own and runs every api test file
+  that imports `tests/support/rust-runtime-binary.ts`, directly or through another support
+  module, on macOS and Windows, except the opt-in live smoke named in `OPT_IN_TESTS`.
+  `scripts/lib/rust-lanes.ts` discovers those files and
+  owns the paths that make the lane relevant, so a new Rust-backed test needs no workflow
+  edit; `scripts/tests/rust-lanes.unit.test.ts` fails if one would be missed.
+  Ubuntu runs these files in the ordinary CI shards against the same debug runtime and
+  fake agent. `scripts/tests/qualification-shards.unit.test.ts` checks that every discovered
+  qualification file belongs to a sharded coverage lane, and that every shard receives
+  both binaries from `local-runtime.yml` before its tests. A missing file or artifact
+  handoff fails the guard by name.
+
+### API serve shutdown fixture
+
+The serve signal case in `rust-runtime-qualification.integration.test.ts` gives
+its never-finishing installer a 10-second deadline. An independent
+`expectRuntimeChildAlive(child, 5_000)` observer starts before SIGTERM and rejects
+an exit during the next five seconds. The eventual runtime exit, installer-PID
+cleanup and 30-second case budget still apply. A three-second installer deadline
+was shown to fail the live observer against the real binary. Other stdio fixture
+holds and their default 20-second installer deadline are retained. The serve
+signal case remains skipped on Windows. This deadline applies to the qualification fixture.
+
+## Cargo targets in worktrees
+
+Each worktree must own its writable Cargo target directory. Sharing one across
+worktrees with different sources or version stamps can make Cargo exit zero
+while the binary still reports the other worktree's version. A successful build
+alone therefore does not establish source identity.
+
+Keep the default `<worktree>/target/`, or set a dedicated real-disk
+`CARGO_TARGET_DIR` for that worktree. Derive runtime and fixture paths from that
+same target. No two active worktrees may write the same target.
+
+For runtime-backed API tests, build the normal runtime first, then the named
+fixture in a separate invocation so the fixture's SDK testing feature does not
+enter the runtime build:
+
+```bash
+cargo build --locked -p mangostudio-runtime --bin mangostudio-runtime
+cargo build --locked -p mangostudio-runtime --example fake_cursor_agent
+```
+
+Confirm that the runtime's checksum remains unchanged after the fixture build,
+and point `MANGOSTUDIO_RUNTIME_BINARY` and `MANGOSTUDIO_FAKE_CURSOR_AGENT` at
+those qualified files when they are outside the default paths.
+
+## Rust Workspace Tests
+
+The Rust workspace tests run under [cargo-nextest](https://nexte.st), locally and in
+`cargo-shim.yml`, one process per test:
+
+```bash
+cargo install cargo-nextest --locked --version 0.9.144
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+cargo nextest run --workspace --all-targets --all-features --locked --retries 0
+cargo test --doc --workspace --all-features --locked
+RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features --locked
+```
+
+The version is the one `cargo-shim.yml` installs through the SHA-pinned
+`taiki-e/install-action`; `scripts/tests/rust-nextest.unit.test.ts` fails when the two
+differ, and when the CI command stops matching the one above. nextest does not run
+doctests, so they stay on `cargo test --doc`, and the ignored fixture generator
+(`generate_rust_fixture`) stays on `cargo test -- --ignored`.
+
+- Same test set. nextest lists the same libtest binaries, and the workspace job's
+  "Check nextest runs the libtest test set" step runs
+  `bun scripts/bench/rust-test-inventory.ts capture`, `capture-nextest` and `compare` on every
+  OS. A case that one runner lists and the other does not, or flags `#[ignore]` differently,
+  fails the job and is printed by its `<package>/<kind>/<binary>::<test>` identity.
+- No retries. `--retries 0` is on every command line, and the workflow tests reject
+  `NEXTEST_*` environment overrides and a `.config/nextest.toml` that retries, filters or
+  overrides, so a flaky test fails the gate instead of passing on a second attempt.
+- Process isolation. A test that passed only because another test in its binary had already
+  initialised process state now runs alone and fails; fix the test, do not retry it.
+- Ubuntu's CI run of this set is the instrumented libtest one in `rust-coverage.yml`
+  (see below); macOS, Windows and the Windows ARM64 runtime lane run nextest. Ubuntu also runs
+  `cargo test -p mangostudio --all-targets --locked` to test the launcher with its own default
+  features, separately from workspace feature unification, on the shared Rust 1.99.0 minimum.
+
+## Rust Coverage In CI
+
+The Ubuntu run of the Rust workspace tests is instrumented: `rust-coverage.yml`
+(called from `ci.yml`) runs `cargo llvm-cov --no-report --workspace
+--all-targets --all-features --locked` on the plain libtest runner, and the QA
+report shows line, function and region coverage per crate (`mango-protocol`,
+`mangostudio`, `mangostudio-runtime`, `mangostudio-runtime-contract`). Branch
+coverage is not collected and doctests are not instrumented. See
+`docs/reference/ci.md` for where the job lives and why.
+
+Reproduce it locally with `cargo install cargo-llvm-cov --locked --version
+0.9.1`, `rustup component add llvm-tools-preview`, then `cargo llvm-cov
+--no-report --workspace --all-targets --all-features --locked` and `cargo
+llvm-cov report --json --summary-only`. Tests that spawn an instrumented binary
+with a cleared environment write `default_*.profraw` into the child's working
+directory (ignored by the repository) instead of the collected profile, so
+those children contribute no coverage.
+
+## CI Artifact Retention
+
+CI artifacts fall into four retention classes; keep new uploads aligned with them:
+
+| Class               | Examples                                                                                                                                             | Policy                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Job-to-job handoff  | `test-shard-<n>` (shard → merge), `qa-test-metrics` and `qa-rust-coverage` (→ qa-metrics), `local-runtime-linux-x64` (build → shards, browser smoke) | 1 day — consumed within the same run                   |
+| Failure diagnostics | `test-shard-<n>-log`, merged coverage, Playwright traces and report                                                                                  | 7–14 days, uploaded only `if: failure()`               |
+| Release assets      | staged binaries and packages in the release pipeline                                                                                                 | 30 days                                                |
+| Main-push baselines | `qa-metrics` envelopes from green `main` CI runs                                                                                                     | 90 days — exact-SHA baselines for future PR QA reports |
+
+Green runs summarize their outcome in the step summary (`$GITHUB_STEP_SUMMARY`)
+instead of uploading success-only artifacts. The browser-smoke workflow keeps a
+`workflow_dispatch` input (`always_upload_report`) to upload the HTML report for
+a passing run when needed.
+
+## CI Cache Policy
+
+All dependency and intermediate-state caches are owned by composites under
+`.github/actions/`; workflows must not call `actions/cache` directly. The shared
+`cache-scoped` composite owns the write-scope, trusted-`main` restore keys, and
+step-summary diagnostics for every family. Callers supply `family`, `path`, and
+a `validity` string (toolchain versions plus content hashes). `setup-mango`
+wraps the Bun install family; every other family is invoked from the workflow
+that produces or consumes it.
+
+| Family              | Producer / consumer            | Path                      | Invalidators                                             | Restore behavior                  |
+| ------------------- | ------------------------------ | ------------------------- | -------------------------------------------------------- | --------------------------------- |
+| Bun install         | every job using `setup-mango`  | `~/.bun/install/cache`    | OS, arch, Bun revision, lockfile                         | loose trusted-`main` prefix       |
+| Turbo task output   | check, test, build, QA metrics | `.turbo/cache`            | OS, arch, Bun, Turbo, lane, lockfile, manifests, configs | lane-scoped trusted-`main` prefix |
+| Workflow lint tools | check                          | `.mango/artifacts/tools/` | pinned tool manifest                                     | exact trusted restore only        |
+| Playwright browser  | browser smoke                  | `~/.cache/ms-playwright`  | OS, arch, Playwright version                             | exact trusted restore only        |
+
+Inside the Turbo task output family each task is keyed by Turbo's own hash. The cached
+API unit task includes the SHA-256 of the runtime binary in it (see [API](#api)); without
+that, a rebuilt binary would replay a stale pass out of this cache.
+
+Root Bun dependency patches are global Turbo inputs through `patches/**` in `turbo.jsonc`.
+The Bun lockfile records their paths, so changing only patch bytes otherwise leaves task
+keys unchanged. Editing a patch invalidates every cached task, including build, typecheck
+and unit lanes, while unchanged patches retain the same keys.
+
+`mode` selects `restore-save` (default), `restore`, or `save`. Exact-restore
+families (`lint-tools`, `playwright`) set `exact-restore: true` so a loose
+prefix hit cannot mark `cache-restored` and skip a required install —
+Playwright browsers and checksum-pinned lint tools are unusable across
+versions. Only `mode: restore` uses `actions/cache/restore`, which is the sole
+mode that reports a trusted-`main` match; `restore-save` sees a primary-key hit
+only. `cache-restored` is therefore only safe to gate an install step when the
+call site opts into both exact restore and `mode: restore` (today: Playwright).
+
+### Turbo snapshot rotation
+
+`actions/cache` never overwrites a key. A snapshot keyed by validity alone keeps
+the contents of the first run that saved it: a later run that restores it
+exactly computes whatever the snapshot lacked, skips its save because the key
+exists, and throws those outputs away. The Turbo lanes therefore pass
+`rotate: "true"` to a `restore` before the work and a `save` after it
+(`rotate` is rejected for `restore-save` and `restore-exact`, whose entry cannot
+be conditional):
+
+- **Key.** The save key is the write-scope key plus `-<run id>-<attempt>`, so it
+  never collides and never leaves its scope: `pr-<number>` for a pull request,
+  `main` only for a push to `main`, `run-<id>` for anything else. The restore
+  asks for the newest entry under the scope's own prefix (pull requests only),
+  then under `main` with the same validity, then under the lane's loose `main`
+  prefix. A pull request therefore restores its own earlier snapshots and
+  `main`'s, and `main` restores nothing a pull request wrote.
+- **Validity.** Besides the OS, Bun revision and Turbo version, the lane key
+  hashes `bun.lock`, every `package.json` and every workspace `turbo.json`
+  (`apps/*`, `packages/*`) next to `turbo.jsonc`. Turbo's own task hashes already
+  cover each of these, so none of them decides whether a task hits. A change
+  does not isolate the old snapshots: the restore falls through to the lane's
+  loose `main` prefix, takes the newest snapshot of the previous validity and
+  carries its entries forward, so only Turbo's task hash decides what replays.
+- **When it saves.** `restore` records a baseline right after the archive is
+  extracted; `save` runs only if the job succeeded and `.turbo/cache` holds a
+  `*.tar.zst` newer than that baseline, which means Turbo ran a task the snapshot
+  lacked. Only the payload counts: Turbo rewrites an entry's `-manifest.json` on
+  every hit. A run that only hit saves nothing. In `test.yml` only shard 1 saves.
+- **Retention.** Every save carries what it restored plus the new outputs, so
+  the chain would only grow. Each job sets `TURBO_CACHE_MAX_SIZE=16MB`: at the
+  start of the run Turbo deletes the oldest entries (by mtime, which the archive
+  preserves) until the rest fit, so a snapshot is at most 16 MB plus one run's
+  outputs. A lane saves at most one snapshot per run, and only a run that
+  computed something; the newest is the only one anyone restores, and the
+  superseded ones are not accessed again, so GitHub removes each seven days
+  after its last restore (or earlier, least recently used first, at the 10 GB
+  repository limit). Turbo does not delete caches or need `actions: write`.
+- **Quota.** The three lanes' complete sets are 3.6 MB (build), 6.5 KB (check)
+  and about 70 KB (test shard 1). A run that recomputed every build task wrote
+  3.6 MB of new entries, so the next snapshot was 7.2 MB, and its save took
+  about a second. With roughly 56 pushes to `main` and 15 pull
+  requests a week, every run saving at today's sizes would hold about 0.4 GB in
+  a rolling week; if every run saved a full 16 MB chain it would be about 2.3 GB.
+  The gate job's cache-usage summary lists the `turbo` family, so growth shows
+  there before it shows as an eviction.
+
+### Pull-request runtime artifact profile
+
+`runtime-build.yml` defaults to the shipping profile: fat LTO and one codegen
+unit. CI's distribution and PR release dry runs explicitly request `light` on
+`pull_request`: thin LTO and 16 units, including PRs that change Rust. The
+binary-smoke rebuild passes the same selection, but it runs only from
+`workflow_dispatch`, so it resolves to shipping. The overrides live at job scope, so
+rust-cache's CARGO environment hash separates both exact and fallback keys by
+profile. A light cache miss does not restore shipping state. PRs never save.
+Shipping receives an empty override map, preserving its existing Cargo
+defaults and cache environment identity.
+
+The builder rejects empty/unknown profiles and every non-PR light artifact
+request before checkout, Cargo setup, or cache access. Light requests also
+require the actual Cargo overrides to be thin LTO and 16 codegen units, and
+shipping requests reject any LTO or codegen-unit override. Main,
+tags, schedules, manual runs, and publication remain shipping. Main is the first shipping
+build of a PR change; its runtime and complete smoke lanes remain mandatory
+before Canary. A failure unique to the shipping profile can make main red
+after a green PR and blocks publication.
+
+This preparation adds no main seed jobs, cache saves, or capacity claim. Light
+builds start cold until separate cache-only seeds are admitted. Before enabling
+seeds for the eight existing targets, verify cache write eligibility and older
+generation lifecycle/older-base fallback, measure each light archive, and
+account for peak retained generations plus an explicit reserve under a
+35 GB admission ceiling. Recheck the repository's configured storage limit
+before enabling seeds. Seed output must have no artifact or publication route.
+Historical size estimates and single Linux benchmarks do not establish that
+admission or a hosted performance gain.
+
+Hosted acceptance still requires current-head logs showing thin/16 on PRs and
+fat/1 with green smoke on main, then at least five comparable PR pushes with
+per-platform build and Gate medians. Report cold runs separately from light
+cache hits, and retain the Windows binary smoke's 60-second handshake budget.
+
+### Rust cache generations
+
+Rust build caches share the repository's configured Actions cache budget with
+the shorter lanes. `rust-cache-cleanup.yml` runs trusted `main` tooling after a
+main cache writer completes, after rust-cache's post-job save, and grants
+`actions: write` only to its cleanup job. `scripts/ci/rust-cache-cleanup.ts`
+deletes older committed generations by exact ID only when a newer replacement
+is listed under `refs/heads/main`. The explicit family registry preserves the
+runner OS and architecture, target, compiler/environment hash and cache archive
+version, including distinct shipping and light-profile environment hashes.
+Only the root-manifest prefix and dependency hash rotate. Sole entries, unknown
+families, fuzz and other cache kinds remain untouched. Before each deletion the
+script audits active main writers and fetches the complete listing again; a
+detected writer, changed generation or lost replacement defers cleanup until a
+later writer's completion. The audit checks pre-start statuses before running
+and rejects duplicate run IDs within each paginated status listing. Separate
+status queries and cache deletion are not atomic: a newly starting or moving
+writer can still escape the audit, and external eviction can remove a keeper.
+The script verifies the retained replacement after each deletion and stops
+further cleanup if it disappears. It fails on malformed or incomplete API
+responses. Preview a captured listing without
+network or deletion with `bun ./scripts/ci/rust-cache-cleanup.ts --fixture
+<listing.json>`. Verify the total and older-base fallback after the first
+post-merge lockfile change before adding more Rust cache consumers.
+
+### Cargo incremental compilation
+
+Every job that compiles Rust in the dev or test profile sets `CARGO_INCREMENTAL:
+"0"`: at workflow level in `cargo-shim.yml`, `protocol-ci.yml`,
+`protocol-fuzz.yml`, `rust-fresh-dependencies.yml` and `protocol-release.yml`,
+at job level in `rust-coverage.yml`, and on the build step of the `local-runtime`
+composite. `scripts/tests/cargo-incremental.unit.test.ts` derives the jobs from
+the workflow files and fails when one lacks it.
+
+Incremental state lets a rebuild of one target directory skip work. A CI job
+builds once, so it only costs time and disk. Cold target, 34 cores, three
+interleaved runs per side, medians, the exact commands the lanes run:
+
+| Command                                                               | Wall, unset to `0` | CPU   | Target directory   |
+| --------------------------------------------------------------------- | ------------------ | ----- | ------------------ |
+| `local-runtime` build (runtime, then `fake_cursor_agent`)             | 134.5 s to 118.6 s | -5.4% | 2.65 GB to 1.65 GB |
+| `cargo clippy --workspace --all-targets --all-features`               | 67.6 s to 64.6 s   | +1.3% | 0.76 GB to 0.37 GB |
+| `cargo nextest run --no-run --workspace --all-targets --all-features` | 126.7 s to 112.0 s | -7.2% | 3.88 GB to 2.09 GB |
+
+`Swatinem/rust-cache` (the pinned v2.9.2 exports it in `restore.ts`) already sets
+the same value for jobs that restore a cache, so the explicit setting changes
+nothing there. It matters for the uncached `workspace-windows-arm64` lane and for the
+`local-runtime` composite when its cache step is skipped. `--release` steps are
+untouched: the rustc command line of a release build is byte-identical with the
+variable unset and set to `0`. Local builds stay incremental, because nothing in
+`.cargo/config.toml` or the profiles sets it.
+
+At the time of these measurements, the separate `workspace-msrv` and `target-msrv` lanes were
+also uncached. Their checks now run in the native workspace lanes at the shared Rust 1.99.0
+minimum, as mapped in [`ci.md`](/en/docs/reference/ci/#minimum-supported-rust).
+
+The binary and Docker smoke matrix (`smoke-binary.yml`) restores no caches: it
+only pins Bun and runs dependency-free release scripts. Manual `rebuild` dispatches
+still use `setup-mango` because they compile inside the job. The QA metrics job
+consumes the frontend dist artifact and restores Check's Turbo snapshot in
+restore-only mode, alongside the Bun install cache that `setup-mango` brings
+with it. It uses Check's key inputs and 16 MB bound, never saves a Turbo
+snapshot, and does not wait for the same run's Check job. A cache miss runs the
+normal checks; a hit reuses typecheck results while quick checks still execute.
+
+`CI_CACHE_EPOCH` is the repository-wide emergency invalidation lever. It is an
+Actions repository variable with a documented `v1` fallback, passed explicitly
+to every cache call site. Composite actions cannot read the `vars` context, so
+callers must keep supplying `cache-epoch` rather than relying on a composite
+default. Increment the variable (for example, to `v2`) to force a clean miss
+after suspected poisoning or a broken key rollout. Removing the variable returns
+to `v1`; only do that for a benign rollback because old `v1` entries may still
+exist.
+
+Main pushes write reusable `main` keys. Pull requests first restore a matching
+trusted `main` key (and, for a rotated family, their own `pr-<number>` chain),
+then write only a `pr-<number>` primary key; fork permissions
+may make that final save restore-only. Other trusted triggers use run-scoped
+primary keys and can restore only `main` prefixes. Consequently, privileged
+release jobs never restore a PR-produced cache. Cache paths contain dependencies
+or rebuildable intermediate state only—distribution and QA artifacts keep their
+separate upload/download policies above.
+
 ## Verification Checklist
 
 Before merging, run:
@@ -339,11 +2050,18 @@ Before merging, run:
 ```bash
 bun run check
 bun run test
-# or use the full local CI gate shortcut (check → test --coverage → build --all):
+# Local check, coverage and build gate:
 bun run verify
 ```
 
-`bun run verify` matches the CI pipeline minus the smoke jobs (browser and binary),
-which require platform runners not available in every local environment. Run those
-separately with `bun run test --e2e` and
-`PLATFORM=linux-x64 bun run scripts/test-build.ts`.
+`bun run verify` runs `check → test --coverage → build --all` and stops at the
+first failure. Its coverage phase does not schedule the protocol TypeScript
+tests; add `bun run protocol:test --ts-only` to cover them. The ordinary
+`bun run test` unit phase includes that protocol suite.
+
+Relevant changes still require the full Rust and protocol contributor gates:
+use the [Rust workspace validation](#rust-workspace-tests) and the protocol's
+`bun run protocol:check && bun run protocol:test` commands. The TypeScript-only
+complement does not replace Rust, feature-powerset or interop qualification.
+Run browser and binary smoke separately with `bun run test --e2e` and
+`PLATFORM=linux-x64 bun run scripts/test-build.ts` on matching runners.

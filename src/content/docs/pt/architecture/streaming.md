@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Arquitetura"
 order: 20
 sourcePath: "docs/pt-br/architecture/streaming.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/architecture/streaming.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/architecture/streaming.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Arquitetura De Streaming
@@ -29,9 +29,17 @@ Todos os eventos estendem `StreamChunk`, uma union discriminada pela propriedade
 | `tool_call_started`          | Server → Client | Modelo inicia uma chamada de tool                   |
 | `tool_call_completed`        | Server → Client | Argumentos da tool foram recebidos por completo     |
 | `tool_result`                | Server → Client | Resultado da execução da tool                       |
+| `subagent_started`           | Server → Client | Delegação a subagente iniciada                      |
+| `subagent_text`              | Server → Client | Deltas de texto do subagente                        |
+| `subagent_tool_call_started` | Server → Client | Subagente iniciou uma tool aninhada                 |
+| `subagent_completed`         | Server → Client | Subagente concluiu com sucesso                      |
+| `subagent_failed`            | Server → Client | Subagente falhou                                    |
 | `image_generation_started`   | Server → Client | Geração de imagem iniciada (via tool)               |
 | `image_generation_completed` | Server → Client | Imagem gerada com sucesso                           |
 | `image_generation_failed`    | Server → Client | Falha na geração de imagem                          |
+| `mcp_media`                  | Server → Client | Tool MCP produziu mídia rica persistida             |
+| `question`                   | Server → Client | Perguntas estruturadas para o usuário               |
+| `todo_update`                | Server → Client | Lista de todos do chat substituída                  |
 | `context_info`               | Server → Client | Uso de tokens e status da janela de contexto        |
 | `fallback_notice`            | Server → Client | Notificação de degradação da continuação            |
 | `continuation_transition`    | Server → Client | Transição de modo de continuação                    |
@@ -166,7 +174,7 @@ Hook React que gerencia o ciclo de vida do stream:
 ## Tratamento De Erros
 
 - **Erros pré-stream** — Retornam respostas HTTP JSON padrão com códigos tipados.
-- **Erros do stream** — `SSEErrorEvent` com `done: true`: `{ type: 'error', error: string, done: true }`.
+- **Erros do stream** — `SSEErrorEvent` com `done: true`: `{ type: 'error', error: string, done: true }`. Um agente externo que não conseguiu iniciar pode acrescentar `unavailableReason`, `remedy` e, para um agente desatualizado, `requiredVersion`, e `code` para uma abertura que falhou, que é o `external_agent_*` do runtime (o limite de sessões tem texto próprio no cliente; os demais mostram o tipo como texto simples ao lado da frase) (veja "A send refused while the session opens" em `docs/architecture/external-agents.md`); `error` continua sendo o texto em inglês de reserva.
 - **Perda de conexão** — O frontend detecta `reader.read()` retornando `done: true` sem um evento `done` anterior e exibe um erro de fallback.
 - **Abort** — A interrupção acionada pelo usuário envia `AbortSignal`; o servidor faz a limpeza via `AbortController` passado ao generator.
 

@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Referência"
 order: 20
 sourcePath: "docs/pt-br/reference/api.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/pt-br/reference/api.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/reference/api.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Referência Da API
@@ -33,6 +33,9 @@ fetch('/api/chats', { credentials: 'include' });
 ```
 
 O frontend usa Eden Treaty, que lida com isso automaticamente.
+
+Para automação fora do navegador, use chaves de API com escopo (`x-api-key`). Veja
+[`external-api.md`](/docs/reference/external-api/) para habilitação, escopos, erros e exemplos.
 
 ### Endpoints De Auth
 
@@ -59,6 +62,36 @@ O frontend usa Eden Treaty, que lida com isso automaticamente.
 | ------ | ----------------------------- | ---- | ------------------------ |
 | `GET`  | `/api/chats/:chatId/messages` | Sim  | Listar mensagens do chat |
 | `POST` | `/api/chats/:chatId/messages` | Sim  | Criar uma mensagem       |
+
+O `GET` pagina a transcrição (`MessagesPage` de `@mangostudio/shared/chat`). Query: `limit`
+(padrão 50), `cursor` e `order` — `asc` (o padrão) lê a partir da mensagem mais antiga, `desc`
+a partir da mais nova. Em ambas as ordens a página é cronológica, da mais antiga para a mais
+nova: `order` escolhe qual janela da transcrição a página é, e `nextCursor` aponta a borda da
+página voltada para as mensagens ainda não lidas (a última mensagem em `asc`, a primeira em
+`desc`), `null` na última página. O frontend abre um chat com `order=desc` e pede as páginas
+mais antigas conforme a pessoa rola para cima.
+
+O cursor é uma posição `(timestamp, rowid)` opaca, não uma direção: o emitido sob uma ordem é
+lido como posição pela outra. Um timestamp numérico puro de uma build antiga ainda é aceito
+(depois de toda mensagem daquele timestamp em `asc`, antes de toda uma delas em `desc`); um
+cursor vazio ou malformado é rejeitado com 400, e um `order` desconhecido com 422, como
+qualquer query que o schema recusa.
+
+## Endpoints De Atividade
+
+| Método | Path            | Auth | Finalidade                           |
+| ------ | --------------- | ---- | ------------------------------------ |
+| `GET`  | `/api/activity` | Sim  | Paginar o feed de atividade da conta |
+
+Query: `since` (epoch ms, exclusivo), `workdir`, `limit` (≤100, padrão 30),
+`cursor`. Retorna `ListActivityResponse` de `@mangostudio/shared/activity` —
+`events` do mais recente para o mais antigo, mais `nextCursor` quando ainda há
+páginas. O cursor é um token keyset opaco; não construa um.
+
+Linhas que a versão em execução não consegue revalidar contra
+`ActivityEventSchema` são omitidas de `events` em vez de derrubar a requisição,
+para que um downgrade leia o feed de uma versão mais nova sem perder o resto
+dele. A paginação continua avançando por elas.
 
 ## Endpoints De Geração
 
@@ -137,6 +170,46 @@ SSE com `Content-Type: text/event-stream`. Veja [../architecture/streaming.md](/
 | `GET`  | `/api/settings/rules`         | Sim  | Listar arquivos de regra         |
 | `GET`  | `/api/settings/rules/preview` | Sim  | Pré-visualizar conteúdo da regra |
 
+## Endpoints De Machine
+
+A máquina do próprio hub: qual processo está servindo, se uma unidade de serviço
+o mantém vivo, o que o doctor diz e as duas ações que mudam qualquer um dos dois.
+
+| Método | Path                   | Auth | Finalidade                                                  |
+| ------ | ---------------------- | ---- | ----------------------------------------------------------- |
+| `GET`  | `/api/machine/status`  | Sim  | Processo do hub, unidade, runtime irmão, slot host e ações  |
+| `GET`  | `/api/machine/doctor`  | Sim  | Linhas do doctor com contagem de avisos e falhas            |
+| `GET`  | `/api/machine/logs`    | Sim  | Fim do arquivo de log da instância em execução              |
+| `POST` | `/api/machine/restart` | Sim  | Reinicia o servidor do jeito que ele foi iniciado (`202`)   |
+| `POST` | `/api/machine/service` | Sim  | `{ "action": "install" \| "uninstall" }` da unidade (`202`) |
+
+`doctor` aceita `?sections=environments,library`; uma seção desconhecida é `422`
+`VALIDATION`. Suas linhas são limitadas à conta autenticada: servidores MCP,
+conectores e toggles de skills pertencem a um usuário, não à máquina, então a
+página de uma conta nunca cita as de outra. O `mangostudio doctor` não tem esse
+limite — ele roda no teclado da própria máquina e relata a instalação inteira.
+`logs` aceita `?tail=` entre 1 e 2000, com padrão 200. Ele lê um
+sufixo limitado do arquivo, não o arquivo inteiro, então um log com linhas
+excepcionalmente longas pode responder com menos linhas do que as pedidas;
+`truncated` diz se o arquivo tem mais.
+
+Os dois POSTs e `GET /api/machine/logs` só respondem em loopback (o log é a saída bruta
+do processo, sem redação): de qualquer outro lugar são `403`
+`PERMISSION_DENIED` com `details.reasons`. "Loopback" é o peer do socket, a menos
+que `trustProxy` esteja ligado: atrás de um reverse proxy o peer é o proxy para
+todo chamador, então lá o guard lê o cliente encaminhado. Veja
+[Confiar nos headers de proxy](/docs/operations/deployment/#confiar-nos-headers-de-proxy).
+Uma ação que não se aplica ao modo como
+o hub está rodando é `409` `UNSUPPORTED` com `details.reason` e `details.command`
+— a linha da CLI para rodar no lugar.
+
+O corpo do `202` é `{ accepted, outcome, unit? }`. `outcome` é um código —
+`restarting-service`, `restarting-detached`, `service-installed-handover`,
+`service-installed`, `service-removing` ou `service-removed` — e `unit` nomeia a
+unidade do supervisor quando o desfecho fala de uma. Sem prosa: o hub não conhece
+o idioma do navegador que pediu, então a página escreve cada código a partir dos
+dicionários de i18n.
+
 ## Endpoints De Upload
 
 | Método | Path          | Auth | Finalidade                |
@@ -168,6 +241,67 @@ Erros de streaming usam `SSEErrorEvent`:
 ```
 data: {"type":"error","error":"Provider API error","done":true}
 ```
+
+### Problem Details (RFC 9457)
+
+Respostas de erro são negociadas por conteúdo. `ApiErrorResponse` continua sendo
+o padrão, então um cliente que não envia nada, envia `*/*` ou
+`application/json` continua recebendo o body acima. Um cliente que nomeia
+`application/problem+json` no `Accept` recebe a mesma falha como um documento
+[RFC 9457](https://www.rfc-editor.org/rfc/rfc9457):
+
+```http
+GET /api/chats/does-not-exist
+Accept: application/problem+json, application/json;q=0.9
+```
+
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json;charset=utf-8
+Vary: Accept
+```
+
+```json
+{
+  "type": "https://mangostudio.dev/problems/not-found",
+  "title": "Not found",
+  "status": 404,
+  "detail": "Chat not found",
+  "code": "NOT_FOUND"
+}
+```
+
+As duas representações são geradas a partir de uma única classificação, então
+nada além da forma muda:
+
+- o HTTP status é idêntico, e `status` sempre é igual a ele;
+- `code` é a mesma constante, carregada como membro de extensão da RFC;
+- `detail` é a mesma string que `error` carregaria, com a mesma sanitização;
+- `details` é repassado sem alteração quando o endpoint reporta um;
+- `type` é um identificador público estável por código de erro — compare-o, não
+  faça dereference. Bodies sem código reconhecido usam `about:blank`;
+- `instance` nunca é emitido; MangoStudio não tem um identificador público de
+  request.
+
+Respostas que participam carregam `Vary: Accept` em qualquer representação, para
+que um cache compartilhado não entregue a um cliente o body do outro.
+
+Duas coisas ficam fora da negociação. SSE mantém `SSEErrorEvent` — é um stream
+de eventos, não uma resposta HTTP de erro. E alguns endpoints respondem 4xx com
+um erro *mais* dados de domínio, como uma recusa de instalação carregando sua
+`recipe`; esses mantêm o shape documentado em qualquer `Accept`, porque a
+conversão é definida apenas sobre bodies que são exatamente um
+`ApiErrorResponse`. A RFC 9457 permitiria esses campos como membros de extensão
+— o mesmo mecanismo que `code` e `details` já usam — mas converter um body que
+este contrato não descreve significaria criar uma extensão privada por endpoint,
+então essas respostas são deixadas intactas.
+
+`Accept: application/problem+json;q=0` recusa explicitamente. Quando os dois
+media types são nomeados, o maior `q` vence.
+
+O documento OpenAPI gerado em `/scalar/json` lista os dois media types em toda
+resposta de erro que participa, e publica o schema como
+`components.schemas.ProblemDetails`.
 
 ### Códigos De Erro Comuns
 

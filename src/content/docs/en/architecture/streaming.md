@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Architecture"
 order: 20
 sourcePath: "docs/architecture/streaming.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/docs/architecture/streaming.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/streaming.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Streaming Architecture
@@ -29,9 +29,17 @@ All events extend `StreamChunk`, a discriminated union on `type`:
 | `tool_call_started`          | Server → Client | Model begins a tool call                     |
 | `tool_call_completed`        | Server → Client | Tool call arguments fully received           |
 | `tool_result`                | Server → Client | Tool execution result                        |
+| `subagent_started`           | Server → Client | Subagent delegation began                    |
+| `subagent_text`              | Server → Client | Subagent text deltas                         |
+| `subagent_tool_call_started` | Server → Client | Subagent began a nested tool call            |
+| `subagent_completed`         | Server → Client | Subagent finished successfully               |
+| `subagent_failed`            | Server → Client | Subagent failed                              |
 | `image_generation_started`   | Server → Client | Image generation began (via tool)            |
 | `image_generation_completed` | Server → Client | Image generated successfully                 |
 | `image_generation_failed`    | Server → Client | Image generation failed                      |
+| `mcp_media`                  | Server → Client | MCP tool produced persisted rich media       |
+| `question`                   | Server → Client | Structured questions for the user            |
+| `todo_update`                | Server → Client | Chat todo list replaced                      |
 | `context_info`               | Server → Client | Token usage and context window status        |
 | `fallback_notice`            | Server → Client | Continuation degradation notification        |
 | `continuation_transition`    | Server → Client | Continuation mode transition                 |
@@ -166,7 +174,7 @@ React hook managing stream lifecycle:
 ## Error Handling
 
 - **Pre-flight errors** — Return standard HTTP error responses (JSON) with typed error codes.
-- **Stream errors** — `SSEErrorEvent` with `done: true`: `{ type: 'error', error: string, done: true }`.
+- **Stream errors** — `SSEErrorEvent` with `done: true`: `{ type: 'error', error: string, done: true }`. An external agent that could not start may add `unavailableReason`, `remedy` and, for an outdated agent, `requiredVersion`, and `code` for a failed open, which is the runtime's `external_agent_*` kind (the session cap has its own copy on the client; the others show the kind as plain text beside the sentence) (see "A send refused while the session opens" in `docs/architecture/external-agents.md`); `error` stays the English fallback.
 - **Connection loss** — The frontend detects `reader.read()` returning `done: true` without a prior `done` event and surfaces a fallback error.
 - **Abort** — User-triggered stop sends `AbortSignal`, server cleans up via the `AbortController` passed to the generator.
 

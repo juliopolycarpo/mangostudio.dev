@@ -8,8 +8,8 @@ groupId: "operations"
 groupTitle: "Operations"
 order: 20
 sourcePath: ".github/SECURITY.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/5490f9a050c73225da1673d7dce7f6f1300b548c/.github/SECURITY.md"
-sourceCommit: "5490f9a050c73225da1673d7dce7f6f1300b548c"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.github/SECURITY.md"
+sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
 ---
 
 # Security Policy
@@ -70,10 +70,11 @@ In-memory rate limiter with configurable window and max requests per window. Pro
 
 ### Automation Security Gates
 
-Pull requests are checked by two GitHub security workflows before merge:
+Pull requests are checked by these GitHub security workflows before merge:
 
-- **CodeQL** (`.github/workflows/codeql.yml`) runs on pull requests to `main`, pushes to `main`, a weekly schedule, and manual dispatch. It uses CodeQL advanced setup for JavaScript/TypeScript with explicit no-build extraction and the `security-extended` query suite. The workflow uploads SARIF with a stable language category so alerts are visible in the Security tab and in the PR `Code scanning results / CodeQL` check.
+- **CodeQL** (`.github/workflows/codeql.yml`) runs on pull requests to `main`, pushes to `main`, a weekly schedule, and manual dispatch. It uses CodeQL advanced setup for JavaScript/TypeScript and Rust (on Linux and on Windows, so `cfg(windows)` code is scanned too) with explicit no-build extraction and the `security-extended` query suite. The workflow uploads SARIF with a stable per-language category so alerts are visible in the Security tab and in the PR `Code scanning results / CodeQL` check.
 - **Dependency Review** (`.github/workflows/dependency-review.yml`) runs on pull requests to `main` and blocks newly introduced moderate-or-worse vulnerable dependencies from manifest or lockfile changes. License checks are intentionally disabled.
+- **Dependency Audit** (`.github/workflows/dependency-audit.yml`) audits every package in `bun.lock` for moderate-or-worse advisories on a daily schedule and on pull requests that change a manifest or the lockfile. Unlike Dependency Review, it also flags advisories published after a version was locked.
 
 When GitHub posts an Advanced Security setup comment on a PR, use it as a pointer
 to the Security tab, not as the review process itself. Maintainers should review
