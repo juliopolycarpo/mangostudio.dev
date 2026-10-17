@@ -8,8 +8,8 @@ groupId: "guides"
 groupTitle: "Guides"
 order: 10
 sourcePath: ".github/CONTRIBUTING.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.github/CONTRIBUTING.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/.github/CONTRIBUTING.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # Contributing to MangoStudio
@@ -18,7 +18,7 @@ Thank you for your interest in contributing to MangoStudio!
 
 ## Code of Conduct
 
-This project follows the [Contributor Covenant Code of Conduct](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.github/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to `julio@polycarpo.dev`.
+This project follows the [Contributor Covenant Code of Conduct](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/.github/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to `julio@polycarpo.dev`.
 
 ## Prerequisites
 
@@ -61,23 +61,23 @@ bun run dev --frontend
 
 ## Documentation Map
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — entry point to the documentation tree
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/README.md) — entry point to the documentation tree
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — shortest contributor onboarding path
 - [`docs/reference/testing.md`](/en/docs/reference/testing/) — testing taxonomy, runners, and support rules
 - [`docs/reference/agent-playbooks.md`](/en/docs/reference/agent-playbooks/) — feature-by-feature file map for targeted work
 
 ## Code Standards
 
-Refer to [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) for the full coding style, naming conventions, i18n rules, and testing guidelines. Key points:
+Refer to [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/AGENTS.md) for the full coding style, naming conventions, i18n rules, and testing guidelines. Key points:
 
 - TypeScript throughout — no plain JS files
 - 2-space indentation, single quotes, semicolons
 - All UI strings must come from `@mangostudio/shared/i18n` — never hardcode user-visible text
 - Hooks that contain JSX must use `.tsx` extension
 - `CLAUDE.md` files with `@imports`
-- AI related Agents: Use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) as a source of agentic stuff
+- AI related Agents: Use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/AGENTS.md) as a source of agentic stuff
 - Cursor-only extras (including Cursor Cloud VM notes) live in
-  [`.cursor/rules/`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.cursor/rules/). Do not duplicate `AGENTS.md` there; Cursor loads it
+  [`.cursor/rules/`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/.cursor/rules/). Do not duplicate `AGENTS.md` there; Cursor loads it
   automatically.
 
 ### Module Architecture

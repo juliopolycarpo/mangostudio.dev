@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 10
 sourcePath: "docs/reference/cli.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/cli.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/reference/cli.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # CLI Reference
@@ -26,11 +26,11 @@ copy-paste commands, or:
 
 | Channel            | Entry point                                                                                                                                                                                                    |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| npm / bun          | `mangostudio` — see [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md)                                             |
+| npm / bun          | `mangostudio` — see [`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/packages/cli/README.md)                                             |
 | Homebrew           | `brew install juliopolycarpo/tap/mangostudio`                                                                                                                                                                  |
 | Shell / PowerShell | `install.sh` / `install.ps1` from [GitHub Releases](https://github.com/juliopolycarpo/mangostudio/releases/latest/download/install.sh) (mirrored at mangostudio.dev)                                           |
 | Scoop              | `juliopolycarpo/scoop-bucket` → `scoop install mangostudio`                                                                                                                                                    |
-| Cargo              | `cargo install mangostudio` — see [`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) |
+| Cargo              | `cargo install mangostudio` — see [`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/crates/mangostudio-launcher/README.md) |
 | Docker             | `ghcr.io/juliopolycarpo/mangostudio` — see [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker)                                                                                           |
 | Manual             | Download platform archives from GitHub Releases and verify `SHA256SUMS`                                                                                                                                        |
 
@@ -80,7 +80,7 @@ so a server bound to one explicit LAN address (`mangostudio serve
 the same as a server that failed to answer. A bind-all start (`lan:`, `0.0.0.0`)
 is probed over loopback as usual. `status --json` prints the `HubProcessStatus`
 document from
-[`apps/shared/src/machine/schemas.ts`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/apps/shared/src/machine/schemas.ts) —
+[`apps/shared/src/machine/schemas.ts`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/apps/shared/src/machine/schemas.ts) —
 the same shape `GET /api/machine/status` embeds, so a terminal and the
 "This machine" page cannot disagree.
 
@@ -231,7 +231,7 @@ The CLI mirror of the Environments page's install flow, for the person typing
 at this machine's own terminal rather than a browser. Both call the same
 install service the API does — recipe ids, previews, download verification,
 audit rows, everything in
-[`docs/architecture/environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/environment-installs.md)
+[`docs/architecture/environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/architecture/environment-installs.md)
 applies unchanged.
 
 ```bash
@@ -324,7 +324,7 @@ Prompts: without `--yes`, an interactive terminal confirms before downloading
 and again before restarting a live hub; anywhere else `upgrade` reports what is
 available, says `Re-run with --yes to install it.`, and exits `0`. `--json`
 prints the `UpgradeReport` document from
-[`apps/shared/src/updates/schemas.ts`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/apps/shared/src/updates/schemas.ts)
+[`apps/shared/src/updates/schemas.ts`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/apps/shared/src/updates/schemas.ts)
 and nothing else. Exit codes: `0` upgraded, already current, or a `--check`
 preview; `1` refused (the report carries `reason` and `command`); `2` download,
 verification or script failure (the script's output is relayed verbatim).
@@ -517,7 +517,7 @@ The Unix unit uses the slot's `current` pointer; the Windows task uses its
 stable `.cmd` shim. The runtime has to be in the slot first — run
 [`install`](#install) or push it from the hub; `service
 install` refuses rather than write a unit that cannot start. See
-[`docs/operations/remote-runtimes.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/operations/remote-runtimes.md) for
+[`docs/operations/remote-runtimes.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/operations/remote-runtimes.md) for
 that prerequisite, linger, SSH session-bus workarounds, macOS launchd verbs, and
 what the Windows Scheduled Task looks like.
 
@@ -655,7 +655,7 @@ When a Cursor connector is still configured (API key in env, `~/.mango/.env`, or
 `[cursor_api_keys]` in `config.toml`), doctor reports a single `Cursor connector`
 warning. The provider is deprecated and refuses every turn; the check exists so
 an operator can see the key is still there. Use the Cursor CLI runner in the chat
-runner selector instead — see [../providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+runner selector instead — see [../providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/providers/cursor.md).
 
 Example (Cursor connector still present):
 
@@ -760,8 +760,8 @@ Host, port, and other settings follow the standard resolution order
 (`process.env` → `.env` next to `config.toml` → `config.toml` → defaults). A positional
 host/port on `serve` is applied as `API_HOST` / `API_PORT` before the server
 reads its config. See
-[`apps/api/src/lib/config.ts`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/apps/api/src/lib/config.ts) and
-[`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) for the full environment.
+[`apps/api/src/lib/config.ts`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/apps/api/src/lib/config.ts) and
+[`packages/cli/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/packages/cli/README.md) for the full environment.
 
 If no auth secret is configured, interactive `mangostudio serve` generates a
 strong `BETTER_AUTH_SECRET` and asks whether to persist it in `~/.mango/.env`

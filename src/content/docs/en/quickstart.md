@@ -8,8 +8,8 @@ groupId: "getting-started"
 groupTitle: "Getting Started"
 order: 10
 sourcePath: "README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/README.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/README.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # MangoStudio
@@ -21,8 +21,8 @@ AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible
 
 Extend the agent without touching the codebase:
 
-- **Agent Skills** — drop reusable instruction packs (plus bundled files and scripts) into a skills directory; MangoStudio advertises them to the model and loads each one on demand. See [`docs/reference/skills.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/skills.md).
-- **MCP servers** — connect [Model Context Protocol](https://modelcontextprotocol.io) servers over stdio or HTTP and expose their tools to the agent, namespaced per server and scoped by per-agent allowlists. See [`docs/reference/mcp.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/mcp.md).
+- **Agent Skills** — drop reusable instruction packs (plus bundled files and scripts) into a skills directory; MangoStudio advertises them to the model and loads each one on demand. See [`docs/reference/skills.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/reference/skills.md).
+- **MCP servers** — connect [Model Context Protocol](https://modelcontextprotocol.io) servers over stdio or HTTP and expose their tools to the agent, namespaced per server and scoped by per-agent allowlists. See [`docs/reference/mcp.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/reference/mcp.md).
 
 > 🇧🇷 [Leia em Português](/docs/quickstart/)
 
@@ -78,7 +78,7 @@ irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 or use Scoop (see table above). The Cargo channel installs a
-[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) that downloads the same
+[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/crates/mangostudio-launcher/README.md) that downloads the same
 checksum-verified archive on first run.
 
 Both install scripts live in this repository (`scripts/install/`), ship as
@@ -125,7 +125,7 @@ Run `mangostudio` with no arguments for the full command list. See
 
 On first run, `mangostudio serve` can generate a strong `BETTER_AUTH_SECRET` and store it in `~/.mango/.env` or `~/.mango/config.toml`.
 Set provider keys such as `GEMINI_API_KEY` when you are ready to use hosted models. Optional runtime settings include `API_HOST`, `API_PORT`, and `DATABASE_PATH`.
-See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) for the full environment.
+See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/packages/cli/README.md) for the full environment.
 For container deployment details, see [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Prerequisites (development)
@@ -209,7 +209,7 @@ MangoStudio will sync these keys automatically the next time the Settings page i
 Cursor is **not** a connector. It runs as an external agent — pick it in the composer's runner
 selector and it uses your own Cursor CLI login, rules and MCP configuration. The
 MangoStudio-owned Cursor provider is deprecated; existing connectors stay editable but no longer
-run turns. See [docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+run turns. See [docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/providers/cursor.md).
 
 ### ChatGPT Subscription Connector
 
@@ -456,7 +456,7 @@ The `Messages` type is inferred directly from the `pt-BR.ts` dictionary (`as con
 
 ## Documentation
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — docs hub, audiences, and reading order
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/README.md) — docs hub, audiences, and reading order
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — fastest contributor onboarding path
 - [`docs/architecture/continuation.md`](/en/docs/architecture/continuation/) — continuation architecture deep-dive
 - [`docs/providers/development.md`](/en/docs/providers/development/) — provider integration guide
@@ -475,4 +475,4 @@ The `bun run build --binary` command compiles the API into platform-specific bin
 
 ## License
 
-This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/LICENSE).
+This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/LICENSE).

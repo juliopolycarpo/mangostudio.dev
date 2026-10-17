@@ -8,8 +8,8 @@ groupId: "guides"
 groupTitle: "Guias"
 order: 10
 sourcePath: "docs/pt-br/CONTRIBUTING.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/CONTRIBUTING.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/pt-br/CONTRIBUTING.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # Contribuindo com o MangoStudio
@@ -59,23 +59,23 @@ bun run dev --frontend
 
 ## Mapa da Documentação
 
-- [`../README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — ponto de entrada da árvore de documentação
+- [`../README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/README.md) — ponto de entrada da árvore de documentação
 - [`../guides/contributor-quickstart.md`](/docs/guides/contributor-quickstart/) — caminho mais curto para começar a contribuir
 - [`../reference/testing.md`](/docs/reference/testing/) — taxonomia de testes, runners e regras de suporte
 - [`../reference/agent-playbooks.md`](/docs/reference/agent-playbooks/) — mapa de arquivos por feature para trabalho direcionado
 
 ## Padrões de Código
 
-Consulte [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) para o guia completo de estilo, convenções de nomes, regras de i18n e diretrizes de testes. Pontos principais:
+Consulte [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/AGENTS.md) para o guia completo de estilo, convenções de nomes, regras de i18n e diretrizes de testes. Pontos principais:
 
 - TypeScript em todo o projeto — nenhum arquivo `.js` puro
 - Indentação de 2 espaços, aspas simples, ponto e vírgula
 - Todas as strings visíveis ao usuário devem vir de `@mangostudio/shared/i18n` — nunca codifique texto diretamente
 - Hooks que contêm JSX devem usar a extensão `.tsx`
 - Arquivos `CLAUDE.md` com `@imports`
-- Agentes de IA: use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/AGENTS.md) como fonte de orientações agnósticas
+- Agentes de IA: use [`AGENTS.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/AGENTS.md) como fonte de orientações agnósticas
 - Extras só do Cursor (incluindo notas da VM Cursor Cloud) ficam em
-  [`.cursor/rules/`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/.cursor/rules/). Não duplique `AGENTS.md` lá; o Cursor já carrega
+  [`.cursor/rules/`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/.cursor/rules/). Não duplique `AGENTS.md` lá; o Cursor já carrega
   esse arquivo automaticamente.
 
 ## Executando os Testes

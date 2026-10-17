@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 60
 sourcePath: "docs/reference/releasing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/releasing.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/reference/releasing.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # Releasing
@@ -306,8 +306,9 @@ packages, Docker images and installers all see the same two files as before.
   Main is the first shipping-profile build of a PR change. A shipping-profile
   runtime or smoke failure on main blocks Canary through CI's mandatory Gate;
   those bytes cannot publish. A defect unique to fat LTO can therefore turn
-  main red after a green PR. Light caches remain cold until their separate
-  cache-only main seeds pass write, lifecycle, and measured capacity admission.
+  main red after a green PR. Light caches come only from CI's cache-only main
+  seed, which builds the light profile after the Gate and uploads nothing; see
+  `docs/reference/testing.md`.
 - **Toolchain pins.** Rust comes from `rust-toolchain.toml`; zig is downloaded
   at a pinned version and SHA-256 (`ZIG_VERSION`/`ZIG_SHA256` in
   `runtime-build.yml`); cargo-zigbuild is installed at a pinned version by
@@ -979,7 +980,7 @@ downloads the platform archive matching the crate version from the GitHub
 release into `~/.mango/dist/<version>/` (verified against `SHA256SUMS`, same
 layout as the shell installer) and execs the real binary. Both install paths
 report the same `mangostudio --version`. See
-[`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md).
+[`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/crates/mangostudio-launcher/README.md).
 
 Design notes:
 
