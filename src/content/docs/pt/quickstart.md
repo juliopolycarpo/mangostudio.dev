@@ -8,8 +8,8 @@ groupId: "getting-started"
 groupTitle: "Começando"
 order: 10
 sourcePath: "docs/pt-br/README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/README.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/pt-br/README.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # MangoStudio
@@ -74,7 +74,7 @@ irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 ou use Scoop (veja a tabela acima). O canal Cargo instala um
-[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) que baixa o mesmo
+[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/crates/mangostudio-launcher/README.md) que baixa o mesmo
 arquivo verificado por checksum na primeira execução.
 
 Os dois scripts de instalação vivem neste repositório (`scripts/install/`), são
@@ -123,7 +123,7 @@ Na primeira execução, `mangostudio serve` pode gerar um `BETTER_AUTH_SECRET` f
 e armazená-lo em `~/.mango/.env` ou `~/.mango/config.toml`. Configure chaves de
 provedor como `GEMINI_API_KEY` quando estiver pronto para usar modelos hospedados. Configurações
 opcionais de runtime incluem `API_HOST`, `API_PORT` e `DATABASE_PATH`.
-Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) para o ambiente completo.
+Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/packages/cli/README.md) para o ambiente completo.
 Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Pré-requisitos (desenvolvimento)
@@ -208,7 +208,7 @@ O Cursor **não** é um conector. Ele roda como agente externo — escolha-o no 
 runner do compositor e ele usa o seu próprio login, regras e configuração MCP do Cursor
 CLI. O provider Cursor mantido pelo MangoStudio foi descontinuado: conectores existentes
 continuam editáveis, mas não executam mais turnos. Veja
-[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/providers/cursor.md).
 
 ### Conector De Assinatura ChatGPT
 
@@ -490,4 +490,4 @@ O comando `bun run build --binary` compila a API em binários específicos por p
 
 ## Licença
 
-Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/LICENSE).
+Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/LICENSE).

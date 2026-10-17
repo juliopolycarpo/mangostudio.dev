@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Architecture"
 order: 10
 sourcePath: "docs/architecture/overview.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/overview.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/architecture/overview.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # Architecture Overview
@@ -148,7 +148,7 @@ stream-text-turn.ts (orchestrator)
 
 Filesystem tools, shell commands, freshness tracking, and checkpoint effects execute through
 the versioned runtime protocol. The API remains the hub for workdir policy, orchestration,
-and durable checkpoint state. See [`hub-runtime.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md) for the ownership
+and durable checkpoint state. See [`hub-runtime.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/architecture/hub-runtime.md) for the ownership
 table, protocol lifecycle, and transport roadmap.
 
 Every runtime, Local included, is the cargo-built `mangostudio-runtime` from
@@ -218,13 +218,13 @@ explicitly enabled behind a trusted reverse proxy.
 
 Environment installation is a guarded local-only execution surface built from code-owned recipes,
 bounded downloads and output, user-scoped audit records, and raw SSE logs. See
-[`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/environment-installs.md) for its threat model and opt-in controls.
+[`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/architecture/environment-installs.md) for its threat model and opt-in controls.
 
 ## Provider Architecture
 
 Providers implement the `AIProvider` interface. The provider registry maps provider types to implementations. The bundled providers are **Gemini, OpenAI, OpenAI-compatible, Anthropic, DeepSeek and ChatGPT**.
 
-**Cursor is registered but deprecated.** It advertises no models and refuses execution; the supported path is the external-agent adapter, where Cursor's own CLI owns the model, the tools and the approvals. `resolve-model.ts` is where that refusal is raised, before provider resolution, so every path to a provider passes through it. See [`../providers/cursor.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+**Cursor is registered but deprecated.** It advertises no models and refuses execution; the supported path is the external-agent adapter, where Cursor's own CLI owns the model, the tools and the approvals. `resolve-model.ts` is where that refusal is raised, before provider resolution, so every path to a provider passes through it. See [`../providers/cursor.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/providers/cursor.md).
 
 Key abstraction layers:
 

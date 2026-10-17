@@ -8,8 +8,8 @@ groupId: "features"
 groupTitle: "Features"
 order: 100
 sourcePath: "docs/features/environments.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/features/environments.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/features/environments.md"
+sourceCommit: "8f5d08f168af06208350fc91b149f9b5783cadcc"
 ---
 
 # Environment Manager
@@ -97,7 +97,7 @@ followable link when the whole value is a URL.
 
 ## Recipes
 
-The recipe table is described in [`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/environment-installs.md).
+The recipe table is described in [`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/8f5d08f168af06208350fc91b149f9b5783cadcc/docs/architecture/environment-installs.md).
 What matters for this page:
 
 - **Windows Node** defaults to winget's `OpenJS.NodeJS.LTS` (install and upgrade; the `.LTS`
