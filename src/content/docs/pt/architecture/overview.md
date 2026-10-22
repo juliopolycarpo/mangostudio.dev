@@ -8,8 +8,8 @@ groupId: "architecture"
 groupTitle: "Arquitetura"
 order: 10
 sourcePath: "docs/pt-br/architecture/overview.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/architecture/overview.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/pt-br/architecture/overview.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Visão Geral Da Arquitetura
@@ -131,7 +131,7 @@ irmão ao lado de um hub standalone ou, num checkout do código-fonte, o build m
 `target/debug` ou `target/release`, que o `bun run dev` compila antes. `MANGOSTUDIO_RUNTIME_BINARY`
 sobrepõe os dois, e um binário ausente faz a conexão falhar indicando `cargo build -p
 mangostudio-runtime` em vez de recorrer a outro runtime. Veja
-[`hub-runtime.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md).
+[`hub-runtime.md`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/architecture/hub-runtime.md).
 
 ### Invalidação Em Tempo Real
 
