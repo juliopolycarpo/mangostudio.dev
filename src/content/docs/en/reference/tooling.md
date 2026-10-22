@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 40
 sourcePath: "docs/reference/tooling.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/tooling.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/reference/tooling.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Tooling
@@ -23,11 +23,6 @@ is over, and nothing here floats any more.
 
 Install it with `bun upgrade`, or `curl -fsSL https://bun.sh/install | bash` from
 cold.
-
-`bun-types` is pinned to `1.4.3` through the root override while the `@types/bun`
-wrapper remains at its latest published version, `1.4.2`. Remove that override
-when the wrapper publishes `1.4.3` and the workspace dependency ranges can move
-with it.
 
 ### Two fields name the same toolchain, for two different consumers
 

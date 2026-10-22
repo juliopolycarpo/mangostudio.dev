@@ -8,8 +8,8 @@ groupId: "providers"
 groupTitle: "Providers"
 order: 10
 sourcePath: "docs/providers/development.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/development.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/providers/development.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Provider Development Guide
@@ -68,7 +68,7 @@ Cursor is **not** a provider to model a new one on. It is registered and
 deprecated: it advertises no models and refuses execution, and Cursor is reached
 through the external-agent adapter instead, where the vendor's own CLI owns the
 model, the tools and the approvals. See
-[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md) for why the ownership inversion made one
+[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/providers/cursor.md) for why the ownership inversion made one
 of the two paths untenable.
 
 ---

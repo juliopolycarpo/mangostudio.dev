@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 30
 sourcePath: "docs/reference/testing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/testing.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/reference/testing.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Testing Strategy
@@ -1327,7 +1327,7 @@ bun test tests/integration/services/connect-container-runtime.integration.test.t
 A compiled Linux runtime binary matching the image's libc is the part a checkout does not
 have. Build one with `bun run build:runtime --platform linux-x64 --zig` (or `linux-x64-musl`;
 the binary lands in `.mango/runtime/<platform>/`), and use an image that satisfies the three requirements in
-[hub-runtime.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md#what-an-image-has-to-provide) — for musl that
+[hub-runtime.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/architecture/hub-runtime.md#what-an-image-has-to-provide) — for musl that
 means `alpine:3` plus `apk add --no-cache bash libstdc++`. `MANGO_CONTAINER_E2E_ENGINE=podman`
 runs the same suite against podman.
 
@@ -1877,6 +1877,13 @@ mode that reports a trusted-`main` match; `restore-save` sees a primary-key hit
 only. `cache-restored` is therefore only safe to gate an install step when the
 call site opts into both exact restore and `mode: restore` (today: Playwright).
 
+`setup-mango` also rechecks the exact Bun key with a metadata-only lookup
+(`lookup-only`, `exact-restore`) after the frozen install and before its inline save on
+`main` pushes. A completed exact hit skips compression, since another caller already saved
+the immutable key. A failed lookup or a miss keeps the normal save, so no writer is
+excluded and no install waits. Callers that miss at the same moment can still race at
+reserve.
+
 ### Turbo snapshot rotation
 
 `actions/cache` never overwrites a key. A snapshot keyed by validity alone keeps
@@ -1913,8 +1920,8 @@ be conditional):
   outputs. A lane saves at most one snapshot per run, and only a run that
   computed something; the newest is the only one anyone restores, and the
   superseded ones are not accessed again, so GitHub removes each seven days
-  after its last restore (or earlier, least recently used first, at the 10 GB
-  repository limit). Turbo does not delete caches or need `actions: write`.
+  after its last restore (or earlier, least recently used first, at the configured
+  repository storage limit). Turbo does not delete caches or need `actions: write`.
 - **Quota.** The three lanes' complete sets are 3.6 MB (build), 6.5 KB (check)
   and about 70 KB (test shard 1). A run that recomputed every build task wrote
   3.6 MB of new entries, so the next snapshot was 7.2 MB, and its save took
@@ -1932,7 +1939,8 @@ unit. CI's distribution and PR release dry runs explicitly request `light` on
 binary-smoke rebuild passes the same selection, but it runs only from
 `workflow_dispatch`, so it resolves to shipping. The overrides live at job scope, so
 rust-cache's CARGO environment hash separates both exact and fallback keys by
-profile. A light cache miss does not restore shipping state. PRs never save.
+profile. A light cache miss does not restore shipping state. PRs never save;
+the light entry comes from the main-push seed described below.
 Shipping receives an empty override map, preserving its existing Cargo
 defaults and cache environment identity.
 
@@ -1945,26 +1953,125 @@ build of a PR change; its runtime and complete smoke lanes remain mandatory
 before Canary. A failure unique to the shipping profile can make main red
 after a green PR and blocks publication.
 
-This preparation adds no main seed jobs, cache saves, or capacity claim. Light
-builds start cold until separate cache-only seeds are admitted. Before enabling
-seeds for the eight existing targets, verify cache write eligibility and older
-generation lifecycle/older-base fallback, measure each light archive, and
-account for peak retained generations plus an explicit reserve under a
-35 GB admission ceiling. Recheck the repository's configured storage limit
-before enabling seeds. Seed output must have no artifact or publication route.
-Historical size estimates and single Linux benchmarks do not establish that
-admission or a hosted performance gain.
+#### Light cache seed
+
+CI's `runtime-cache-seed` job fills the light entry. It runs only on a push to
+`main`, after the Gate passes, and calls `runtime-build.yml` with
+`mode: cache-seed`, `profile: light` and `cache: true`. The default mode is
+`artifact`. A seed goes through the same matrix, job `env` and single rust-cache
+step as a PR light build, so it saves under the key a PR restores:
+`v0-rust-<sha256 of Cargo.toml>-runtime-build-<platform>-<OS>-<arch>-<CARGO env
+hash>-<lockfile hash>`. Nothing in the job `env`, the runner, or the steps
+before the cache step may read the mode, and `runtime-profile.unit.test.ts`
+rebuilds that key for both paths and every target, so a seed cannot drift from
+the key a PR looks up. It reproduces rust-cache v2.9.2's hash, which it cannot
+read from the action at test time.
+
+The guard accepts `cache-seed` only for a `push` to `refs/heads/main`, profile
+`light` with thin LTO and 16 units, the cache on, and an empty
+`artifact_prefix`. Artifact mode still rejects light on every event except
+`pull_request` and requires a prefix. The seed has no upload step to reach: the
+single `actions/upload-artifact` step is conditional on `mode == 'artifact'`,
+and the job holds `contents: read` only. Light bytes that did reach a bundle
+would still stop at publication: the distribution manifest records the runtime
+profile, and Release and Canary require `shipping` (see `releasing.md`). The
+seed builds only on an exact-key
+miss, so a lockfile, root manifest, toolchain or CARGO-environment change seeds
+again and any other main push ends each platform after the lookup. An entry
+evicted by the 12-day retention is re-seeded by the next main push.
+
+The job waits on the Gate and nothing waits on it, so it never gates a
+mandatory lane or Canary. It sits outside the Gate's `needs`, which the
+`ci-gate` tests allow because it needs the Gate. Its job-level concurrency group
+`light-runtime-cache-seed` does not cancel in-flight saves. CI's own main group
+already runs main pushes one at a time. The CI run now ends after the seed, so a
+cold seed can delay the next main run's start; if that shows up in measurements,
+move the seed to a standalone workflow and register it as a Rust cache writer.
+
+Capacity, from the repository on 2026-10-15: the configured limit is 40 GB, the
+active caches hold 16.3 GiB, and each shipping runtime entry is about 243 to 253
+MiB. Light archives are unmeasured. If they are the same size, one light
+generation adds about 2 GiB for the eight targets and a replacement generation
+doubles that until `rust-cache-cleanup.yml` deletes the older one, which stays
+under the 35 GB admission ceiling. Measure the first seeded light archives
+before relying on that, and recheck the limit; the Gate's cache report (see
+[Cache accounting and write recovery](#cache-accounting-and-write-recovery))
+records it. The cleanup family registry already keys on the environment hash,
+so light and shipping entries of one target stay separate families of the same
+name. The report's family table adds both profiles into one
+`rust/runtime-build-*` row. A second table lists every Rust family that one
+runner holds under more than one environment hash, which separates the light
+archive sizes. The hash includes the runner's `rustc -vV` and `CARGO_HOME`, so
+the report cannot name the profile; the hash that appears after the first seed
+is the light one.
+
+Cost: a seed on a key miss is up to eight light builds on one main push, and
+each other main push starts eight runners that only look the entry up. Neither
+cost has been measured, and no PR speedup is claimed yet.
 
 Hosted acceptance still requires current-head logs showing thin/16 on PRs and
 fat/1 with green smoke on main, then at least five comparable PR pushes with
 per-platform build and Gate medians. Report cold runs separately from light
 cache hits, and retain the Windows binary smoke's 60-second handshake budget.
 
+### Cache accounting and write recovery
+
+The configured repository storage allowance changes with owner settings; the
+40 GB figure above was read on 2026-10-15. Treat any figure as evidence, not a
+constant: the advisory Gate summary reads
+`GET /repos/{owner}/{repo}/actions/cache/storage-limit` and records the returned
+`max_cache_size_gb` value and source. The API labels this unit GB; the report
+explicitly uses 1 GB = 1,000,000,000 bytes for percentages and labels binary byte
+conversions KiB, MiB and GiB. This endpoint requires repository Administration
+read permission. Gate retains its `actions: read` token; a 403, missing field or
+other unavailable allowance is reported as **unknown**, without falling back to
+10 or 35 GiB or adding a privileged token.
+
+The report counts unique cache IDs across pages, reconciles every scoped and
+registered Rust family plus `unknown` to the listed bytes, and shows the
+separate usage endpoint's byte/count drift. Malformed entries, duplicate IDs,
+changing counts, short pages, rate limits and timeouts leave the inventory
+**incomplete**, with only observed unique bytes attributed. These reads are not
+an atomic snapshot, so even matching counts do not prove that no concurrent
+save or eviction occurred. Each request, including response-body decoding, has
+a 3-second deadline; the whole report has a 15-second deadline and at most 50
+pages of 100 entries. Pages are read one after another, so on a slow API the
+deadline is the effective cap: at the 3-second ceiling, only about five pages
+(500 entries) fit. The summary then reports **incomplete**, with entries seen
+of the expected count and pages read; raise the report budget if that becomes
+common. Gate evaluates mandatory results first, then runs the
+advisory report with `always()`, `continue-on-error` and a 1-minute step timeout.
+
+Keep three measurements separate when adding or recovering a cache writer:
+
+- **Retained bytes:** the complete listing, family totals and configured storage
+  allowance describe eviction pressure. Record partial/unknown states rather
+  than inferring capacity from one page or the usage endpoint alone.
+- **Transfer cost:** restore/save duration and archive bytes describe network and
+  job-time cost. The retained inventory does not measure how often jobs download
+  the same archive.
+- **Write eligibility:** storage headroom does not prove billing eligibility.
+  GitHub Actions or Actions Cache Storage billing budgets can make caches read-only
+  below the configured allowance. A restored old entry is not evidence of a
+  successful new reservation.
+
+Before expanding writers, keep a recovery receipt from an ordinary authorized
+main run: full run/job URL, exact immutable save key and cache ID, successful
+reservation/upload logs, post-save complete listing and allowance (or explicit
+unknown), family/total bytes and the relevant billing-budget status. Verify that
+an older valid base can still restore after the new save. A reservation rejected
+by billing remains a blocked write even when the storage report has headroom;
+resolve it through the repository owner's billing controls. The reporter reads
+only. It does not delete entries, change limits or dispatch a workflow.
+
+Sources: [storage-limit API](https://docs.github.com/en/rest/actions/cache#get-github-actions-cache-storage-limit-for-a-repository)
+and [dependency caching limits and billing budgets](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#usage-limits-and-eviction-policy).
+
 ### Rust cache generations
 
-Rust build caches share the repository's configured Actions cache budget with
-the shorter lanes. `rust-cache-cleanup.yml` runs trusted `main` tooling after a
-main cache writer completes, after rust-cache's post-job save, and grants
+Rust build caches share the repository's configured Actions cache storage
+allowance with the shorter lanes. `rust-cache-cleanup.yml` runs trusted `main` tooling after a main
+cache writer completes, after rust-cache's post-job save, and grants
 `actions: write` only to its cleanup job. `scripts/ci/rust-cache-cleanup.ts`
 deletes older committed generations by exact ID only when a newer replacement
 is listed under `refs/heads/main`. The explicit family registry preserves the

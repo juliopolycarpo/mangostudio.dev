@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 50
 sourcePath: "docs/reference/agent-playbooks.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/agent-playbooks.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/reference/agent-playbooks.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Agent Playbooks
@@ -97,6 +97,9 @@ Open these first:
 - `apps/shared/src/streaming/events.ts`
 - `apps/shared/src/streaming/schemas.ts`
 - `apps/frontend/src/features/chat/ChatPage.tsx`
+- `apps/frontend/src/features/chat/lib/chat-column.ts` (the one column and gutter the transcript,
+  the dock notices and the composer share; `ChatDockNotice` in `ChatPageNotices.tsx` is the row
+  every block above the composer sits in)
 - `apps/frontend/src/features/chat/components/InputBar.tsx` (the composer, including the `/`
   palette's caret and keyboard)
 - `apps/frontend/src/features/chat/lib/slash-commands.ts` (what opens the palette, how it ranks,
@@ -178,7 +181,7 @@ Two invariants the checkpoint path depends on:
 
 - A mutation and its manifest row run under one per-path lock (`withMutationPersistence` in `apps/api/src/services/tools/file-mutation-snapshot.ts`). Every executor passes it the full set of paths its call can touch, so nothing on those paths can start a second mutation before the row exists. The lock does not roll the filesystem back if blob or database I/O then fails: the file stays changed, no row is written, and the tool reports failure. That is accepted. Closing it needs a two-phase capture-then-mutate protocol or a runtime rollback, neither of which this path does.
 - Revert sends both the state the turn left behind (`afterHash`) and the state a completed revert produces (`revertedHash`). A retry after a revert whose bookkeeping write failed therefore recognises its own finished work instead of reporting the file as changed by someone else. A set that is half in each state is still a conflict — `already_reverted` in `crates/mangostudio-runtime/src/filesystem/snapshot.rs` refuses it, because resuming it is unsafe.
-- Cancelling a turn never abandons a mutation that has started. Every runtime method takes the call's cancellation token and refuses only where there is nothing to undo — each handler in `crates/mangostudio-runtime/src/filesystem/` places its own last cancellation point and [hub-runtime.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/hub-runtime.md) explains the rule. Adding a mutation means choosing its cancellation point, not threading a parameter.
+- Cancelling a turn never abandons a mutation that has started. Every runtime method takes the call's cancellation token and refuses only where there is nothing to undo — each handler in `crates/mangostudio-runtime/src/filesystem/` places its own last cancellation point and [hub-runtime.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/architecture/hub-runtime.md) explains the rule. Adding a mutation means choosing its cancellation point, not threading a parameter.
 
 `delete_file` gates on `read_fresh` (`crates/mangostudio-runtime/src/filesystem/service.rs`, over the ledger in `filesystem/freshness.rs`): the chat must have read a file's current bytes before it can destroy them. `move_file` does not. A rename does not require the source to have been read. Freshness and containment are separate. Containment is the compiled path policy (`crates/mangostudio-runtime/src/filesystem/policy.rs`) refusing any move whose source or destination resolves outside a chat's `pathPolicy.containmentRoot` before `move_file` touches either path. That is not a stronger form of the read-first gate. A contained chat can still relocate unread bytes inside the root. What it prevents is using a rename to park a file outside the root, read or not. The remaining gap: a chat with no containment root (the default, empty `allowedPaths`/`deniedPaths`) can relocate a file anywhere without reading it first, which is functionally an unguarded delete. That gap is accepted, not closed; see #632.
 
@@ -775,6 +778,40 @@ Open these first:
 - `apps/frontend/src/services/`
 - `apps/frontend/src/index.css`
 
+## Frontend UI And Design System
+
+Open these first:
+
+- `docs/design/README.md` (principles, page index, the enforcing tests), then the page
+  that matches the task: `foundations.md` (tokens), `components.md` (primitives),
+  `patterns.md` (pages, forms, notices, copy), `decisions.md` (why a rule exists)
+- `apps/frontend/src/index.css` (the tokens: dark in `@theme`, light under
+  `[data-theme="light"]`; the hand-written component classes such as `.composer-chip` and
+  `.range-input`; the touch-target floor)
+- `apps/frontend/src/components/ui/` (`Button`, `Callout`, `Dialog`, `Menu`, `Tabs`, `Toast`
+  and the other primitives) and `apps/frontend/src/components/settings/` (`SettingsSection`,
+  `SettingsRow`, `PickOneRow`, `SettingsSegmented`)
+- `apps/frontend/src/lib/icon-sizes.ts` (`ICON_SM` / `ICON_MD` / `ICON_LG`) and
+  `apps/frontend/src/lib/utils.ts` (`cn`)
+
+Tests that hold the system:
+
+- `apps/frontend/tests/unit/design-system-conformance.test.ts` scans every source file for
+  classes outside the vocabulary; a deliberate exception goes in its `ALLOWED` map with a
+  reason
+- `apps/frontend/tests/unit/design-tokens-doc.test.ts` parses the colour table in
+  `docs/design/foundations.md` against `index.css`, so a token change updates both
+- `apps/frontend/tests/unit/design-token-contrast.test.ts`,
+  `stylesheet-cascade.test.ts` and `stylesheet-downlevel.test.ts` (status and media text
+  contrast, the unlayered rules and touch-floor exemptions, no `color-mix()` in stylesheets)
+- `apps/frontend/tests/unit/components/ui/` (component tests for the primitives)
+- `apps/shared/tests/unit/i18n-copy-rules.test.ts` (the copy rules of `patterns.md`)
+
+A new colour token touches `index.css`, the colour table in `foundations.md`, the
+`SEMANTIC_COLORS` list in the conformance test (so its opacity-modifier rule covers the
+token) and, when it has a native counterpart, `native-ports.md`. A rule change gets a new numbered entry in
+`decisions.md`.
+
 ## Frontend Build, Dev Server, And Test Harness
 
 Open these first:
@@ -848,10 +885,10 @@ a fixed order and is reviewed as one.
 The hub's own catalog is generated against this spec — see `scripts/runtime-contract/` and
 `apps/shared/src/runtime-contract/`. A non-TypeScript runtime embeds those generated artifacts
 rather than restating them: `crates/mangostudio-runtime-contract/`, its behavioural corpus at
-`generated/conformance-corpus.json`, and [runtime-contract.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/runtime-contract.md).
+`generated/conformance-corpus.json`, and [runtime-contract.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/architecture/runtime-contract.md).
 `crates/mangostudio-runtime/` serves that embedded contract over a `mango-protocol` session — its
 typed dispatcher, fail-closed ports, and panic isolation are covered in
-[runtime-dispatcher.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/runtime-dispatcher.md). Its binary is the
+[runtime-dispatcher.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/architecture/runtime-dispatcher.md). Its binary is the
 `mangostudio-runtime` every distribution channel ships beside the hub (the "Config, Runtime, And
 Standalone Build" section above), so the hub reaches it through the resolution in
 `apps/api/src/lib/runtime-paths.ts` (override, sibling, then a source checkout's cargo build). `scripts/lib/release-version.ts`'s

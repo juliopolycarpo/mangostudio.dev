@@ -8,8 +8,8 @@ groupId: "features"
 groupTitle: "Recursos"
 order: 100
 sourcePath: "docs/pt-br/features/environments.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/features/environments.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/pt-br/features/environments.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Gerenciador de ambiente
@@ -96,7 +96,7 @@ App Installer na Microsoft Store, renderizado no formato copiar-apenas em vez de
 ## Receitas
 
 A tabela de receitas está descrita em
-[`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/architecture/environment-installs.md). O que importa aqui:
+[`environment-installs.md`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/architecture/environment-installs.md). O que importa aqui:
 
 - **Node no Windows** usa por padrão o `OpenJS.NodeJS.LTS` do winget (instalar e atualizar; o
   pacote `.LTS` acompanha a *linha* LTS atual, então uma atualização cruza majors quando o Node
