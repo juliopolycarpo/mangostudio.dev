@@ -48,17 +48,17 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@astrojs/sitemap": "^3.7.4",
-    "@biomejs/biome": "^2.6.3",
-    "@dprint/markdown": "^0.28.1",
+    "@biomejs/biome": "^2.6.4",
+    "@dprint/markdown": "^0.28.2",
     "@dprint/toml": "^0.9.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@playwright/test": "^1.64.1",
-    "astro": "^7.4.2",
+    "astro": "^7.4.4",
     "dprint": "^0.64.3",
     "lefthook": "^2.2.2",
     "typescript": "~6.0.3",
     "typescript-native": "npm:typescript@7.0.2",
-    "wrangler": "4.151.3"
+    "wrangler": "4.156.0"
   }
 }
