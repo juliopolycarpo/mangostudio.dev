@@ -8,14 +8,15 @@ import { join, resolve } from 'node:path';
 // Real archive extraction and isolated install roots, with no network or user PATH writes.
 // These fixtures do not qualify real release binaries or deployed endpoint bytes.
 const windows = process.platform === 'win32';
-const root = mkdtempSync(join(tmpdir(), 'hosted-installer-'));
+// Every case exercises paths with shell metacharacters as data, never command text.
+const root = mkdtempSync(join(tmpdir(), "hosted-installer-'$() & "));
 const installer = resolve(`public/install.${windows ? 'ps1' : 'sh'}`);
 const source = join(root, 'source');
 const binary = windows ? 'mangostudio.exe' : 'mangostudio';
 mkdirSync(source);
 
-function run(command: string, args: string[]) {
-  const env = { ...process.env };
+function run(command: string, args: string[], fixtureEnv: Record<string, string> = {}) {
+  const env = { ...process.env, ...fixtureEnv };
   if (windows && command === 'powershell.exe') {
     // Actions launches Bun from PowerShell 7. Let Windows PowerShell 5.1 build
     // its own module path instead of inheriting PS7's incompatible module set.
@@ -26,10 +27,6 @@ function run(command: string, args: string[]) {
   const result = spawnSync(command, args, { encoding: 'utf8', env });
   if (result.error) throw result.error;
   return result;
-}
-
-function quote(value: string): string {
-  return `'${value.replaceAll("'", "''")}'`;
 }
 
 function install(archive: string, target: string) {
@@ -45,23 +42,31 @@ function install(archive: string, target: string) {
   }
   // Load the actual production functions without main, which persists the user PATH.
   const functions = readFileSync(installer, 'utf8').split('if ($Help) {')[0];
-  return run('powershell.exe', [
-    '-NoProfile',
-    '-NonInteractive',
-    '-Command',
-    `${functions}\nInstall-Archive ${quote(archive)} fixture ${quote(target)}`,
-  ]);
+  return run(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `${functions}\nInstall-Archive $env:MANGO_FIXTURE_ARCHIVE fixture $env:MANGO_FIXTURE_TARGET`,
+    ],
+    { MANGO_FIXTURE_ARCHIVE: archive, MANGO_FIXTURE_TARGET: target }
+  );
 }
 
 function archive(name: string): string {
   const path = join(root, `${name}.${windows ? 'zip' : 'tar.gz'}`);
   const result = windows
-    ? run('powershell.exe', [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        `Compress-Archive -Path ${quote(join(source, '*'))} -DestinationPath ${quote(path)}`,
-      ])
+    ? run(
+        'powershell.exe',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          "Compress-Archive -Path (Join-Path $env:MANGO_FIXTURE_SOURCE '*') -DestinationPath $env:MANGO_FIXTURE_ARCHIVE",
+        ],
+        { MANGO_FIXTURE_SOURCE: source, MANGO_FIXTURE_ARCHIVE: path }
+      )
     : run('tar', ['-czf', path, '-C', source, '.']);
   strictEqual(result.status, 0, result.stderr);
   return path;
@@ -113,12 +118,16 @@ try {
       ]);
     }
     const functions = readFileSync(installer, 'utf8').split('if ($Help) {')[0];
-    return run('powershell.exe', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      `${functions}\nTest-Checksum ${quote(manifest)} ${quote(valid)} fixture`,
-    ]);
+    return run(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        `${functions}\nTest-Checksum $env:MANGO_FIXTURE_MANIFEST $env:MANGO_FIXTURE_ARCHIVE fixture`,
+      ],
+      { MANGO_FIXTURE_MANIFEST: manifest, MANGO_FIXTURE_ARCHIVE: valid }
+    );
   }
   const verified = checksum();
   strictEqual(verified.status, 0, verified.stderr);
