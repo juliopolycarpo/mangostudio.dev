@@ -35,14 +35,7 @@ function run(command: string, args: string[], fixtureEnv: Record<string, string>
 
 function install(archive: string, target: string) {
   if (!windows) {
-    return run('bash', [
-      '-c',
-      'source "$1"; install_archive "$2" fixture "$3"',
-      'layout-test',
-      installer,
-      archive,
-      target,
-    ]);
+    return run('bash', ['scripts/installer-fixture.sh', 'install', installer, archive, target]);
   }
   // Load the actual production functions without main, which persists the user PATH.
   return run(
@@ -111,14 +104,7 @@ try {
   writeFileSync(manifest, `${hash}  fixture\n`);
   function checksum() {
     if (!windows) {
-      return run('bash', [
-        '-c',
-        'source "$1"; verify_checksum "$2" "$3" fixture',
-        'checksum-test',
-        installer,
-        manifest,
-        valid,
-      ]);
+      return run('bash', ['scripts/installer-fixture.sh', 'checksum', installer, manifest, valid]);
     }
     return run(
       'powershell.exe',
