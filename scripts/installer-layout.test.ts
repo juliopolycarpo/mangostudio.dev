@@ -5,9 +5,13 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { extractPowerShellFunctions } from './installer-fixture-functions';
+
 // Real archive extraction and isolated install roots, with no network or user PATH writes.
 // These fixtures do not qualify real release binaries or deployed endpoint bytes.
 const windows = process.platform === 'win32';
+// Validate the main boundary before spawning any fixture process, on every host.
+const functions = extractPowerShellFunctions(readFileSync(resolve('public/install.ps1'), 'utf8'));
 // Every case exercises paths with shell metacharacters as data, never command text.
 const root = mkdtempSync(join(tmpdir(), "hosted-installer-'$() & "));
 const installer = resolve(`public/install.${windows ? 'ps1' : 'sh'}`);
@@ -41,7 +45,6 @@ function install(archive: string, target: string) {
     ]);
   }
   // Load the actual production functions without main, which persists the user PATH.
-  const functions = readFileSync(installer, 'utf8').split('if ($Help) {')[0];
   return run(
     'powershell.exe',
     [
@@ -117,7 +120,6 @@ try {
         valid,
       ]);
     }
-    const functions = readFileSync(installer, 'utf8').split('if ($Help) {')[0];
     return run(
       'powershell.exe',
       [

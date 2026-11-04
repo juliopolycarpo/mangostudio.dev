@@ -7,6 +7,8 @@ on:
       - public/install.sh
       - public/install.ps1
       - scripts/installer-layout.test.ts
+      - scripts/installer-fixture-functions.ts
+      - scripts/installer-fixture-functions.test.ts
       - .github/workflows/installer-fixtures.yml
   workflow_dispatch:
 
@@ -29,4 +31,6 @@ jobs:
           bun-version-file: package.json
       # Fixture evidence only: no release binary execution or public deployment.
       - name: Validate layout and negative integrity controls
-        run: bun scripts/installer-layout.test.ts
+        run: |
+          bun scripts/installer-fixture-functions.test.ts
+          bun scripts/installer-layout.test.ts
