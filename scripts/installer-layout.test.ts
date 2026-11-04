@@ -112,7 +112,8 @@ try {
       `${functions}\nTest-Checksum ${quote(manifest)} ${quote(valid)} fixture`,
     ]);
   }
-  strictEqual(checksum().status, 0);
+  const verified = checksum();
+  strictEqual(verified.status, 0, verified.stderr);
   writeFileSync(valid, 'corrupted downloaded binary archive');
   const mismatch = checksum();
   ok(mismatch.status !== 0);
