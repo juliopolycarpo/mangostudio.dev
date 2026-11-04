@@ -15,7 +15,15 @@ const binary = windows ? 'mangostudio.exe' : 'mangostudio';
 mkdirSync(source);
 
 function run(command: string, args: string[]) {
-  const result = spawnSync(command, args, { encoding: 'utf8' });
+  const env = { ...process.env };
+  if (windows && command === 'powershell.exe') {
+    // Actions launches Bun from PowerShell 7. Let Windows PowerShell 5.1 build
+    // its own module path instead of inheriting PS7's incompatible module set.
+    for (const key of Object.keys(env)) {
+      if (key.toLowerCase() === 'psmodulepath') delete env[key];
+    }
+  }
+  const result = spawnSync(command, args, { encoding: 'utf8', env });
   if (result.error) throw result.error;
   return result;
 }
