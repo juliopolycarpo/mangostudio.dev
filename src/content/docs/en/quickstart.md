@@ -8,8 +8,8 @@ groupId: "getting-started"
 groupTitle: "Getting Started"
 order: 10
 sourcePath: "README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/README.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/README.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # MangoStudio
@@ -21,8 +21,8 @@ AI-powered image generation and chat studio supporting Gemini, OpenAI-compatible
 
 Extend the agent without touching the codebase:
 
-- **Agent Skills** — drop reusable instruction packs (plus bundled files and scripts) into a skills directory; MangoStudio advertises them to the model and loads each one on demand. See [`docs/reference/skills.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/skills.md).
-- **MCP servers** — connect [Model Context Protocol](https://modelcontextprotocol.io) servers over stdio or HTTP and expose their tools to the agent, namespaced per server and scoped by per-agent allowlists. See [`docs/reference/mcp.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/mcp.md).
+- **Agent Skills** — drop reusable instruction packs (plus bundled files and scripts) into a skills directory; MangoStudio advertises them to the model and loads each one on demand. See [`docs/reference/skills.md`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/reference/skills.md).
+- **MCP servers** — connect [Model Context Protocol](https://modelcontextprotocol.io) servers over stdio or HTTP and expose their tools to the agent, namespaced per server and scoped by per-agent allowlists. See [`docs/reference/mcp.md`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/reference/mcp.md).
 
 > 🇧🇷 [Leia em Português](/docs/quickstart/)
 
@@ -78,7 +78,7 @@ irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 or use Scoop (see table above). The Cargo channel installs a
-[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) that downloads the same
+[small launcher](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/crates/mangostudio-launcher/README.md) that downloads the same
 checksum-verified archive on first run.
 
 Both install scripts live in this repository (`scripts/install/`), ship as
@@ -125,7 +125,7 @@ Run `mangostudio` with no arguments for the full command list. See
 
 On first run, `mangostudio serve` can generate a strong `BETTER_AUTH_SECRET` and store it in `~/.mango/.env` or `~/.mango/config.toml`.
 Set provider keys such as `GEMINI_API_KEY` when you are ready to use hosted models. Optional runtime settings include `API_HOST`, `API_PORT`, and `DATABASE_PATH`.
-See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) for the full environment.
+See [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/packages/cli/README.md) for the full environment.
 For container deployment details, see [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Prerequisites (development)
@@ -171,7 +171,7 @@ MangoStudio has a flexible multi-connector system for managing multiple API keys
 
 ### Supported Persistence Methods
 
-1. **OS Secret Store** — Native secure storage via `Bun.secrets`. Recommended for maximum security.
+1. **OS secret store** — Native secure storage via `Bun.secrets`. Recommended for maximum security.
 2. **config.toml** — Stores keys in `~/.mango/config.toml`. Ideal for sharing keys across instances or CLI tools.
 3. **.env file** — Adds variables to the `~/.mango/.env` file.
 
@@ -209,7 +209,7 @@ MangoStudio will sync these keys automatically the next time the Settings page i
 Cursor is **not** a connector. It runs as an external agent — pick it in the composer's runner
 selector and it uses your own Cursor CLI login, rules and MCP configuration. The
 MangoStudio-owned Cursor provider is deprecated; existing connectors stay editable but no longer
-run turns. See [docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+run turns. See [docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/providers/cursor.md).
 
 ### ChatGPT Subscription Connector
 
@@ -343,7 +343,7 @@ Files that pass formatting are re-staged automatically. All hooks must succeed f
 
 ## Editor Setup
 
-Claude Code hooks auto-prepend `node_modules/.bin` to PATH on session start and directory changes (`SessionStart` / `CwdChanged`). After every write or edit, a `PostToolUse` hook runs `auto-fix.mjs` to format the touched file.
+Claude Code hooks auto-prepend `node_modules/.bin` to PATH on session start and directory changes (`SessionStart` / `CwdChanged`). After every write or edit, a `PostToolUse` hook runs `auto-fix.mjs` to format the touched file (Biome, dprint, or rustfmt). Before every write or edit, a `PreToolUse` hook (`protect-generated.mjs`) blocks hand edits to generated files such as `CHANGELOG.md`, lockfiles, and `routeTree.gen.ts`, and names the command that regenerates them.
 
 ### OpenCode
 
@@ -422,7 +422,7 @@ Configured in `dprint.json` with the following scope and settings:
 
 ### Circular Dependencies
 
-Biome checks imports as part of `bun run check`, including value, type-only and self-import cycles. Each workspace scans TS, TSX, MTS, CTS, JS, JSX, MJS and CJS files, including top-level helpers, generated files and gitignored build output, through `biome.cycles.json`. JavaScript files are checked both as dependencies of TypeScript files and as independent roots. Only `node_modules` and `.git` are excluded from the cycle scan. Normal formatting and lint still follow `biome.json`.
+Biome checks imports as part of `bun run check`, including value, type-only and self-import cycles. Each workspace scans TS, TSX, MTS, CTS, JS, JSX, MJS and CJS files, including top-level helpers, generated files and gitignored build output, through `biome.cycles.json`. JavaScript files are checked both as dependencies of TypeScript files and as independent roots. The cycle scan excludes `node_modules`, `.git`, and the repository-root `.mango/artifacts` and `.mango/out` directories. Both Biome configurations prevent discovery and indexing of metadata inside those two root cache directories. Normal formatting and lint still follow `biome.json`.
 
 ### Copy/Paste Detection
 
@@ -456,7 +456,7 @@ The `Messages` type is inferred directly from the `pt-BR.ts` dictionary (`as con
 
 ## Documentation
 
-- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/README.md) — docs hub, audiences, and reading order
+- [`docs/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/README.md) — docs hub, audiences, and reading order
 - [`docs/guides/contributor-quickstart.md`](/en/docs/guides/contributor-quickstart/) — fastest contributor onboarding path
 - [`docs/architecture/continuation.md`](/en/docs/architecture/continuation/) — continuation architecture deep-dive
 - [`docs/providers/development.md`](/en/docs/providers/development/) — provider integration guide
@@ -475,4 +475,4 @@ The `bun run build --binary` command compiles the API into platform-specific bin
 
 ## License
 
-This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/LICENSE).
+This project is licensed under the [MIT License](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/LICENSE).

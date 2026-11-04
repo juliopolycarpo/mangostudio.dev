@@ -8,8 +8,8 @@ groupId: "getting-started"
 groupTitle: "Começando"
 order: 10
 sourcePath: "docs/pt-br/README.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/README.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/pt-br/README.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # MangoStudio
@@ -74,7 +74,7 @@ irm https://mangostudio.dev/install.ps1 | iex
 ```
 
 ou use Scoop (veja a tabela acima). O canal Cargo instala um
-[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md) que baixa o mesmo
+[launcher pequeno](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/crates/mangostudio-launcher/README.md) que baixa o mesmo
 arquivo verificado por checksum na primeira execução.
 
 Os dois scripts de instalação vivem neste repositório (`scripts/install/`), são
@@ -123,7 +123,7 @@ Na primeira execução, `mangostudio serve` pode gerar um `BETTER_AUTH_SECRET` f
 e armazená-lo em `~/.mango/.env` ou `~/.mango/config.toml`. Configure chaves de
 provedor como `GEMINI_API_KEY` quando estiver pronto para usar modelos hospedados. Configurações
 opcionais de runtime incluem `API_HOST`, `API_PORT` e `DATABASE_PATH`.
-Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/packages/cli/README.md) para o ambiente completo.
+Veja [`mangostudio`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/packages/cli/README.md) para o ambiente completo.
 Para deploy em container, veja [`docs/operations/deployment.md`](/en/docs/operations/deployment/#docker).
 
 ## Pré-requisitos (desenvolvimento)
@@ -169,7 +169,7 @@ O MangoStudio possui um sistema flexível de múltiplos conectores que permite g
 
 ### Métodos de Persistência Suportados
 
-1. **OS Secret Store** — Armazenamento nativo seguro do sistema operacional (via `Bun.secrets`). Recomendado para maior segurança.
+1. **OS secret store** — Armazenamento nativo seguro do sistema operacional (via `Bun.secrets`). Recomendado para maior segurança.
 2. **config.toml** — Armazena chaves em `~/.mango/config.toml`. Ideal para compartilhar chaves entre instâncias ou ferramentas CLI.
 3. **Arquivo .env** — Adiciona variáveis ao arquivo `~/.mango/.env`.
 
@@ -208,7 +208,7 @@ O Cursor **não** é um conector. Ele roda como agente externo — escolha-o no 
 runner do compositor e ele usa o seu próprio login, regras e configuração MCP do Cursor
 CLI. O provider Cursor mantido pelo MangoStudio foi descontinuado: conectores existentes
 continuam editáveis, mas não executam mais turnos. Veja
-[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/providers/cursor.md).
+[docs/providers/cursor.md](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/providers/cursor.md).
 
 ### Conector De Assinatura ChatGPT
 
@@ -263,6 +263,7 @@ mangostudio/
 │   ├── README.md                   # Hub da documentação
 │   ├── architecture/              # Arquitetura e fluxos transversais
 │   ├── features/                  # Documentação por área do produto
+│   ├── design/                    # Design system flat: tokens, componentes, padrões
 │   ├── providers/                 # Guias e notas por provedor
 │   ├── reference/                 # API, testes e mapas de arquivos
 │   ├── guides/                    # Guias práticos para contribuição
@@ -340,7 +341,7 @@ Arquivos formatados são re-adicionados ao stage automaticamente. Todos os hooks
 
 ## Configuração do Editor
 
-Os hooks do Claude Code prependem `node_modules/.bin` ao PATH automaticamente ao iniciar sessão e ao mudar de diretório (`SessionStart` / `CwdChanged`). Após cada escrita ou edição, um hook `PostToolUse` executa `auto-fix.mjs` para formatar o arquivo modificado.
+Os hooks do Claude Code prependem `node_modules/.bin` ao PATH automaticamente ao iniciar sessão e ao mudar de diretório (`SessionStart` / `CwdChanged`). Após cada escrita ou edição, um hook `PostToolUse` executa `auto-fix.mjs` para formatar o arquivo modificado (Biome, dprint ou rustfmt). Antes de cada escrita ou edição, um hook `PreToolUse` (`protect-generated.mjs`) bloqueia edições manuais em arquivos gerados, como `CHANGELOG.md`, lockfiles e `routeTree.gen.ts`, e indica o comando que os regenera.
 
 ### OpenCode
 
@@ -419,7 +420,7 @@ Configurado em `dprint.json` com o seguinte escopo e configurações:
 
 ### Dependências Circulares
 
-O Biome verifica os ciclos de importação como parte do `bun run check`, incluindo imports de valores, de tipos e do próprio módulo. Cada workspace verifica arquivos TS, TSX, MTS, CTS, JS, JSX, MJS e CJS, incluindo arquivos na raiz, arquivos gerados e saídas de build ignoradas pelo Git, com o `biome.cycles.json`. Arquivos JavaScript são verificados como dependências de arquivos TypeScript e como raízes independentes. Somente `node_modules` e `.git` são excluídos da verificação de ciclos. A formatação e os demais checks de lint continuam seguindo o `biome.json`.
+O Biome verifica os ciclos de importação como parte do `bun run check`, incluindo imports de valores, de tipos e do próprio módulo. Cada workspace verifica arquivos TS, TSX, MTS, CTS, JS, JSX, MJS e CJS, incluindo arquivos na raiz, arquivos gerados e saídas de build ignoradas pelo Git, com o `biome.cycles.json`. Arquivos JavaScript são verificados como dependências de arquivos TypeScript e como raízes independentes. A verificação de ciclos exclui `node_modules`, `.git` e os diretórios `.mango/artifacts` e `.mango/out` da raiz do repositório. As duas configurações do Biome impedem a descoberta e a indexação de metadados nesses dois diretórios de cache da raiz. A formatação e os demais checks de lint continuam seguindo o `biome.json`.
 
 ### Detecção de Código Duplicado
 
@@ -456,6 +457,7 @@ O tipo `Messages` é inferido diretamente do dicionário `pt-BR.ts` (`as const`)
 - [`./README.md`](/docs/quickstart/) — hub da documentação em Português
 - [`./guides/contributor-quickstart.md`](/docs/guides/contributor-quickstart/) — onboarding rápido para contribuidores
 - [`./architecture/continuation.md`](/docs/architecture/continuation/) — arquitetura de continuação
+- [`./design/README.md`](/docs/design/README/) — design system flat: princípios, índice e testes que o fazem valer
 - [`./providers/development.md`](/docs/providers/development/) — guia de integração de provedores
 - [`./reference/cli.md`](/docs/reference/cli/) — referência da CLI e canais de instalação
 - [`./reference/ci.md`](/docs/reference/ci/) — gates agregados e checks obrigatórios
@@ -474,6 +476,7 @@ O tipo `Messages` é inferido diretamente do dicionário `pt-BR.ts` (`as const`)
 
 - `architecture/`
 - `features/`
+- `design/`
 - `providers/`
 - `reference/`
 - `guides/`
@@ -490,4 +493,4 @@ O comando `bun run build --binary` compila a API em binários específicos por p
 
 ## Licença
 
-Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/LICENSE).
+Este projeto está licenciado sob a [Licença MIT](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/LICENSE).

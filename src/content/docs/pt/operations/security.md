@@ -8,8 +8,8 @@ groupId: "operations"
 groupTitle: "Operações"
 order: 20
 sourcePath: "docs/pt-br/operations/security.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/pt-br/operations/security.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/pt-br/operations/security.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Política De Segurança
@@ -41,7 +41,7 @@ Chaves de API para Gemini, OpenAI, Anthropic e DeepSeek suportam três métodos 
 
 1. **Variáveis de ambiente** em `~/.mango/.env` — prioridade mais alta, nunca versionadas.
 2. **config.toml** em `~/.mango/config.toml` — arquivo flat, nunca versionado.
-3. **OS Secret Store** via `Bun.secrets` — armazenamento nativo seguro do sistema operacional, recomendado para máxima segurança.
+3. **OS secret store** via `Bun.secrets` — armazenamento nativo seguro do sistema operacional, recomendado para máxima segurança.
 
 As chaves nunca são expostas ao frontend. A API resolve os secrets server-side e nunca os inclui nas responses.
 

@@ -8,8 +8,8 @@ groupId: "reference"
 groupTitle: "Reference"
 order: 60
 sourcePath: "docs/reference/releasing.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/reference/releasing.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/reference/releasing.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # Releasing
@@ -306,8 +306,9 @@ packages, Docker images and installers all see the same two files as before.
   Main is the first shipping-profile build of a PR change. A shipping-profile
   runtime or smoke failure on main blocks Canary through CI's mandatory Gate;
   those bytes cannot publish. A defect unique to fat LTO can therefore turn
-  main red after a green PR. Light caches remain cold until their separate
-  cache-only main seeds pass write, lifecycle, and measured capacity admission.
+  main red after a green PR. Light caches come only from CI's cache-only main
+  seed, which builds the light profile after the Gate and uploads nothing; see
+  `docs/reference/testing.md`.
 - **Toolchain pins.** Rust comes from `rust-toolchain.toml`; zig is downloaded
   at a pinned version and SHA-256 (`ZIG_VERSION`/`ZIG_SHA256` in
   `runtime-build.yml`); cargo-zigbuild is installed at a pinned version by
@@ -711,6 +712,17 @@ emits a warning naming both versions.
 Dispatch inputs: `channel` (`canary` default, or `stable`), `version` (exact npm
 version override), and `deep_diagnostics` (runs `doctor --all`).
 
+The npm lane retains the complete `doctor --json` report for both the fresh
+install and the upgrade. `scripts/ci/verify-distribution-doctor.mjs` validates
+the report's shape, counters and original exit code before judging distribution
+health. Core checks (including the auth secret, embedded frontend and sibling
+runtime) must be present and healthy. Missing optional host runtimes, version
+managers and agent CLIs, plus zero Library locations in the empty home, are
+reported separately: the published package does not install these prerequisites.
+Unexpected failures, missing core checks, malformed output and crashes fail the
+lane. `deep_diagnostics` applies to both installations; provider, skills and MCP
+failures remain fatal. The CLI's ordinary `doctor` exit semantics are unchanged.
+
 Deliberate boundaries:
 
 - No build or dependency caches — the lanes test published bytes and installer
@@ -722,13 +734,17 @@ Deliberate boundaries:
   checked-in, non-secret fixture policy exists.
 
 Failures rely on the standard failed-scheduled-run notification (no auto-filed
-issues); npm debug logs are uploaded only on failure and retained for 14 days.
+issues); npm debug logs and doctor JSON reports are uploaded only on failure and
+retained for 14 days.
 Reproduce a lane locally:
 
 ```bash
 # npm lane (any OS with node)
 npm install -g mangostudio@<exact-version>
-mangostudio --version && mangostudio doctor
+mangostudio --version
+doctor_status=0
+mangostudio doctor --json > doctor.json || doctor_status=$?
+node scripts/ci/verify-distribution-doctor.mjs doctor.json "$doctor_status"
 
 # archive lane (substitute the resolved tag/platform)
 gh release download v0.1.1-canary -p 'mangostudio-0.1.1-canary-linux-x64.tar.gz' -p SHA256SUMS
@@ -979,7 +995,7 @@ downloads the platform archive matching the crate version from the GitHub
 release into `~/.mango/dist/<version>/` (verified against `SHA256SUMS`, same
 layout as the shell installer) and execs the real binary. Both install paths
 report the same `mangostudio --version`. See
-[`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/crates/mangostudio-launcher/README.md).
+[`crates/mangostudio-launcher/README.md`](https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/crates/mangostudio-launcher/README.md).
 
 Design notes:
 

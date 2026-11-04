@@ -8,8 +8,8 @@ groupId: "guides"
 groupTitle: "Guides"
 order: 100
 sourcePath: "docs/guides/first-run.md"
-sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/33e1fa63025b143788138fa6872c3d698960f0f8/docs/guides/first-run.md"
-sourceCommit: "33e1fa63025b143788138fa6872c3d698960f0f8"
+sourceUrl: "https://github.com/juliopolycarpo/mangostudio/blob/2b46c3a2fce0db827219528d9b2b08db97a3741e/docs/guides/first-run.md"
+sourceCommit: "2b46c3a2fce0db827219528d9b2b08db97a3741e"
 ---
 
 # First run
@@ -86,9 +86,12 @@ a slow network cannot drag you backwards through steps you finished.
 
 ### Skipping
 
-**Skip for now** marks one step as skipped and moves on. **Skip setup** records
-the whole flow as finished and takes you to the page you were originally
-heading for. Neither sends a message or creates a chat.
+**Skip for now** marks one step as skipped and moves on. It is offered on a step
+that is still asking something: not on **Welcome**, which asks nothing, and not
+on a step the machine already satisfies, where **Continue** is the way on.
+**Skip setup**, at the top of the page beside **Sign out**, records the whole
+flow as finished and takes you to the page you were originally heading for.
+Neither sends a message or creates a chat.
 
 To go through it again: **Settings → General → Run setup again**. That clears
 the progress record and nothing else — your chats, your vendor sign-ins and
