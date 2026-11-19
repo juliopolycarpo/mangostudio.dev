@@ -60,5 +60,8 @@
     "typescript": "~6.0.3",
     "typescript-native": "npm:typescript@7.0.2",
     "wrangler": "4.162.0"
+  },
+  "overrides": {
+    "@emnapi/runtime": "1.11.3"
   }
 }
