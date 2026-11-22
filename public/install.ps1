@@ -127,11 +127,8 @@ function Install-Archive([string]$ArchivePath, [string]$Version, [string]$Instal
   New-Item -ItemType Directory -Force $tempInstall | Out-Null
 
   Expand-Archive -Path $ArchivePath -DestinationPath $tempInstall -Force
-  if (-not (Test-Path (Join-Path $tempInstall 'mangostudio.exe'))) {
+  if (-not (Test-Path (Join-Path $tempInstall 'mangostudio.exe') -PathType Leaf)) {
     Fail 'archive is missing mangostudio.exe'
-  }
-  if (-not (Test-Path (Join-Path $tempInstall 'public\index.html'))) {
-    Fail 'archive is missing public\index.html'
   }
 
   if (Test-Path $installDir) { Remove-Item $installDir -Recurse -Force }

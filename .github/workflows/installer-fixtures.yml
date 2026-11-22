@@ -1,0 +1,37 @@
+name: Hosted installer fixtures
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - public/install.sh
+      - public/install.ps1
+      - scripts/installer-layout.test.ts
+      - scripts/installer-fixture.sh
+      - scripts/installer-fixture-functions.ts
+      - scripts/installer-fixture-functions.test.ts
+      - .github/workflows/installer-fixtures.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures:
+    name: Installer fixtures (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      # Fixture evidence only: no release binary execution or public deployment.
+      - name: Validate layout and negative integrity controls
+        run: |
+          bun scripts/installer-fixture-functions.test.ts
+          bun scripts/installer-layout.test.ts
